@@ -1,4 +1,4 @@
-#include <pattern.h>
+#include <colibri-core/pattern.h>
 
 using namespace std;
 

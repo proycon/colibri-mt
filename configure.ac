@@ -50,16 +50,16 @@ if test "x$PKG_CONFIG_PATH" = x; then
      export PKG_CONFIG_PATH=""
 fi
 
-AC_ARG_WITH(colibri_core,
+AC_ARG_WITH(colibricore,
        [  --with-colibri-core=DIR       use colibri-core installed in <DIR>; 
                note that you can install colibri-core in a non-default directory with
-               ./configure --prefix=<DIR> in the timbl installation directory],
+               ./configure --prefix=<DIR> in the colibri-core installation directory],
        [PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$withval/lib/pkgconfig"],
        [PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$prefix/lib/pkgconfig"])
   AC_MSG_NOTICE( [pkg-config search path: $PKG_CONFIG_PATH] )
-PKG_CHECK_MODULES([colibri_core], [colibri-core >= 0.1] )
-CXXFLAGS="$CXXFLAGS $colibri_core_FLAGS"
-LIBS="$LIBS $colibri_core_LIBS"
+PKG_CHECK_MODULES([colibricore], [colibri-core >= 0.1] )
+CXXFLAGS="$CXXFLAGS $colibricore_CFLAGS"
+LIBS="$LIBS $colibricore_LIBS"
 
 
 # Checks for timbl library.
