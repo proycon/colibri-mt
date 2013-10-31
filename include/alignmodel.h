@@ -39,9 +39,9 @@ class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,Neste
         AlignmentModel(const std::string filename) { //load from (binary) file
             char one;
             std::ifstream * in = new std::ifstream(filename.c_str());
-            out->read( (char*) &one, sizeof(char));       
-            if (one == 1) {
-                std::cerr << "File " << filename << " is not a valid alignment model" << std:endl;
+            in->read( (char*) &one, sizeof(char));       
+            if (one != 1) {
+                std::cerr << "File " << filename << " is not a valid alignment model" << std::endl;
                 throw InternalError();
             }
             this->read(in);
