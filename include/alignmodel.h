@@ -48,6 +48,9 @@ class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,Neste
             in->close();
             delete in;
         }
+        
+        typedef typename PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> >::iterator iterator;
+        typedef typename PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> >::const_iterator const_iterator;
 
         AlignmentModel(const std::string filename, ClassEncoder * sourceencoder, ClassEncoder * targetencoder, bool logprobs= true, int ptsfield = 3, bool DEBUG = false); //load from Moses text file
 
