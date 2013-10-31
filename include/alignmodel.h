@@ -36,10 +36,29 @@ class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,Neste
     public:
         typedef PatternMap<ValueType,ValueHandler,NestedSizeType> valuetype;
 
-        AlignmentModel(const std::string filename); //load from (binary) file
+        AlignmentModel(const std::string filename) { //load from (binary) file
+            char one;
+            std::ifstream * in = new std::ifstream(filename.c_str());
+            out->read( (char*) &one, sizeof(char));       
+            if (one == 1) {
+                std::cerr << "File " << filename << " is not a valid alignment model" << std:endl;
+                throw InternalError();
+            }
+            this->read(in);
+            in->close();
+            delete in;
+        }
+
         AlignmentModel(const std::string filename, ClassEncoder * sourceencoder, ClassEncoder * targetencoder, bool logprobs= true, int ptsfield = 3, bool DEBUG = false); //load from Moses text file
 
-        void write(const std::string filename); //write to (binary) file
+        void write(const std::string filename) { //write to (binary) file
+            const char one = 1;
+            std::ofstream * out = new std::ofstream(filename.c_str());
+            out->write( (char*) &one, sizeof(char));       
+            this->write(out);
+            out->close();
+            delete out;
+        }
 };
 
 typedef AlignmentModel<std::array<double,5>, ArrayValueHandler<double,5> > t_alignmatrix;
