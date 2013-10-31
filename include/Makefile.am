@@ -1,1 +1,1 @@
-#pkginclude_HEADERS = 
+pkginclude_HEADERS = classifiers.h alignmodel.h
