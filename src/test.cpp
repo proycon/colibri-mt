@@ -1,4 +1,5 @@
 #include <pattern.h>
+#include <alignmodel.h>
 
 using namespace std;
 
