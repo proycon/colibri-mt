@@ -27,13 +27,22 @@ enum PhraseAlignHeuristic {
 //typedef std::unordered_map<const EncAnyGram*, std::vector<double> > t_aligntargets;
 //typedef std::unordered_map<const EncAnyGram*, t_aligntargets > t_alignmatrix;
 
+typedef PatternMap< PatternSet<uint32_t>,  PatternStoreValueHandler<PatternSet<uint32_t>>> t_contexts;
 
 template<class ValueType,class ValueHandler, class NestedSizeType = uint16_t >
-class AlignModel: public PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> > {
-    typedef PatternMap<ValueType,ValueHandler,NestedSizeType> valuetype;
+class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> > {
+    protected:
+        t_contexts sourcecontexts;
+    public:
+        typedef PatternMap<ValueType,ValueHandler,NestedSizeType> valuetype;
+
+        AlignmentModel(const std::string filename); //load from (binary) file
+        AlignmentModel(const std::string filename, ClassEncoder * sourceencoder, ClassEncoder * targetencoder, bool logprobs= true, int ptsfield = 3, bool DEBUG = false); //load from Moses text file
+
+        void write(const std::string filename); //write to (binary) file
 };
 
-typedef AlignModel<std::array<double,5>, ArrayValueHandler<double,5> > t_alignmatrix;
+typedef AlignmentModel<std::array<double,5>, ArrayValueHandler<double,5> > t_alignmatrix;
 
 
 /*
