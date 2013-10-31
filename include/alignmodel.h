@@ -33,6 +33,8 @@ template<class ValueType,class ValueHandler, class NestedSizeType = uint16_t >
 class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> > {
     protected:
         t_contexts sourcecontexts;
+        unsigned char leftsourcecontext;
+        unsigned char rightsourcecontext;
     public:
         typedef PatternMap<ValueType,ValueHandler,NestedSizeType> valuetype;
 
@@ -44,6 +46,8 @@ class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,Neste
                 std::cerr << "File " << filename << " is not a valid alignment model" << std::endl;
                 throw InternalError();
             }
+            in->read( (char*) &leftsourcecontext, sizeof(char));       
+            in->read( (char*) &rightsourcecontext, sizeof(char));       
             this->read(in);
             in->close();
             delete in;
@@ -52,16 +56,19 @@ class AlignmentModel: public PatternMap< PatternMap<ValueType,ValueHandler,Neste
         typedef typename PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> >::iterator iterator;
         typedef typename PatternMap< PatternMap<ValueType,ValueHandler,NestedSizeType>,PatternStoreValueHandler<PatternMap<ValueType,ValueHandler,NestedSizeType>> >::const_iterator const_iterator;
 
-        AlignmentModel(const std::string filename, ClassEncoder * sourceencoder, ClassEncoder * targetencoder, bool logprobs= true, int ptsfield = 3, bool DEBUG = false); //load from Moses text file
 
         void write(const std::string filename) { //write to (binary) file
             const char one = 1;
             std::ofstream * out = new std::ofstream(filename.c_str());
             out->write( (char*) &one, sizeof(char));       
+            out->write( (char*) &leftsourcecontext, sizeof(char));       
+            out->write( (char*) &rightsourcecontext, sizeof(char));       
             this->write(out);
             out->close();
             delete out;
         }
+        
+        AlignmentModel(const std::string filename, ClassEncoder * sourceencoder, ClassEncoder * targetencoder, bool logprobs= true, int ptsfield = 3, bool DEBUG = false); //load from Moses text file
 };
 
 typedef AlignmentModel<std::array<double,5>, ArrayValueHandler<double,5> > t_alignmatrix;
