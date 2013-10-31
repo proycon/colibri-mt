@@ -1,9 +1,9 @@
 AM_CPPFLAGS = -I@top_srcdir@/include
 
-bin_PROGRAMS = colibri-ml-moses-test
+bin_PROGRAMS = colibri-mt-test
 
 #lib_LTLIBRARIES = libcolibricore.la
 
 
-colibri_ml_moses_test_CXXFLAGS = -Wall 
-colibri_ml_moses_test_SOURCES = test.cpp
+colibri_mt_test_CXXFLAGS = -Wall 
+colibri_mt_test_SOURCES = test.cpp
