@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function, unicode_literals, division, absolute_import
+
 import colibricore
+import sys
+import datetime
+import bz2
+import gzip
 
 
 class FeaturePhraseTable:
@@ -33,8 +39,6 @@ class FeaturePhraseTable:
     def __getitem__(self, sourcepattern):
         return self.classifiers[self.sourcepatterns[sourcepattern]]
 
-    def loadmoses(self, filename, sourceencoder, targetencoder):
-        pass #TODO
 
     def load(self, filename, sourceencoder, targetencoder):
         with open(filename,'r',encoding='utf-8') as f:
@@ -84,6 +88,70 @@ class FeaturePhraseTable:
         pass #TODO
 
 
+    def loadmoses(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
+        """Load a phrase table from file into memory (memory intensive!)"""
+        self.phrasetable = {}
+
+        if filename.split(".")[-1] == "bz2":
+            f = bz2.BZ2File(filename,'r')
+        elif filename.split(".")[-1] == "gz":
+            f = gzip.GzipFile(filename,'r')
+        else:
+            f = open(filename,'r',encoding='utf-8')
+        linenum = 0
+        prevsource = None
+        targets = []
+
+        while True:
+            if not quiet:
+                linenum += 1
+                if (linenum % 100000) == 0:
+                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")",file=sys.stderr)
+            line = f.readline()
+            if not line:
+                break
+
+            #split into (trimmed) segments
+            segments = [ segment.strip() for segment in line.split(delimiter) ]
+
+            if len(segments) < 3:
+                print("Invalid line: ", line, file=sys.stderr)
+                continue
+
+            #Do we have a score associated?
+            if score_column > 0 and len(segments) >= score_column:
+                scores = tuple( ( float(x) for x in segments[score_column-1].strip().split() ) )
+            else:
+                scores = tuple()
+
+            #if align2_column > 0:
+            #    try:
+            #        null_alignments = segments[align2_column].count("()")
+            #    except:
+            #        null_alignments = 0
+            #else:
+            #    null_alignments = 0
+
+            if scorefilter:
+                if not scorefilter(scores): continue
+
+            if reverse:
+                if max_sourcen > 0 and segments[1].count(' ') + 1 > max_sourcen:
+                    continue
+
+                source = sourceencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
+                target = targetencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
+            else:
+                if max_sourcen > 0 and segments[0].count(' ') + 1 > max_sourcen:
+                    continue
+
+                source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
+                target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
+
+
+            self.add(source, scores, target)
+
+        f.close()
 
 
 
