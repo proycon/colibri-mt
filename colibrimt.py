@@ -47,7 +47,7 @@ class FeaturePhraseTable:
                 sourcepattern = sourceencoder.buildpattern(fields[0])
                 targetpattern = targetencoder.buildpattern(fields[-1])
                 for raw in fields[1:-1]:
-                    type, value = fields.split('=',2)
+                    type, value = raw.split('=',2)
                     features = []
                     if type == 's':
                         features.append(value)
