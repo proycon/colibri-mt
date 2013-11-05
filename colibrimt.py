@@ -2,11 +2,13 @@
 
 from __future__ import print_function, unicode_literals, division, absolute_import
 
-import colibricore
 import sys
 import datetime
 import bz2
 import gzip
+import colibricore
+import timbl
+
 
 
 class FeaturePhraseTable:
@@ -152,6 +154,113 @@ class FeaturePhraseTable:
             self.add(source, scores, target)
 
         f.close()
+
+
+
+
+
+    def extractfeatures(self, featureconf, sourcemodel, targetmodel, factoredcorpora):
+        """Extracts features and adds it to the phrasetable"""
+
+        #factoredcorpora is a list of IndexedCorpus instances, for each of the factors.. the base data is considered a factor like any other
+
+
+
+        if len(factoredcorpora) != len(featureconf):
+            raise ValueError("Expected " + str(len(featureconf)) + " instances in factoredcorpora, got " + str(len(factoredcorpora)))
+
+        if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
+            raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
+
+        assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
+        assert isinstance(targetmodel, colibricore.IndexedPatternModel)
+
+        for pattern in self.sourcepatterns:
+            if not pattern in sourcemodel:
+                print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
+                continue
+
+
+            sourceindexes = sourcemodel[pattern]
+
+            for features, targetpattern in self[pattern]:
+                if not targetpattern in targetmodel:
+                    print("Warning: a pattern from the phrase table was not found in the target model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
+                    continue
+
+                targetindexes = targetmodel[targetpattern]
+
+                #for every occurrence of this pattern in the source
+                for sentence, token in sourceindexes:
+
+                    #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
+                    targetmatch = False
+                    for targetsentence,_ in targetindexes:
+                        if sentence == targetsentence:
+                            targetmatch = True
+                            break
+                    if not targetmatch:
+                        continue
+
+                    #good, we can start extracting features!!
+
+                    #add the location to the features so we can find it later when we build intermediate location-based IDs instead of sourcepatterns
+                    features.append(sentence)
+                    features.append(token)
+
+                    for factoredcorpus, factor in zip(factoredcorpora, featureconf.factors):
+                        classdecoder, leftcontext, rightcontext = factor
+                        features += _extractfeatures(pattern, sentence, token, factoredcorpus, leftcontext, rightcontext)
+
+
+
+
+
+
+def _extractfeatures(pattern, sentence, token, factoredcorpus, leftcontext, rightcontext):
+    featurevector = []
+    n = len(pattern)
+    sentencelength = factoredcorpus.sentencelength(sentence)
+    for i in range(token - leftcontext,token):
+        if token < 0:
+            unigram = colibricore.BEGINPATTERN
+        else:
+            unigram = factoredcorpus[(sentence,i)]
+        featurevector.append(unigram)
+    for i in range(token + n , token + n + rightcontext):
+        if token > sentencelength:
+            unigram = colibricore.ENDPATTERN
+        else:
+            unigram = factoredcorpus[(sentence,i)]
+        featurevector.append(unigram)
+    return featurevector
+
+class FeatureConfiguration:
+
+
+    #the feature vectors will contain:
+    #   the two-tuple (sentence, tokenoffset) of the beginning occurrence
+    #   leftcontext from sourcepatternmodel
+    #   rightcontext from sourcepatternmodel
+    #   for each of the factors:
+    #       leftcontext from factored indexedcorpus
+    #        rightcontext from factored indexedcorpus
+
+
+    def __init__(self, classdecoder, leftcontext, rightcontext):
+        self.factors = []
+        self.addfactor(  classdecoder, leftcontext, rightcontext )
+
+    def addfactor(self,  classdecoder, leftcontext, rightcontext):
+        self.data.append( ( classdecoder, leftcontext, rightcontext) )
+
+    def __len__(self):
+        return len(self.data)
+
+
+
+
+
 
 
 
