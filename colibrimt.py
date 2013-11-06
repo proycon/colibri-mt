@@ -14,7 +14,7 @@ import argparse
 
 class FeaturePhraseTable:
     def __init__(self, sourcedecoder, targetdecoder):
-        self.classifiers = [] #list of all classifierdata, list consists of two tuple (features, targetpattern)
+        self.data = [] #list of all feature data, list consists of two tuple (features, targetpattern)
         self.sourcepatterns = colibricore.PatternDict_int32()
         self.sourcedecoder = sourcedecoder
         self.targetdecoder = targetdecoder
@@ -26,21 +26,21 @@ class FeaturePhraseTable:
             raise ValueError("Target pattern must be instance of Pattern")
 
         if sourcepattern in self.sourcepatterns:
-            classifierid = self.sourcepatterns[sourcepattern]
+            dataid = self.sourcepatterns[sourcepattern]
         else:
-            self.classifiers.append( [(features, targetpattern) ] )
-            classifierid = len(self.classifiers)
+            self.data.append( [(features, targetpattern) ] )
+            dataid = len(self.data)
 
     def __len__(self):
         return len(self.sourcepatterns)
 
     def __iter__(self):
-        for sourcepattern, classifierid in self.sourcepatterns:
-            for features, targetpattern in self.classifiers[classifierid]:
+        for sourcepattern, dataid in self.sourcepatterns:
+            for features, targetpattern in self.data[dataid]:
                 yield sourcepattern, features, targetpattern
 
     def __getitem__(self, sourcepattern):
-        return self.classifiers[self.sourcepatterns[sourcepattern]]
+        return self.data[self.sourcepatterns[sourcepattern]]
 
 
     def load(self, filename, sourceencoder, targetencoder):
