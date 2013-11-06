@@ -12,14 +12,14 @@ import argparse
 
 
 
-class FeaturePhraseTable:
+class PhraseTable:
     def __init__(self, sourcedecoder, targetdecoder):
         self.data = [] #list of all feature data, list consists of two tuple (features, targetpattern)
         self.sourcepatterns = colibricore.PatternDict_int32()
         self.sourcedecoder = sourcedecoder
         self.targetdecoder = targetdecoder
 
-    def add(self, sourcepattern, features, targetpattern):
+    def add(self, sourcepattern, targetpattern, features=None):
         if not isinstance(sourcepattern, colibricore.Pattern):
             raise ValueError("Source pattern must be instance of Pattern")
         if not isinstance(targetpattern, colibricore.Pattern):
@@ -37,7 +37,7 @@ class FeaturePhraseTable:
     def __iter__(self):
         for sourcepattern, dataid in self.sourcepatterns:
             for features, targetpattern in self.data[dataid]:
-                yield sourcepattern, features, targetpattern
+                yield sourcepattern, targetpattern, features
 
     def __getitem__(self, sourcepattern):
         return self.data[self.sourcepatterns[sourcepattern]]
@@ -152,7 +152,7 @@ class FeaturePhraseTable:
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
 
 
-            self.add(source, scores, target)
+            self.add(source,target, scores)
 
         f.close()
 
@@ -212,7 +212,6 @@ class FeaturePhraseTable:
                     for factoredcorpus, factor in zip(factoredcorpora, featureconf.factors):
                         classdecoder, leftcontext, rightcontext = factor
                         features += _extractfeatures(pattern, sentence, token, factoredcorpus, leftcontext, rightcontext)
-
 
 
 
