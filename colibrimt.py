@@ -14,7 +14,7 @@ import argparse
 
 class PhraseTable:
     def __init__(self, sourcedecoder, targetdecoder):
-        self.data = [] #list of all feature data, list consists of two tuple (features, targetpattern)
+        self.data = [] #list of all feature data, list consists of two tuple (targetpattern, features)
         self.sourcepatterns = colibricore.PatternDict_int32()
         self.sourcedecoder = sourcedecoder
         self.targetdecoder = targetdecoder
@@ -28,7 +28,7 @@ class PhraseTable:
         if sourcepattern in self.sourcepatterns:
             dataid = self.sourcepatterns[sourcepattern]
         else:
-            self.data.append( [(features, targetpattern) ] )
+            self.data.append( [(targetpattern, features) ] )
             dataid = len(self.data)
 
     def __len__(self):
@@ -36,7 +36,7 @@ class PhraseTable:
 
     def __iter__(self):
         for sourcepattern, dataid in self.sourcepatterns:
-            for features, targetpattern in self.data[dataid]:
+            for  targetpattern, features in self.data[dataid]:
                 yield sourcepattern, targetpattern, features
 
     def __getitem__(self, sourcepattern):
