@@ -12,7 +12,7 @@ import argparse
 
 
 
-class PhraseTable:
+class AlignmentModel:
     def __init__(self, sourcedecoder, targetdecoder):
         self.data = [] #list of all feature data, list consists of two tuple (targetpattern, features)
         self.sourcepatterns = colibricore.PatternDict_int32()
@@ -256,23 +256,4 @@ class FeatureConfiguration:
 
     def __len__(self):
         return len(self.data)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="colibri-mt -- A wrapper around Moses that adds source-side context classifier support", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--storeconst',dest='settype',help="", action='store_const',const='somevalue')
-    parser.add_argument('-f','--dataset', type=str,help="", action='store',default="",required=False)
-    parser.add_argument('-i','--number',dest="num", type=int,help="", action='store',default="",required=False)
-    parser.add_argument('bar', nargs='+', help='bar help')
-    args = parser.parse_args()
-    #args.storeconst, args.dataset, args.num, args.bar
-
-if __name__ == '__main__':
-    main()
-
-
-
-
-
-
 
