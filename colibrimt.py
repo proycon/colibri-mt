@@ -9,11 +9,12 @@ import gzip
 import colibricore
 import timbl
 import argparse
+import pickle
 
 
 
 class AlignmentModel:
-    def __init__(self, sourcedecoder, targetdecoder, multivalue=True, singleintvalue=False):
+    def __init__(self, multivalue=True, singleintvalue=False):
         self.values = []
         self.newvalueid = 0
         self.alignedpatterns = colibricore.AlignedPatternDict_int32()
@@ -57,6 +58,18 @@ class AlignmentModel:
             for sourcepattern, targetpattern, valueid in self.alignedpatterns.items():
                 yield sourcepattern, targetpattern, self.values[valueid]
 
+    def sourcepatterns(self):
+        for sourcepattern in self.alignedpatterns:
+            yield sourcepattern
+
+
+    def targetpatterns(self, sourcepattern):
+        for targetpattern in self.alignedpatterns.children(sourcepattern):
+            yield targetpattern
+
+    def items(self):
+        return iter(self)
+
     def __getitem__(self, item):
         if self.singleintvalue:
             return self.alignedpatterns[item]
@@ -69,53 +82,26 @@ class AlignmentModel:
         else:
             self.values[self.alignedpatterns[item]] = value
 
-    def load(self, filename, sourceencoder, targetencoder):
-        with open(filename,'r',encoding='utf-8') as f:
-            for line in f:
-                fields = line.strip().split("\t")
-                sourcepattern = sourceencoder.buildpattern(fields[0])
-                targetpattern = targetencoder.buildpattern(fields[-1])
-                for raw in fields[1:-1]:
-                    type, value = raw.split('=',2)
-                    features = []
-                    if type == 's':
-                        features.append(value)
-                    elif type == 'p':
-                        features.append(sourceencoder.buildpattern(value))
-                    elif type == 'i':
-                        features.append(int(value))
-                    elif type == 'f':
-                        features.append(float(value))
-                    elif type == 'b':
-                        features.append(bool(value))
-                self.add(sourcepattern,features,targetpattern)
 
-    def save(self, filename):
+    def __contains__(self, item):
+        return item in self.alignedpatterns
+
+
+    def load(self, fileprefix):
+        self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
+        self.values = pickle.load(fileprefix + ".colibri.alignmodel-values")
+
+    def save(self, fileprefix):
         """Output"""
-        with open(filename,'w',encoding='utf-8') as f:
-            for sourcepattern, features, targetpattern in self:
-                f.write(sourcepattern.tostring(self.sourcedecoder))
-                for feature in features:
-                    f.write("\t")
-                    if isinstance(feature,str):
-                        f.write('s=' + feature)
-                    elif isinstance(feature, colibricore.Pattern):
-                        f.write('p=' + feature.tostring(self.sourcedecoder))
-                    elif isinstance(feature,int):
-                        f.write('i=' + str(feature))
-                    elif isinstance(feature,float):
-                        f.write('f=' + str(feature))
-                    elif isinstance(feature,bool):
-                        f.write('b=' + str(feature))
-                    else:
-                        raise TypeError
-                f.write("\t" + targetpattern.tostring(self.targetdecoder)+"\n")
+        self.alignedpatterns.write(fileprefix + ".colibri.alignmodel-keys")
+        pickle.dump(self.values, fileprefix + ".colibri.alignmodel-values")
 
 
+
+class FeaturedAlignmentModel(AlignmentModel):
     def savemoses(self, filename):
         """Output for moses"""
         pass #TODO
-
 
     def loadmoses(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
         """Load a phrase table from file into memory (memory intensive!)"""
