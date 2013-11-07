@@ -13,35 +13,61 @@ import argparse
 
 
 class AlignmentModel:
-    def __init__(self, sourcedecoder, targetdecoder):
-        self.data = [] #list of all feature data, list consists of two tuple (targetpattern, features)
-        self.sourcepatterns = colibricore.PatternDict_int32()
+    def __init__(self, sourcedecoder, targetdecoder, multivalue=True, singleintvalue=False):
+        self.values = []
+        self.newvalueid = 0
+        self.alignedpatterns = colibricore.AlignedPatternDict_int32()
         self.sourcedecoder = sourcedecoder
         self.targetdecoder = targetdecoder
+        self.multivalue = multivalue
+        self.singleintvalue = singleintvalue
 
-    def add(self, sourcepattern, targetpattern, features=None):
+    def add(self, sourcepattern, targetpattern, value):
         if not isinstance(sourcepattern, colibricore.Pattern):
             raise ValueError("Source pattern must be instance of Pattern")
         if not isinstance(targetpattern, colibricore.Pattern):
             raise ValueError("Target pattern must be instance of Pattern")
 
-        if sourcepattern in self.sourcepatterns:
-            dataid = self.sourcepatterns[sourcepattern]
+        if (sourcepattern, targetpattern) in self.alignedpatterns:
+            valueid = self.alignedpatterns[(sourcepattern, targetpattern)]
+            if self.singleintvalue:
+                self.alignedpatterns[(sourcepattern,targetpattern)] = value
+            elif self.multivalue:
+                self.values[valueid].append(value)
+            else:
+                self.values[valueid] = value
         else:
-            self.data.append( [(targetpattern, features) ] )
-            dataid = len(self.data)
+            self.newvalueid += 1
+            valueid = self.newvalueid
+            if self.singleintvalue:
+                self.alignedpatterns[(sourcepattern,targetpattern)] = value
+            elif self.multivalue:
+                self.values[valueid] = [value]
+            else:
+                self.values[valueid] = value
 
     def __len__(self):
-        return len(self.sourcepatterns)
+        return len(self.alignedpatterns)
 
     def __iter__(self):
-        for sourcepattern, dataid in self.sourcepatterns:
-            for  targetpattern, features in self.data[dataid]:
-                yield sourcepattern, targetpattern, features
+        if self.singleintvalue:
+            for sourcepattern, targetpattern, value in self.alignedpatterns.items():
+                yield sourcepattern, targetpattern, value
+        else:
+            for sourcepattern, targetpattern, valueid in self.alignedpatterns.items():
+                yield sourcepattern, targetpattern, self.values[valueid]
 
-    def __getitem__(self, sourcepattern):
-        return self.data[self.sourcepatterns[sourcepattern]]
+    def __getitem__(self, item):
+        if self.singleintvalue:
+            return self.alignedpatterns[item]
+        else:
+            return self.values[self.alignedpatterns[item]]
 
+    def __setitem__(self, item, value):
+        if self.singleintvalue:
+            self.alignedpatterns[item] = value
+        else:
+            self.values[self.alignedpatterns[item]] = value
 
     def load(self, filename, sourceencoder, targetencoder):
         with open(filename,'r',encoding='utf-8') as f:
