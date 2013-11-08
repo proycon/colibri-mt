@@ -184,7 +184,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             self.conf.addscorefeature(float)
 
     def patternswithindexes(self, sourcemodel, targetmodel):
-        """Finds occurrences (positions in the source model) for all patterns"""
+        """Finds occurrences (positions in the source and target models) for all patterns"""
         for sourcepattern in self.sourcepatterns():
             if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
