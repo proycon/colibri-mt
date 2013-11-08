@@ -99,9 +99,22 @@ class AlignmentModel:
 
 
 class FeaturedAlignmentModel(AlignmentModel):
-    def savemoses(self, filename):
+    def __init__(self, conf):
+        assert isinstance(conf, FeatureConfiguration)
+        self.conf = conf
+        super().__init__(True,False)
+
+
+    def savemoses(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
-        pass #TODO
+        with open(filename,'w',encoding='utf-8') as f:
+            for sourcepattern, targetpattern, features in self:
+                f.write(sourcepattern.tostring(sourcedecoder) + " ||| " + targetpattern.tostring(targetdecoder) + " ||| ")
+                for i, feature, featureconf in enumerate(zip(features, self.conf)):
+                    if featureconf[0] != Pattern and featureconf[1]:
+                        if (i > 0): f.write(" ")
+                        f.write(str(feature))
+                f.write("\n")
 
     def loadmoses(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
         """Load a phrase table from file into memory (memory intensive!)"""
@@ -168,7 +181,9 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         f.close()
 
-
+        self.conf = FeatureConfiguration()
+        for x in scores:
+            self.conf.addscorefeature(float)
 
 
 
@@ -259,13 +274,28 @@ class FeatureConfiguration:
     #        rightcontext from factored indexedcorpus
 
 
-    def __init__(self, classdecoder, leftcontext, rightcontext):
-        self.factors = []
-        self.addfactor(  classdecoder, leftcontext, rightcontext )
+    def __init__(self):
+        self.conf = []
 
-    def addfactor(self,  classdecoder, leftcontext, rightcontext):
-        self.data.append( ( classdecoder, leftcontext, rightcontext) )
+    def addfactorfeature(self, classdecoder, leftcontext=0, rightcontext=0):
+        self.conf.append( ( Pattern, classdecoder, leftcontext, rightcontext) )
+
+    def addfeature(self, type):
+        """Will not be propagated to Moses phrasetable"""
+        self.conf.append( ( type,False) )
+
+    def addscorefeature(self, type):
+        """Will be propagated to Moses phrasetable"""
+        self.conf.append( ( type,True) )
 
     def __len__(self):
-        return len(self.data)
+        return len(self.conf)
+
+    def __iter__(self):
+        for x in self.conf:
+            yield x
+
+    def __getitem__(self, index):
+        return self.conf[index]
+
 
