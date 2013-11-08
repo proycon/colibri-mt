@@ -97,7 +97,7 @@ class AlignmentModel:
 
 
 class FeaturedAlignmentModel(AlignmentModel):
-    def __init__(self, conf):
+    def __init__(self, conf=FeatureConfiguration()):
         assert isinstance(conf, FeatureConfiguration)
         self.conf = conf
         super().__init__(True,False)
@@ -283,6 +283,7 @@ def main_mosesphrasetable2alignmodel():
     except:
         print("mosesphrasetable2alignmodel inputfilename sourceclassfile targetclassfile outfileprefix",file=sys.stderr)
         return 1
+
     mosesphrasetable2alignmodel(inputfilename, sourceclassfile, targetclassfile, outfileprefix)
 
 
