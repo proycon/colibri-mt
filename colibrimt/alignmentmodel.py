@@ -103,7 +103,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         super().__init__(True,False)
 
 
-    def savemoses(self, filename, sourcedecoder, targetdecoder):
+    def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
         with open(filename,'w',encoding='utf-8') as f:
             for sourcepattern, targetpattern, features in self:
@@ -114,7 +114,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                         f.write(str(feature))
                 f.write("\n")
 
-    def loadmoses(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
+    def loadmosesphrasetable(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
         """Load a phrase table from file into memory (memory intensive!)"""
         self.phrasetable = {}
 
@@ -268,5 +268,23 @@ class FeatureConfiguration:
 
     def __getitem__(self, index):
         return self.conf[index]
+
+
+def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix):
+    sourceencoder = colibricore.ClassEncoder(sourceclassfile)
+    targetencoder = colibricore.ClassEncoder(sourceclassfile)
+    model = FeaturedAlignmentModel()
+    m.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
+    m.save(outfileprefix)
+
+def main_mosesphrasetable2alignmodel():
+    try:
+        inputfilename,sourceclassfile, targetclassfile,outfileprefix = sys.argv[1:]
+    except:
+        print("mosesphrasetable2alignmodel inputfilename sourceclassfile targetclassfile outfileprefix",file=sys.stderr)
+        return 1
+    mosesphrasetable2alignmodel(inputfilename, sourceclassfile, targetclassfile, outfileprefix)
+
+
 
 

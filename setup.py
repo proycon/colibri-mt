@@ -27,9 +27,9 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            #'clamclient = clam.clamclient:main'
+            'colibri-mosesphrasetable2alignmodel = colibrimt.alignmentmodel:main_mosesphrasetable2alignmodel'
         ]
     },
     package_data = {},
-    install_requires=['colibri-core','web.py >= 0.33','lxml >= 2.2','pycurl']
+    install_requires=['colibri-core']
 )
