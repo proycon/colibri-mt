@@ -6,7 +6,7 @@ import sys
 from setuptools import setup
 
 setup(
-    name = "colibri-mt",
+    name = "colibrimt",
     version = "0.1",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
@@ -14,7 +14,7 @@ setup(
     license = "GPL",
     keywords = "machine translation moses wrapper colibri",
     url = "https://github.com/proycon/colibri-mt",
-    packages=['colibrimt.alignmentmodel'],
+    packages=['colibrimt'],
     long_description="Colibri-MT",
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -31,5 +31,5 @@ setup(
         ]
     },
     package_data = {},
-    install_requires=['colibri-core']
+    install_requires=['colibricore']
 )
