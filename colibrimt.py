@@ -18,8 +18,6 @@ class AlignmentModel:
         self.values = []
         self.newvalueid = 0
         self.alignedpatterns = colibricore.AlignedPatternDict_int32()
-        self.sourcedecoder = sourcedecoder
-        self.targetdecoder = targetdecoder
         self.multivalue = multivalue
         self.singleintvalue = singleintvalue
 
@@ -111,7 +109,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             for sourcepattern, targetpattern, features in self:
                 f.write(sourcepattern.tostring(sourcedecoder) + " ||| " + targetpattern.tostring(targetdecoder) + " ||| ")
                 for i, feature, featureconf in enumerate(zip(features, self.conf)):
-                    if featureconf[0] != Pattern and featureconf[1]:
+                    if featureconf[0] != colibricore.Pattern and featureconf[1]:
                         if (i > 0): f.write(" ")
                         f.write(str(feature))
                 f.write("\n")
@@ -185,100 +183,71 @@ class FeaturedAlignmentModel(AlignmentModel):
         for x in scores:
             self.conf.addscorefeature(float)
 
-
-
-    def extractfeatures(self, featureconf, sourcemodel, targetmodel, factoredcorpora):
-        """Extracts features and adds it to the phrasetable"""
-
-        #factoredcorpora is a list of IndexedCorpus instances, for each of the factors.. the base data is considered a factor like any other
-
-
-
-        if len(factoredcorpora) != len(featureconf):
-            raise ValueError("Expected " + str(len(featureconf)) + " instances in factoredcorpora, got " + str(len(factoredcorpora)))
-
-        if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
-            raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
-
-        assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
-        assert isinstance(targetmodel, colibricore.IndexedPatternModel)
-
-        for pattern in self.sourcepatterns:
-            if not pattern in sourcemodel:
+    def patternswithindexes(self, sourcemodel, targetmodel):
+        """Finds occurrences (positions in the source model) for all patterns"""
+        for sourcepattern in self.sourcepatterns():
+            if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
-
-
-            sourceindexes = sourcemodel[pattern]
-
-            for features, targetpattern in self[pattern]:
+            sourceindexes = sourcemodel[sourcepattern]
+            for targetpattern in self.targetpatterns(sourcepattern):
                 if not targetpattern in targetmodel:
                     print("Warning: a pattern from the phrase table was not found in the target model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                     continue
-
                 targetindexes = targetmodel[targetpattern]
 
                 #for every occurrence of this pattern in the source
                 for sentence, token in sourceindexes:
-
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
                     targetmatch = False
-                    for targetsentence,_ in targetindexes:
+                    for targetsentence,targettoken in targetindexes:
                         if sentence == targetsentence:
+                            yield sourcepattern, targetpattern, sentence, token, targetsentence, targettoken
                             targetmatch = True
                             break
-                    if not targetmatch:
-                        continue
-
-                    #good, we can start extracting features!!
-
-                    #add the location to the features so we can find it later when we build intermediate location-based IDs instead of sourcepatterns
-                    features.append(sentence)
-                    features.append(token)
-
-                    for factoredcorpus, factor in zip(factoredcorpora, featureconf.factors):
-                        classdecoder, leftcontext, rightcontext = factor
-                        features += _extractfeatures(pattern, sentence, token, factoredcorpus, leftcontext, rightcontext)
 
 
+    def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+        featurevector = []
+        assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
+        assert isinstance(targetmodel, colibricore.IndexedPatternModel)
+
+        factorconf = [x for x in self.conf if x[0] == colibricore.Pattern ]
+        if len(factoredcorpora) != len(factorconf):
+            raise ValueError("Expected " + str(len(factorconf)) + " instances in factoredcorpora, got " + str(len(factoredcorpora)))
+
+        if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
+            raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
 
 
+        for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
+            n = len(sourcepattern)
+            featurevector= []
+            for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+                _,classdecoder, leftcontext, rightcontext = factor
+                sentencelength = factoredcorpus.sentencelength(sentence)
+                for i in range(token - leftcontext,token):
+                    if token < 0:
+                        unigram = colibricore.beginpattern
+                    else:
+                        unigram = factoredcorpus[(sentence,i)]
+                    featurevector.append(unigram)
+                for i in range(token + n , token + n + rightcontext):
+                    if token > sentencelength:
+                        unigram = colibricore.endpattern
+                    else:
+                        unigram = factoredcorpus[(sentence,i)]
+                    featurevector.append(unigram)
+            yield sentence, token, sourcepattern, targetpattern, features, featurevector
 
-def _extractfeatures(pattern, sentence, token, factoredcorpus, leftcontext, rightcontext):
-    featurevector = []
-    n = len(pattern)
-    sentencelength = factoredcorpus.sentencelength(sentence)
-    for i in range(token - leftcontext,token):
-        if token < 0:
-            unigram = colibricore.BEGINPATTERN
-        else:
-            unigram = factoredcorpus[(sentence,i)]
-        featurevector.append(unigram)
-    for i in range(token + n , token + n + rightcontext):
-        if token > sentencelength:
-            unigram = colibricore.ENDPATTERN
-        else:
-            unigram = factoredcorpus[(sentence,i)]
-        featurevector.append(unigram)
-    return featurevector
+
 
 class FeatureConfiguration:
-
-
-    #the feature vectors will contain:
-    #   the two-tuple (sentence, tokenoffset) of the beginning occurrence
-    #   leftcontext from sourcepatternmodel
-    #   rightcontext from sourcepatternmodel
-    #   for each of the factors:
-    #       leftcontext from factored indexedcorpus
-    #        rightcontext from factored indexedcorpus
-
-
     def __init__(self):
         self.conf = []
 
     def addfactorfeature(self, classdecoder, leftcontext=0, rightcontext=0):
-        self.conf.append( ( Pattern, classdecoder, leftcontext, rightcontext) )
+        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, rightcontext) )
 
     def addfeature(self, type):
         """Will not be propagated to Moses phrasetable"""
