@@ -270,11 +270,16 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
 
-def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix):
+def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, quiet=False):
+    if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
+    if not quiet: print("Reading target encoder " + targetclassfile,file=sys.stderr)
     targetencoder = colibricore.ClassEncoder(targetclassfile)
+    if not quiet: print("Initialising featured alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
+    if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
+    if not quiet: print("Saving alignment model",file=sys.stderr)
     model.save(outfileprefix)
 
 def main_mosesphrasetable2alignmodel():
