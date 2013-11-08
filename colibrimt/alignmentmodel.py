@@ -14,7 +14,7 @@ import pickle
 
 class AlignmentModel:
     def __init__(self, multivalue=True, singleintvalue=False):
-        self.values = []
+        self.values = {}
         self.newvalueid = 0
         self.alignedpatterns = colibricore.AlignedPatternDict_int32()
         self.multivalue = multivalue
