@@ -224,7 +224,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             n = len(sourcepattern)
             featurevector= []
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
-                _,classdecoder, leftcontext, rightcontext = factor
+                _,classdecoder, leftcontext, focus, rightcontext = factor
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
                     if token < 0:
@@ -232,13 +232,15 @@ class FeaturedAlignmentModel(AlignmentModel):
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
+                if focus:
+                    featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
                 for i in range(token + n , token + n + rightcontext):
                     if token > sentencelength:
                         unigram = colibricore.endpattern
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
-            yield sentence, token, sourcepattern, targetpattern, features, featurevector
+            yield sentence, token, sourcepattern, targetpattern, featurevector
 
 
 
@@ -246,8 +248,8 @@ class FeatureConfiguration:
     def __init__(self):
         self.conf = []
 
-    def addfactorfeature(self, classdecoder, leftcontext=0, rightcontext=0):
-        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, rightcontext) )
+    def addfactorfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
+        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
 
     def addfeature(self, type):
         """Will not be propagated to Moses phrasetable"""
