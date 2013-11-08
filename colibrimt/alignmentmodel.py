@@ -12,7 +12,6 @@ import argparse
 import pickle
 
 
-
 class AlignmentModel:
     def __init__(self, multivalue=True, singleintvalue=False):
         self.values = []
@@ -94,6 +93,31 @@ class AlignmentModel:
         self.alignedpatterns.write(fileprefix + ".colibri.alignmodel-keys")
         pickle.dump(self.values, fileprefix + ".colibri.alignmodel-values")
 
+
+class FeatureConfiguration:
+    def __init__(self):
+        self.conf = []
+
+    def addfactorfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
+        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
+
+    def addfeature(self, type):
+        """Will not be propagated to Moses phrasetable"""
+        self.conf.append( ( type,False) )
+
+    def addscorefeature(self, type):
+        """Will be propagated to Moses phrasetable"""
+        self.conf.append( ( type,True) )
+
+    def __len__(self):
+        return len(self.conf)
+
+    def __iter__(self):
+        for x in self.conf:
+            yield x
+
+    def __getitem__(self, index):
+        return self.conf[index]
 
 
 class FeaturedAlignmentModel(AlignmentModel):
@@ -244,30 +268,6 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
 
-class FeatureConfiguration:
-    def __init__(self):
-        self.conf = []
-
-    def addfactorfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
-        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
-
-    def addfeature(self, type):
-        """Will not be propagated to Moses phrasetable"""
-        self.conf.append( ( type,False) )
-
-    def addscorefeature(self, type):
-        """Will be propagated to Moses phrasetable"""
-        self.conf.append( ( type,True) )
-
-    def __len__(self):
-        return len(self.conf)
-
-    def __iter__(self):
-        for x in self.conf:
-            yield x
-
-    def __getitem__(self, index):
-        return self.conf[index]
 
 
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix):
