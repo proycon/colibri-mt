@@ -272,7 +272,7 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix):
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
-    targetencoder = colibricore.ClassEncoder(sourceclassfile)
+    targetencoder = colibricore.ClassEncoder(targetclassfile)
     model = FeaturedAlignmentModel()
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
     model.save(outfileprefix)
