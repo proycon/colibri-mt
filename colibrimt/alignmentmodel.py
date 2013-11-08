@@ -274,8 +274,8 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
     targetencoder = colibricore.ClassEncoder(sourceclassfile)
     model = FeaturedAlignmentModel()
-    m.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
-    m.save(outfileprefix)
+    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
+    model.save(outfileprefix)
 
 def main_mosesphrasetable2alignmodel():
     try:
