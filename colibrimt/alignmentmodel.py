@@ -195,9 +195,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if max_sourcen > 0 and segments[0].count(' ') + 1 > max_sourcen:
                     continue
 
-                print("Building source pattern " + segments[0],file=sys.stderr)
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
-                print("Building target pattern " + segments[1],file=sys.stderr)
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
 
 
