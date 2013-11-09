@@ -86,12 +86,14 @@ class AlignmentModel:
 
     def load(self, fileprefix):
         self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
-        self.values = pickle.load(fileprefix + ".colibri.alignmodel-values")
+        with open(fileprefix + ".colibri.alignmodel-values",'rb') as f:
+            self.values = pickle.load(f)
 
     def save(self, fileprefix):
         """Output"""
         self.alignedpatterns.write(fileprefix + ".colibri.alignmodel-keys")
-        pickle.dump(self.values, fileprefix + ".colibri.alignmodel-values")
+        with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
+            pickle.dump(self.values, f)
 
 
 class FeatureConfiguration:
