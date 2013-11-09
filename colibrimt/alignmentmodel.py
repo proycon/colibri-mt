@@ -39,8 +39,10 @@ class AlignmentModel:
             if self.singleintvalue:
                 self.alignedpatterns[(sourcepattern,targetpattern)] = value
             elif self.multivalue:
+                self.alignedpatterns[(sourcepattern,targetpattern)] = valueid
                 self.values[valueid] = [value]
             else:
+                self.alignedpatterns[(sourcepattern,targetpattern)] = valueid
                 self.values[valueid] = value
 
     def __len__(self):
@@ -199,7 +201,6 @@ class FeaturedAlignmentModel(AlignmentModel):
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
 
-            print("Adding",file=sys.stderr)
             self.add(source,target, scores)
 
         f.close()
