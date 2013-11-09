@@ -7,7 +7,6 @@ import datetime
 import bz2
 import gzip
 import colibricore
-import timbl
 import argparse
 import pickle
 
@@ -200,7 +199,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
 
-
+            print("Adding",file=sys.stderr)
             self.add(source,target, scores)
 
         f.close()
