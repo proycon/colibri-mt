@@ -281,6 +281,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     model = FeaturedAlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
+    if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not quiet: print("Saving alignment model",file=sys.stderr)
     model.save(outfileprefix)
 
