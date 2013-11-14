@@ -6,18 +6,18 @@ import os
 import sys
 import numpy
 import argparse
-import colibrimt.alignmentmodel
+from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
 def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quiet=False):
-    if not quiet: print("Extracting temporary source patterns",file=sys.stderr)
+    if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
         for sourcepattern in alignmodel.sourcepatterns():
             f.write(bytes(sourcepattern) + '\0')
 
 
-    if not quiet: print("Extracting temporary target patterns",file=sys.stderr)
+    if not quiet: print("Writing all target patterns t temporary file",file=sys.stderr)
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
     with open(targetpatternfile,'wb') as f:
         for targetpattern in alignmodel.targetpatterns():
@@ -44,6 +44,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
 
+    if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, sourcepattern, targetpattern, features in enumerate(alignmodel.items()):
         assert(isinstance(features[-1], list))
 
@@ -53,11 +54,11 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
             targettemplates = []
 
             for template in sourcemodel.gettemplates(sourcepattern):
-                if template.isskipgram() and sourcemodel[template] >= mintokens:
+                if template.isskipgram() and template in sourcemodel:
                     sourcetemplates.append(template)
 
             for template in targetmodel.gettemplates(targetpattern):
-                if template.isskipgram() and targetmodel[template] >= mintokens:
+                if template.isskipgram() and template in targetmodel:
                     targettemplates.append(template)
 
             #these will act as a memory buffer, saving time
@@ -109,27 +110,47 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
                         #            scorepart_s[0] += instfeatures[3]
                         #            scorepart_s[1] += instfeatures[4]
 
+    print("Unloading models",file=sys.stderr)
     del sourcemodel
     del targetmodel
 
     #now we are going to renormalise the scores (leave lexical weights intact)
+    print("Renormalising alignment model",file=sys.stderr)
     alignmodel.normalize('s-t-')
 
 
+    print("Cleanup",file=sys.stderr)
     os.unlink(sourcepatternfile)
     os.unlink(targetpatternfile)
 
+    return alignmodel
+
 def main():
-    import argparse
     parser = argparse.ArgumentParser(description="Extract skipgrams from a Moses phrasetable", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-t','--minskiptypes', type=int,help="Minimal skip types", action='store',default=2,required=False)
-    parser.add_argument('-i','--input',type=str,help="Input phrase table", action='store',required=True)
+    parser.add_argument('-i','--inputfile',type=str,help="Input phrase table", action='store',required=True)
     parser.add_argument('-l','--maxlength',type=int,help="Maximum length", action='store',default=8,required=False)
-    parser.add_argument('-T','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=Fale)
+    parser.add_argument('-W','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=False)
+    parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
+    parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
+    print("Loading class encoders",file=sys.stderr)
+    sourceencoder = colibricore.ClassEncoder(args.sourceclassfile)
+    targetencoder = colibricore.ClassEncoder(args.targetclassfile)
+    print("Loading phrase table",file=sys.stderr)
+    alignmodel = FeaturedAlignmentModel()
+    alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
     extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir)
+
+    outfile = os.path.basename(args.inputfile)
+    if outfile[-3:] == '.gz': outfile = outfile[:-3]
+    if outfile[-4:] == '.bz2': outfile = outfile[:-4]
+    if outfile[-11:] == '.phrasetable': outfile = outfile[:-11]
+    if outfile[-12:] == '.phrase-table': outfile = outfile[:-12]
+    print("Saving alignment model to " + outfile,file=sys.stderr)
+    alignmodel.save(outfile) #extensions will be added automatically
 
 
 if __name__ == '__main__':

@@ -27,7 +27,8 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'colibri-mosesphrasetable2alignmodel = colibrimt.alignmentmodel:main_mosesphrasetable2alignmodel'
+            'colibri-mosesphrasetable2alignmodel = colibrimt.alignmentmodel:main_mosesphrasetable2alignmodel',
+            'colibri-extractskipgrams = colibrimt.extractskipgrams:main'
         ]
     },
     package_data = {},
