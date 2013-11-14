@@ -63,9 +63,13 @@ class AlignmentModel:
 
     def targetpatterns(self, sourcepattern=None):
         if sourcepattern is None:
+            s = colibricore.PatternSet()
             for sourcepattern in self.alignedpatterns:
                 for targetpattern in self.alignedpatterns.children(sourcepattern):
-                    yield targetpattern
+                    s.add(targetpattern)
+
+            for targetpattern in s:
+                yield targetpattern
         else:
             for targetpattern in self.alignedpatterns.children(sourcepattern):
                 yield targetpattern

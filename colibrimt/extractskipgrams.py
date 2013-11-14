@@ -5,20 +5,19 @@ import colibricore
 import os
 import sys
 import numpy
-
-mosesfeatureconf = FeatureConfiguration()
-for x in range(0,5):
-    mosesfeatureconf.addscorefeature(float)
-mosesfeatureconf.addfeature(list)
+import argparse
+import colibrimt.alignmentmodel
 
 
-def extractskipgrams(alignmodel,tmpdir="./", maxlength= 8, mintokens = 1,minskiptypes=2):
+def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quiet=False):
+    if not quiet: print("Extracting temporary source patterns",file=sys.stderr)
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
         for sourcepattern in alignmodel.sourcepatterns():
             f.write(bytes(sourcepattern) + '\0')
 
 
+    if not quiet: print("Extracting temporary target patterns",file=sys.stderr)
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
     with open(targetpatternfile,'wb') as f:
         for targetpattern in alignmodel.targetpatterns():
@@ -26,7 +25,7 @@ def extractskipgrams(alignmodel,tmpdir="./", maxlength= 8, mintokens = 1,minskip
 
 
     options = colibricore.PatternModelOptions()
-    options.MINTOKENS = mintokens
+    options.MINTOKENS = 1
     options.MINSKIPTYPES = minskiptypes
     options.MAXLENGTH = maxlength
     options.DOSKIPGRAMS = True
@@ -35,9 +34,11 @@ def extractskipgrams(alignmodel,tmpdir="./", maxlength= 8, mintokens = 1,minskip
     #we first build skipgrams from the patterns found in the phrase-table, for both sides independently,
     #using indexed pattern models
 
+    if not quiet: print("Building source pattern model",file=sys.stderr)
     sourcemodel = colibricore.IndexedPatternModel()
     sourcemodel.train(sourcepatternfile,options)
 
+    if not quiet: print("Building target pattern model",file=sys.stderr)
     targetmodel = colibricore.IndexedPatternModel()
     targetmodel.train(targetpatternfile,options)
 
@@ -117,3 +118,19 @@ def extractskipgrams(alignmodel,tmpdir="./", maxlength= 8, mintokens = 1,minskip
 
     os.unlink(sourcepatternfile)
     os.unlink(targetpatternfile)
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Extract skipgrams from a Moses phrasetable", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-t','--minskiptypes', type=int,help="Minimal skip types", action='store',default=2,required=False)
+    parser.add_argument('-i','--input',type=str,help="Input phrase table", action='store',required=True)
+    parser.add_argument('-l','--maxlength',type=int,help="Maximum length", action='store',default=8,required=False)
+    parser.add_argument('-T','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=Fale)
+    args = parser.parse_args()
+    #args.storeconst, args.dataset, args.num, args.bar
+
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir)
+
+
+if __name__ == '__main__':
+    main()
