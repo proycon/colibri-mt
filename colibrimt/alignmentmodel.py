@@ -97,6 +97,7 @@ class AlignmentModel:
 
     def load(self, fileprefix):
         self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
+        print( "Loaded keys: alignments for " + str(len(self.alignedpatterns)) + " source patterns",file=sys.stderr)
         if os.path.exists(fileprefix + ".colibri.alignmodel-values"):
             self.singleintvalue= False
             with open(fileprefix + ".colibri.alignmodel-values",'rb') as f:
@@ -105,6 +106,7 @@ class AlignmentModel:
             for key, value in self.values.items():
                 self.multivalue = (isinstance(value, tuple) or isinstance(value, list))
                 break
+            print( "Loaded values (" + str(len(self.values)) + ")",file=sys.stderr)
         else:
             self.singleintvalue= True
 
