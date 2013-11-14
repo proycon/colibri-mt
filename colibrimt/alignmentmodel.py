@@ -482,6 +482,7 @@ def main_alignmodel():
     else:
         model = AlignmentModel()
         featured = False
+    model.load(args.inputfile)
     print("Outputting",file=sys.stderr)
     model.output(sourcedecoder,targetdecoder)
 
