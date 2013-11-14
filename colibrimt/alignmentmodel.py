@@ -96,6 +96,17 @@ class AlignmentModel:
         with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
             pickle.dump(self.values, f)
 
+    def sourcemodel(self):
+        model = colibricore.UnindexedPatternModel()
+        for sourcepattern in self.sourcepatterns():
+            model[sourcepattern] = model[sourcepattern] + 1
+        return model
+
+    def targetmodel(self):
+        model = colibricore.UnindexedPatternModel()
+        for targetpattern in self.targetpatterns():
+            model[targetpattern] = model[targetpattern] + 1
+        return model
 
 class FeatureConfiguration:
     def __init__(self):
