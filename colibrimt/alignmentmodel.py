@@ -108,6 +108,58 @@ class AlignmentModel:
             model[targetpattern] = model[targetpattern] + 1
         return model
 
+    def _normaux(self, sourcepattern, targetpattern, total_s, total_t, value, index, sumover):
+        if sumover == 's':
+            total_s[sourcepattern] += value[index]
+        elif sumover == 't':
+            total_t[targetpattern] += value[index]
+        else:
+            raise Exception("sumover can't be " + sumover)
+
+    def normalize(self, sumover='s'):
+        if self.singleintvalue:
+            raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
+        total_s = colibricore.PatternDict_float()
+        total_t = colibricore.PatternDict_float()
+
+        for sourcepattern, targetpattern, value in self:
+            if self.multivalue:
+                for i in range(0, max(len(value), len(sumover))):
+                    if sumover[i] == 's':
+                        total_s[targetpattern] += value[i]
+                    elif sumover[i] == 't':
+                        total_t[sourcepattern] += value[i]
+            else:
+                if sumover == 's':
+                    total_s[targetpattern] += value
+                elif sumover[i] == 't':
+                    total_t[sourcepattern] += value
+
+
+        for sourcepattern, targetpattern, value in self:
+            if self.multivalue:
+                 for i in range(0,len(len(value),len(sumover))):
+                    if sumover[i] == 's':
+                        try:
+                            value[i] = value[i] / total_s[targetpattern]
+                        except ZeroDivisionError: #ok, just leave unchanged
+                            pass
+                    elif sumover[i] == 't':
+                        try:
+                            value[i] = value[i] / total_t[sourcepattern]
+                        except ZeroDivisionError: #ok, just leave unchanged
+                            pass
+                    elif sumover[i] == '0':
+                        value[i] = 0
+            else:
+                if sumover == 's':
+                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_s[targetpattern]
+                elif sumover == 't':
+                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_t[sourcepattern]
+                elif sumover == '0':
+                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = 0
+
+
 class FeatureConfiguration:
     def __init__(self):
         self.conf = []
@@ -122,6 +174,7 @@ class FeatureConfiguration:
     def addscorefeature(self, type):
         """Will be propagated to Moses phrasetable"""
         self.conf.append( ( type,True) )
+
 
     def __len__(self):
         return len(self.conf)
@@ -230,6 +283,8 @@ class FeaturedAlignmentModel(AlignmentModel):
         self.conf = FeatureConfiguration()
         for x in scores:
             self.conf.addscorefeature(float)
+        if haswordalignments:
+            self.conf.addfeature(list)
 
     def patternswithindexes(self, sourcemodel, targetmodel):
         """Finds occurrences (positions in the source and target models) for all patterns"""
