@@ -61,9 +61,14 @@ class AlignmentModel:
             yield sourcepattern
 
 
-    def targetpatterns(self, sourcepattern):
-        for targetpattern in self.alignedpatterns.children(sourcepattern):
-            yield targetpattern
+    def targetpatterns(self, sourcepattern=None):
+        if sourcepattern is None:
+            for sourcepattern in self.alignedpatterns:
+                for targetpattern in self.alignedpatterns.children(sourcepattern):
+                    yield targetpattern
+        else:
+            for targetpattern in self.alignedpatterns.children(sourcepattern):
+                yield targetpattern
 
     def items(self):
         return iter(self)
