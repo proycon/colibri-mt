@@ -166,6 +166,8 @@ class FeaturedAlignmentModel(AlignmentModel):
         prevsource = None
         targets = []
 
+        haswordalignments = False
+
         while True:
             if not quiet:
                 linenum += 1
@@ -182,11 +184,13 @@ class FeaturedAlignmentModel(AlignmentModel):
                 print("Invalid line: ", line, file=sys.stderr)
                 continue
 
+
             #Do we have a score associated?
             if score_column > 0 and len(segments) >= score_column:
-                scores = tuple( ( float(x) for x in segments[score_column-1].strip().split() ) )
+                scores = [ float(x) for x in segments[score_column-1].strip().split()  ]
             else:
-                scores = tuple()
+                scores = []
+
 
             #if align2_column > 0:
             #    try:
@@ -198,6 +202,13 @@ class FeaturedAlignmentModel(AlignmentModel):
 
             if scorefilter:
                 if not scorefilter(scores): continue
+
+            if len(segments) >= 4:
+                scores.append( [ tuple(x.split('-')) for x in segments[3].split() ] )
+                haswordalignments = True
+            elif haswordalignments:
+                scores.append([])
+
 
             if reverse:
                 if max_sourcen > 0 and segments[1].count(' ') + 1 > max_sourcen:
