@@ -111,8 +111,8 @@ def extractskipgrams(alignmodel,tmpdir="./", maxlength= 8, mintokens = 1,minskip
     del sourcemodel
     del targetmodel
 
-    #now we are going to renormalise the scores
-    alignmodel.normalize('sstt')
+    #now we are going to renormalise the scores (leave lexical weights intact)
+    alignmodel.normalize('s-t-')
 
 
     os.unlink(sourcepatternfile)

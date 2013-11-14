@@ -156,6 +156,8 @@ class AlignmentModel:
                             pass
                     elif sumover[i] == '0':
                         value[i] = 0
+                    elif sumover[i] == '-':
+                        pass
             else:
                 if sumover == 's':
                     self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_s[targetpattern]
@@ -163,6 +165,8 @@ class AlignmentModel:
                     self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_t[sourcepattern]
                 elif sumover == '0':
                     self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = 0
+                elif sumover == '-':
+                    pass
 
 
 class FeatureConfiguration:
