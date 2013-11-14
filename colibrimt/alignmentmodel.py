@@ -9,6 +9,7 @@ import gzip
 import colibricore
 import argparse
 import pickle
+import os
 
 
 class AlignmentModel:
@@ -96,14 +97,36 @@ class AlignmentModel:
 
     def load(self, fileprefix):
         self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
-        with open(fileprefix + ".colibri.alignmodel-values",'rb') as f:
-            self.values = pickle.load(f)
+        if os.path.exists(fileprefix + ".colibri.alignmodel-values"):
+            self.singleintvalue= False
+            with open(fileprefix + ".colibri.alignmodel-values",'rb') as f:
+                self.values = pickle.load(f)
+            #check if we are multivalued
+            for key, value in self.values.items():
+                self.multivalue = (isinstance(value, tuple) or isinstance(value, list))
+                break
+        else:
+            self.singleintvalue= True
 
     def save(self, fileprefix):
         """Output"""
         self.alignedpatterns.write(fileprefix + ".colibri.alignmodel-keys")
-        with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
-            pickle.dump(self.values, f)
+        if not self.singleintvalue:
+            with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
+                pickle.dump(self.values, f)
+
+    def output(self, sourcedecoder, targetdecoder):
+        for sourcepattern, targetpattern, value in self.items():
+            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
+            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
+            if not self.multivalue or self.singleintvalue:
+                print(str(value))
+            else:
+                for v in value:
+                    print(str(v) + "\t" ,end="")
+            print()
+
+
 
     def sourcemodel(self):
         model = colibricore.UnindexedPatternModel()
@@ -176,8 +199,12 @@ class AlignmentModel:
 class FeatureConfiguration:
     def __init__(self):
         self.conf = []
+        self.decoders = {}
 
     def addfactorfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
+        if isinstance(classdecoder, colibricore.ClassDecoder):
+            self.decoders[classdecoder.filename] = classdecoder
+            classdecoder = classdecoder.filename
         self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
 
     def addfeature(self, type):
@@ -200,12 +227,60 @@ class FeatureConfiguration:
         return self.conf[index]
 
 
+    def loaddecoders(self, *args):
+        for item in self:
+            if item[0] == colibricore.Pattern:
+                decoderfile = item[1]
+                if decoderfile not in self.decoders:
+                    foundinargs = False
+                    for x in args:
+                        if x.filename == decoderfile:
+                            self.decoders[x.filename] = x
+                    if not foundinargs:
+                        self.decoders[decoderfile] = colibricore.ClassDecoder(decoderfile)
+
+
 class FeaturedAlignmentModel(AlignmentModel):
     def __init__(self, conf=FeatureConfiguration()):
         assert isinstance(conf, FeatureConfiguration)
         self.conf = conf
         super().__init__(True,False)
 
+
+    def load(self, fileprefix):
+        if os.path.exists(fileprefix + ".colibri.alignmodel-featconf"):
+            with open(fileprefix + ".colibri.alignmodel-featconf",'rb') as f:
+                self.conf.conf = pickle.load(f)
+        super().load(fileprefix)
+
+    def save(self, fileprefix):
+        with open(fileprefix + ".colibri.alignmodel-featconf",'wb') as f:
+            pickle.dump(self.conf.conf, f)
+        super().save(fileprefix)
+
+    def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
+        preloadeddecoders = tuple(sourcedecoder, targetdecoder) +  preloadeddecoders
+        self.conf.loaddecoders(*preloadeddecoders)
+
+        for sourcepattern, targetpattern, value in self.items():
+            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
+            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
+            it = iter(value)
+            for i, conf in enumerate(self.conf):
+                if conf[0] == colibricore.Pattern:
+                    _, classdecoder, leftcontext, dofocus, rightcontext = conf
+                    classdecoder = self.conf.decoders[classdecoder]
+                    n = leftcontext + rightcontext
+                    if dofocus: n += 1
+                    for j in range(0,n):
+                        p = next(it)
+                        print(p.tostring(classdecoder) ,end="")
+                        if i < len(self.conf) -1:
+                            #not the last feature yet:
+                            print("\t",end="")
+                else:
+                    print(str(next(it)) + "\t" ,end="")
+            print()
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
@@ -361,7 +436,6 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
 
-
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
@@ -375,6 +449,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     if not quiet: print("Saving alignment model",file=sys.stderr)
     model.save(outfileprefix)
 
+
 def main_mosesphrasetable2alignmodel():
     try:
         inputfilename,sourceclassfile, targetclassfile,outfileprefix = sys.argv[1:]
@@ -383,6 +458,30 @@ def main_mosesphrasetable2alignmodel():
         return 1
 
     mosesphrasetable2alignmodel(inputfilename, sourceclassfile, targetclassfile, outfileprefix)
+
+
+def main_alignmodel():
+    parser = argparse.ArgumentParser(description="Load and view the specified aligment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
+    parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
+    parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
+    args = parser.parse_args()
+    #args.storeconst, args.dataset, args.num, args.bar
+
+
+    print("Loading source decoder " + args.sourceclassfile,file=sys.stderr)
+    sourcedecoder = colibricore.ClassDecoder(args.sourceclassfile)
+    print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
+    targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
+    print("Loading alignment model",file=sys.stderr)
+    if os.path.exists(args.inputfile + ".colibri.alignmodel-featconf"):
+        model = FeaturedAlignmentModel()
+        featured = True
+    else:
+        model = AlignmentModel()
+        featured = False
+    print("Outputting",file=sys.stderr)
+    model.output()
 
 
 
