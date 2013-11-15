@@ -162,9 +162,6 @@ class AlignmentModel:
 
         for sourcepattern, targetpattern, value in self:
             if (isinstance(value,tuple) or isinstance(value, list)):
-                if not isinstance(sumover, tuple) and not isinstance(sumover, list):
-                    print("normalize(): Expected iteratable for sumover, got " + str(type(sumover)),file=sys.stderr)
-                    continue
                 for i in range(0, min(len(value), len(sumover))):
                     if sumover[i] == 's':
                         total_s[targetpattern] = total_s[targetpattern] + value[i]
