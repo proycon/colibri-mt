@@ -413,8 +413,6 @@ class FeaturedAlignmentModel(AlignmentModel):
             raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
 
         total = {}
-        #total_s = colibricore.PatternDict_float()
-        #total_t = colibricore.PatternDict_float()
 
         for sourcepattern, targetpattern, features in self:
             #if not isinstance(value, list) and not isinstance(value, tuple):
@@ -422,11 +420,11 @@ class FeaturedAlignmentModel(AlignmentModel):
             #    continue
 
             for i in range(0, min(len(features), len(sumover))):
-                if sumover[i] == 's':
+                if sumover[i] == 's': #s|t
                     if not i in total:
                         total[i] = colibricore.PatternDict_float()
                     total[i][targetpattern] = total[i][targetpattern] + features[i]
-                elif sumover[i] == 't':
+                elif sumover[i] == 't': #t|s
                     if not i in total:
                         total[i] = colibricore.PatternDict_float()
                     total[i][sourcepattern] = total[i][sourcepattern] + features[i]
@@ -438,12 +436,12 @@ class FeaturedAlignmentModel(AlignmentModel):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
             for i in range(0,min(len(features),len(sumover))):
-                if sumover[i] == 's':
+                if sumover[i] == 's': #s|t
                     try:
                         features[i] = features[i] / total[i][targetpattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
-                elif sumover[i] == 't':
+                elif sumover[i] == 't': #t|s
                     try:
                         features[i] = features[i] / total[i][sourcepattern]
                     except ZeroDivisionError: #ok, just leave unchanged
