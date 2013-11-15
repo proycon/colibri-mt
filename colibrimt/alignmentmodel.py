@@ -153,54 +153,6 @@ class AlignmentModel:
         else:
             raise Exception("sumover can't be " + sumover)
 
-    def normalize(self, sumover='s'):
-        if self.singleintvalue:
-            raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
-
-        total_s = colibricore.PatternDict_float()
-        total_t = colibricore.PatternDict_float()
-
-        for sourcepattern, targetpattern, value in self:
-            if (isinstance(value,tuple) or isinstance(value, list)):
-                for i in range(0, min(len(value), len(sumover))):
-                    if sumover[i] == 's':
-                        total_s[targetpattern] = total_s[targetpattern] + value[i]
-                    elif sumover[i] == 't':
-                        total_t[sourcepattern] = total_t[sourcepattern] + value[i]
-            else:
-                if sumover == 's':
-                    total_s[targetpattern] += value
-                elif sumover == 't':
-                    total_t[sourcepattern] += value
-
-
-        for sourcepattern, targetpattern, value in self:
-            if self.multivalue:
-                 for i in range(0,len(len(value),len(sumover))):
-                    if sumover[i] == 's':
-                        try:
-                            value[i] = value[i] / total_s[targetpattern]
-                        except ZeroDivisionError: #ok, just leave unchanged
-                            pass
-                    elif sumover[i] == 't':
-                        try:
-                            value[i] = value[i] / total_t[sourcepattern]
-                        except ZeroDivisionError: #ok, just leave unchanged
-                            pass
-                    elif sumover[i] == '0':
-                        value[i] = 0
-                    elif sumover[i] == '-':
-                        pass
-            else:
-                if sumover == 's':
-                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_s[targetpattern]
-                elif sumover == 't':
-                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = value / total_t[sourcepattern]
-                elif sumover == '0':
-                    self.values[self.alignedpatterns[(sourcepattern,targetpattern)]] = 0
-                elif sumover == '-':
-                    pass
-
 
 class FeatureConfiguration:
     def __init__(self):
@@ -456,6 +408,46 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
 
+    def normalize(self, sumover='s'):
+        if self.singleintvalue:
+            raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
+
+        total_s = colibricore.PatternDict_float()
+        total_t = colibricore.PatternDict_float()
+
+        for sourcepattern, targetpattern, value in self:
+            try:
+                for i in range(0, min(len(value), len(sumover))):
+                    if sumover[i] == 's':
+                        total_s[targetpattern] = total_s[targetpattern] + value[i]
+                    elif sumover[i] == 't':
+                        total_t[sourcepattern] = total_t[sourcepattern] + value[i]
+            except IndexError:
+                print("IndexError in normalize()",file=sys.stderr)
+                continue
+
+
+        for sourcepattern, targetpattern, value in self:
+            try:
+                for i in range(0,len(len(value),len(sumover))):
+                    if sumover[i] == 's':
+                        try:
+                            value[i] = value[i] / total_s[targetpattern]
+                        except ZeroDivisionError: #ok, just leave unchanged
+                            pass
+                    elif sumover[i] == 't':
+                        try:
+                            value[i] = value[i] / total_t[sourcepattern]
+                        except ZeroDivisionError: #ok, just leave unchanged
+                            pass
+                    elif sumover[i] == '0':
+                        value[i] = 0
+                    elif sumover[i] == '-':
+                        pass
+
+            except IndexError:
+                print("IndexError in normalize()",file=sys.stderr)
+                continue
 
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
