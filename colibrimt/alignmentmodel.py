@@ -266,7 +266,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 yield sourcepattern, targetpattern, featurevector
 
     def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
-        preloadeddecoders = tuple(sourcedecoder, targetdecoder) +  preloadeddecoders
+        preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
         self.conf.loaddecoders(*preloadeddecoders)
 
         for sourcepattern, targetpattern, features in self.items():
