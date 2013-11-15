@@ -169,10 +169,10 @@ class AlignmentModel:
                 for i in range(0, min(len(value), len(sumover))):
                     if sumover[i] == 's':
                         print("DEBUG 3a",file=sys.stderr)
-                        total_s[targetpattern] += value[i]
+                        total_s[targetpattern] = total_s[targetpattern] + value[i]
                     elif sumover[i] == 't':
                         print("DEBUG 3b",file=sys.stderr)
-                        total_t[sourcepattern] += value[i]
+                        total_t[sourcepattern] = total_t[sourcepattern] + value[i]
             else:
                 if sumover == 's':
                     total_s[targetpattern] += value
