@@ -64,8 +64,8 @@ class AlignmentModel:
 
     def targetpatterns(self, sourcepattern=None):
         if sourcepattern is None:
-            s = colibricore.PatternSet() #//segfaults (after 130000+ entries)? can't figure out why yet
-            #s = set()
+            #s = colibricore.PatternSet() #//segfaults (after 130000+ entries)? can't figure out why yet
+            s = set()
             for sourcepattern in self.alignedpatterns:
                 print("DEBUG processing sourcepattern", len(s), file=sys.stderr)
                 for targetpattern in self.alignedpatterns.children(sourcepattern):
