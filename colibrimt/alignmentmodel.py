@@ -275,6 +275,8 @@ class FeaturedAlignmentModel(AlignmentModel):
         for sourcepattern, targetpattern, features in self.items():
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
+            if len(features) < len(self.conf):
+                raise Exception("Expected " + str(len(self.conf)) + " features, got " + str(len(features)))
             it = iter(features)
             for i, conf in enumerate(self.conf):
                 if conf[0] == colibricore.Pattern:
