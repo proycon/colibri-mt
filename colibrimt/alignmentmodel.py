@@ -421,9 +421,9 @@ class FeaturedAlignmentModel(AlignmentModel):
             #    continue
 
             for i in range(0, min(len(value), len(sumover))):
-                if sumover[i] == 's':
+                if sumover[i] == 't':
                     total_s[targetpattern] = total_s[targetpattern] + value[i]
-                elif sumover[i] == 't':
+                elif sumover[i] == 's':
                     total_t[sourcepattern] = total_t[sourcepattern] + value[i]
 
 
@@ -433,12 +433,12 @@ class FeaturedAlignmentModel(AlignmentModel):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
             for i in range(0,min(len(value),len(sumover))):
-                if sumover[i] == 's':
+                if sumover[i] == 't':
                     try:
                         value[i] = value[i] / total_s[targetpattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
-                elif sumover[i] == 't':
+                elif sumover[i] == 's':
                     try:
                         value[i] = value[i] / total_t[sourcepattern]
                     except ZeroDivisionError: #ok, just leave unchanged
