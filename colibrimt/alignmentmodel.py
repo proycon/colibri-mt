@@ -68,12 +68,8 @@ class AlignmentModel:
             #s = set()
             for sp in self.alignedpatterns:
                 for targetpattern in self.alignedpatterns.children(sp):
-                    print("DEBUG adding to set... ", len(s), file=sys.stderr)
                     s.add(targetpattern)
-                    print("DEBUG done, next target")
-                print("DEBUG done, next source")
 
-            print("DEBUG iterating over set",file=sys.stderr)
             for targetpattern in s:
                 yield targetpattern
         else:
