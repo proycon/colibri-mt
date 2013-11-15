@@ -260,14 +260,19 @@ class FeaturedAlignmentModel(AlignmentModel):
             pickle.dump(self.conf.conf, f)
         super().save(fileprefix)
 
+    def __iter__(self):
+        for sourcepattern, targetpattern, valueid in self.alignedpatterns.items():
+            for featurevector in self.values[valueid]: #multiple feature vectors per alignment possible
+                yield sourcepattern, targetpattern, featurevector
+
     def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
         preloadeddecoders = tuple(sourcedecoder, targetdecoder) +  preloadeddecoders
         self.conf.loaddecoders(*preloadeddecoders)
 
-        for sourcepattern, targetpattern, value in self.items():
+        for sourcepattern, targetpattern, features in self.items():
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
-            it = iter(value)
+            it = iter(features)
             for i, conf in enumerate(self.conf):
                 if conf[0] == colibricore.Pattern:
                     _, classdecoder, leftcontext, dofocus, rightcontext = conf
