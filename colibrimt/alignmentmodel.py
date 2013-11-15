@@ -359,7 +359,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if not scorefilter(scores): continue
 
             if len(segments) >= 4:
-                scores.append( [ tuple(x.split('-')) for x in segments[3].split() ] )
+                scores.append( [ tuple([int(y) for y in x.split('-')]) for x in segments[3].split() ] )
                 haswordalignments = True
             elif haswordalignments:
                 scores.append([])
