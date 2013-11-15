@@ -383,7 +383,10 @@ class FeaturedAlignmentModel(AlignmentModel):
         f.close()
 
         self.conf = FeatureConfiguration()
-        for x in scores:
+        l = len(scores)
+        if haswordalignments:
+            l = l - 1
+        for x in range(0,l):
             self.conf.addscorefeature(float)
         if haswordalignments:
             self.conf.addfeature(list)
