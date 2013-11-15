@@ -6,6 +6,8 @@ import os
 import sys
 import numpy
 import argparse
+
+from copy import copy
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
@@ -90,7 +92,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
                         #if we made it here we have a proper pair!
 
-                        alignmodel[(sourcetemplate,targettemplate)] = [ [1.0,0.0,1.0,0.0,features[-2],features[-1]] ] #lexical probability disabled (0),
+                        alignmodel.add(sourcetemplate,targettemplate, [1.0,0.0,1.0,0.0,features[-2],copy(features[-1])]  ) #lexical probability disabled (0),
                         found += 1
 
                         #Now we have to compute a new score vector based on the score vectors of the possible instantiations

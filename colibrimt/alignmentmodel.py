@@ -89,6 +89,9 @@ class AlignmentModel:
         if self.singleintvalue:
             self.alignedpatterns[item] = value
         else:
+            if not item in self.alignedpatterns:
+                self.newvalueid +=1
+                self.alignedpatterns[item] = self.newvalueid
             self.values[self.alignedpatterns[item]] = value
 
 
@@ -435,14 +438,17 @@ class FeaturedAlignmentModel(AlignmentModel):
             #if not isinstance(value, list) and not isinstance(value, tuple):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
+            #print("f: ", features,file=sys.stderr)
             for i in range(0,min(len(features),len(sumover))):
                 if sumover[i] == 's': #s|t
                     try:
+                        #print("s: ", features[i],"/",total[i][targetpattern],file=sys.stderr)
                         features[i] = features[i] / total[i][targetpattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
                 elif sumover[i] == 't': #t|s
                     try:
+                        #print("t: ", features[i],"/",total[i][sourcepattern],file=sys.stderr)
                         features[i] = features[i] / total[i][sourcepattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
