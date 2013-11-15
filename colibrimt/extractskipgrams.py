@@ -90,7 +90,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
                         #if we made it here we have a proper pair!
 
-                        alignmodel[(sourcetemplate,targettemplate)] = [ [1,0,1,0,features[-2],features[-1]] ] #lexical probability disabled (0),
+                        alignmodel[(sourcetemplate,targettemplate)] = [ [1.0,0.0,1.0,0.0,features[-2],features[-1]] ] #lexical probability disabled (0),
                         found += 1
 
                         #Now we have to compute a new score vector based on the score vectors of the possible instantiations
@@ -132,7 +132,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
     #now we are going to renormalise the scores (leave lexical weights intact)
     print("Renormalising alignment model",file=sys.stderr)
-    alignmodel.normalize('s-t-')
+    #alignmodel.normalize('s-t-')
 
 
     print("Cleanup",file=sys.stderr)
