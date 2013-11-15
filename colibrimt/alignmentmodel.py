@@ -67,8 +67,11 @@ class AlignmentModel:
             s = colibricore.PatternSet()
             for sourcepattern in self.alignedpatterns:
                 for targetpattern in self.alignedpatterns.children(sourcepattern):
+                    print("DEBUG adding to set",file=sys.stderr)
                     s.add(targetpattern)
 
+
+            print("DEBUG iterating over set",file=sys.stderr)
             for targetpattern in s:
                 yield targetpattern
         else:
