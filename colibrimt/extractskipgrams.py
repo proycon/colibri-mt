@@ -14,14 +14,14 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
         for sourcepattern in alignmodel.sourcepatterns():
-            f.write(bytes(sourcepattern) + '\0')
+            f.write(bytes(sourcepattern) + b'\0')
 
 
     if not quiet: print("Writing all target patterns t temporary file",file=sys.stderr)
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
     with open(targetpatternfile,'wb') as f:
         for targetpattern in alignmodel.targetpatterns():
-            f.write(bytes(targetpattern) + '\0')
+            f.write(bytes(targetpattern) + b'\0')
 
 
     options = colibricore.PatternModelOptions()
