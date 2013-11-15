@@ -156,9 +156,12 @@ class AlignmentModel:
     def normalize(self, sumover='s'):
         if self.singleintvalue:
             raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
+
+        print("DEBUG init patterndicts",file=sys.stderr)
         total_s = colibricore.PatternDict_float()
         total_t = colibricore.PatternDict_float()
 
+        print("DEBUG computing totals",file=sys.stderr)
         for sourcepattern, targetpattern, value in self:
             if self.multivalue:
                 for i in range(0, max(len(value), len(sumover))):
@@ -173,6 +176,7 @@ class AlignmentModel:
                     total_t[sourcepattern] += value
 
 
+        print("DEBUG changing values",file=sys.stderr)
         for sourcepattern, targetpattern, value in self:
             if self.multivalue:
                  for i in range(0,len(len(value),len(sumover))):
