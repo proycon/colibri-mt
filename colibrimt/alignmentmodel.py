@@ -269,6 +269,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
         self.conf.loaddecoders(*preloadeddecoders)
 
+        print("Configuration:",len(self.conf),file=sys.stderr)
+
+
         for sourcepattern, targetpattern, features in self.items():
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
