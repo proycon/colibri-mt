@@ -72,7 +72,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
             for sourcetemplate in sourcetemplates:
                 for targettemplate in targettemplates:
-                    if not alignmodel.haspair(sourcetemplate, targettemplate): #each pair needs to be processed only once
+                    if not alignmodel.haspair( (sourcetemplate, targettemplate) ): #each pair needs to be processed only once
                         #we now have two skipgrams, to be proper alignments their gaps must only align with gaps:
 
                         validalignment=False
