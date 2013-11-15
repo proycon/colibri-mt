@@ -95,6 +95,8 @@ class AlignmentModel:
     def __contains__(self, item):
         return item in self.alignedpatterns
 
+    def haspair(self, pair):
+        return self.alignedpatterns.haspair(pair)
 
     def load(self, fileprefix):
         self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
