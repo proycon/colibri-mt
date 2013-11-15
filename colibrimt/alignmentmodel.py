@@ -69,11 +69,12 @@ class AlignmentModel:
             for sourcepattern in self.alignedpatterns:
                 print("DEBUG processing sourcepattern", len(s), file=sys.stderr)
                 for targetpattern in self.alignedpatterns.children(sourcepattern):
-                    print("Testing targetpattern integrity")
+                    print("DEBUG Testing targetpattern integrity")
                     len(targetpattern)
                     print("DEBUG adding to set... ", len(s), file=sys.stderr)
                     s.add(targetpattern)
-
+                    print("DEBUG done, next target")
+                print("DEBUG done, next source")
 
             print("DEBUG iterating over set",file=sys.stderr)
             for targetpattern in s:
