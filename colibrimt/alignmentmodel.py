@@ -164,7 +164,7 @@ class AlignmentModel:
         print("DEBUG computing totals",file=sys.stderr)
         for sourcepattern, targetpattern, value in self:
             if self.multivalue:
-                for i in range(0, max(len(value), len(sumover))):
+                for i in range(0, min(len(value), len(sumover))):
                     if sumover[i] == 's':
                         total_s[targetpattern] += value[i]
                     elif sumover[i] == 't':
@@ -172,7 +172,7 @@ class AlignmentModel:
             else:
                 if sumover == 's':
                     total_s[targetpattern] += value
-                elif sumover[i] == 't':
+                elif sumover == 't':
                     total_t[sourcepattern] += value
 
 
