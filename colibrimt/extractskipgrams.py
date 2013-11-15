@@ -50,7 +50,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
-        if not isinstance(features, list) or not isinstance(features, tuple):
+        if not isinstance(features, list) and not isinstance(features, tuple):
             print("WARNING: Expected feature vector, got " + str(type(features)),file=sys.stderr)
             continue
         if not isinstance(features[-1], list) or not isinstance(features[-1], tuple):
