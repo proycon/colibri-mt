@@ -276,6 +276,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
             if len(features) < len(self.conf):
+                print(repr(self.conf.conf),file=sys.stderr)
                 print(repr(features),file=sys.stderr)
                 raise Exception("Expected " + str(len(self.conf)) + " features, got " + str(len(features)))
             it = iter(features)
