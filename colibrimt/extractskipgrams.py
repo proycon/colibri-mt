@@ -49,19 +49,20 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
-    for sourcepattern, targetpattern, features in alignmodel.items():
+    for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
         assert(isinstance(features[-1], list))
+        if not quiet and (i+1) % 100 == 0: print("@"+str(i),file=sys.stderr)
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
             #find abstractions
             sourcetemplates = []
             targettemplates = []
 
-            for template in sourcemodel.gettemplates(sourcepattern):
+            for template, count in sourcemodel.gettemplates(sourcepattern):
                 if template.isskipgram() and template in sourcemodel:
                     sourcetemplates.append(template)
 
-            for template in targetmodel.gettemplates(targetpattern):
+            for template, count in targetmodel.gettemplates(targetpattern):
                 if template.isskipgram() and template in targetmodel:
                     targettemplates.append(template)
 
