@@ -416,38 +416,38 @@ class FeaturedAlignmentModel(AlignmentModel):
         total_t = colibricore.PatternDict_float()
 
         for sourcepattern, targetpattern, value in self:
-            try:
-                for i in range(0, min(len(value), len(sumover))):
-                    if sumover[i] == 's':
-                        total_s[targetpattern] = total_s[targetpattern] + value[i]
-                    elif sumover[i] == 't':
-                        total_t[sourcepattern] = total_t[sourcepattern] + value[i]
-            except IndexError:
-                print("IndexError in normalize()",file=sys.stderr)
+            if not isinstance(value, list) and not isinstance(value, tuple):
+                print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
                 continue
+
+            for i in range(0, min(len(value), len(sumover))):
+                if sumover[i] == 's':
+                    total_s[targetpattern] = total_s[targetpattern] + value[i]
+                elif sumover[i] == 't':
+                    total_t[sourcepattern] = total_t[sourcepattern] + value[i]
+
 
 
         for sourcepattern, targetpattern, value in self:
-            try:
-                for i in range(0,len(len(value),len(sumover))):
-                    if sumover[i] == 's':
-                        try:
-                            value[i] = value[i] / total_s[targetpattern]
-                        except ZeroDivisionError: #ok, just leave unchanged
-                            pass
-                    elif sumover[i] == 't':
-                        try:
-                            value[i] = value[i] / total_t[sourcepattern]
-                        except ZeroDivisionError: #ok, just leave unchanged
-                            pass
-                    elif sumover[i] == '0':
-                        value[i] = 0
-                    elif sumover[i] == '-':
-                        pass
-
-            except IndexError:
-                print("IndexError in normalize()",file=sys.stderr)
+            if not isinstance(value, list) and not isinstance(value, tuple):
+                print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
                 continue
+            for i in range(0,len(len(value),len(sumover))):
+                if sumover[i] == 's':
+                    try:
+                        value[i] = value[i] / total_s[targetpattern]
+                    except ZeroDivisionError: #ok, just leave unchanged
+                        pass
+                elif sumover[i] == 't':
+                    try:
+                        value[i] = value[i] / total_t[sourcepattern]
+                    except ZeroDivisionError: #ok, just leave unchanged
+                        pass
+                elif sumover[i] == '0':
+                    value[i] = 0
+                elif sumover[i] == '-':
+                    pass
+
 
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
