@@ -47,6 +47,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
     targetmodel.train(targetpatternfile,options)
 
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
+    found = 0
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
@@ -57,7 +58,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
             print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
             continue
 
-        if not quiet and (i+1) % 100 == 0: print("@"+str(i),file=sys.stderr)
+        if not quiet and (i+1) % 100 == 0: print("@"+str(i), "  found " + str(found) + " skipgram pairs thus-far",file=sys.stderr)
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
             #find abstractions
@@ -90,7 +91,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
                         #if we made it here we have a proper pair!
 
                         alignmodel[(sourcetemplate,targettemplate)] = [1,0,1,0,features[-2],features[-1]] #lexical probability disabled (0),
-
+                        found += 1
 
                         #Now we have to compute a new score vector based on the score vectors of the possible instantiations
                         #find all instantiations
