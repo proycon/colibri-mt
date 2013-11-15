@@ -136,12 +136,16 @@ def main():
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
-    print("Loading class encoders",file=sys.stderr)
-    sourceencoder = colibricore.ClassEncoder(args.sourceclassfile)
-    targetencoder = colibricore.ClassEncoder(args.targetclassfile)
-    print("Loading phrase table",file=sys.stderr)
     alignmodel = FeaturedAlignmentModel()
-    alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
+    if os.path.exists(args.inputfile + '.colibri.alignmodel-keys'):
+        print("Loading colibri alignment model",file=sys.stderr)
+        alignmodel.load(args.inputfile)
+    else:
+        print("Loading class encoders",file=sys.stderr)
+        sourceencoder = colibricore.ClassEncoder(args.sourceclassfile)
+        targetencoder = colibricore.ClassEncoder(args.targetclassfile)
+        print("Loading moses phrase table",file=sys.stderr)
+        alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
     extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir)
 
     outfile = os.path.basename(args.inputfile)
