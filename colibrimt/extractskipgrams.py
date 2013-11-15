@@ -17,6 +17,10 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
             f.write(bytes(sourcepattern) + b'\0')
 
 
+    #DEBUG:
+    for sourcepattern in alignmodel.sourcepatterns():
+        pass
+
     if not quiet: print("Writing all target patterns to temporary file",file=sys.stderr)
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
     with open(targetpatternfile,'wb') as f:
