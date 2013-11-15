@@ -50,7 +50,10 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
-        assert(isinstance(features[-1], list))
+        if not isinstance(features[-1], list):
+            print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
+            continue
+
         if not quiet and (i+1) % 100 == 0: print("@"+str(i),file=sys.stderr)
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
