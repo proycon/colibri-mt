@@ -416,9 +416,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         total_t = colibricore.PatternDict_float()
 
         for sourcepattern, targetpattern, value in self:
-            if not isinstance(value, list) and not isinstance(value, tuple):
-                print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
-                continue
+            #if not isinstance(value, list) and not isinstance(value, tuple):
+            #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
+            #    continue
 
             for i in range(0, min(len(value), len(sumover))):
                 if sumover[i] == 's':
@@ -429,10 +429,10 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
         for sourcepattern, targetpattern, value in self:
-            if not isinstance(value, list) and not isinstance(value, tuple):
-                print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
-                continue
-            for i in range(0,len(len(value),len(sumover))):
+            #if not isinstance(value, list) and not isinstance(value, tuple):
+            #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
+            #    continue
+            for i in range(0,min(len(value),len(sumover))):
                 if sumover[i] == 's':
                     try:
                         value[i] = value[i] / total_s[targetpattern]
