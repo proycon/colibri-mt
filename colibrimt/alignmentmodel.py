@@ -412,39 +412,44 @@ class FeaturedAlignmentModel(AlignmentModel):
         if self.singleintvalue:
             raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
 
-        total_s = colibricore.PatternDict_float()
-        total_t = colibricore.PatternDict_float()
+        total = {}
+        #total_s = colibricore.PatternDict_float()
+        #total_t = colibricore.PatternDict_float()
 
-        for sourcepattern, targetpattern, value in self:
+        for sourcepattern, targetpattern, features in self:
             #if not isinstance(value, list) and not isinstance(value, tuple):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
 
-            for i in range(0, min(len(value), len(sumover))):
-                if sumover[i] == 't':
-                    total_s[targetpattern] = total_s[targetpattern] + value[i]
-                elif sumover[i] == 's':
-                    total_t[sourcepattern] = total_t[sourcepattern] + value[i]
+            for i in range(0, min(len(features), len(sumover))):
+                if sumover[i] == 's':
+                    if not i in total:
+                        total[i] = colibricore.PatternDict_float()
+                    total[i][targetpattern] = total[i][targetpattern] + features[i]
+                elif sumover[i] == 't':
+                    if not i in total:
+                        total[i] = colibricore.PatternDict_float()
+                    total[i][sourcepattern] = total[i][sourcepattern] + features[i]
 
 
 
-        for sourcepattern, targetpattern, value in self:
+        for sourcepattern, targetpattern, features in self:
             #if not isinstance(value, list) and not isinstance(value, tuple):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
-            for i in range(0,min(len(value),len(sumover))):
-                if sumover[i] == 't':
+            for i in range(0,min(len(features),len(sumover))):
+                if sumover[i] == 's':
                     try:
-                        value[i] = value[i] / total_s[targetpattern]
+                        features[i] = features[i] / total[i][targetpattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
-                elif sumover[i] == 's':
+                elif sumover[i] == 't':
                     try:
-                        value[i] = value[i] / total_t[sourcepattern]
+                        features[i] = features[i] / total[i][sourcepattern]
                     except ZeroDivisionError: #ok, just leave unchanged
                         pass
                 elif sumover[i] == '0':
-                    value[i] = 0
+                    features[i] = 0
                 elif sumover[i] == '-':
                     pass
 
