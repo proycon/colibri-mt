@@ -126,6 +126,10 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
     del sourcemodel
     del targetmodel
 
+
+    for sourcepattern, targetpattern, features in alignmodel:
+        print(repr(sourcepattern), repr(targetpattern),repr(features), file=sys.stderr)
+
     #now we are going to renormalise the scores (leave lexical weights intact)
     print("Renormalising alignment model",file=sys.stderr)
     alignmodel.normalize('s-t-')
