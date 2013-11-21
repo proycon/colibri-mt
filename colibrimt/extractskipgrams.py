@@ -193,7 +193,14 @@ def main():
         targetencoder = colibricore.ClassEncoder(args.targetclassfile)
         print("Loading moses phrase table",file=sys.stderr)
         alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
-    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,False, args.debug)
+
+    if args.debug:
+        debug = (colibricore.ClassDecoder(args.sourceclassfile), colibricore.ClassDecoder(args.targetclassfile))
+    else:
+        debug = False
+
+
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,False, debug)
 
     if args.outputfile:
         outfile = args.outputfile
