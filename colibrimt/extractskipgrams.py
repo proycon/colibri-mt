@@ -11,7 +11,7 @@ from copy import copy
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
-def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, quiet=False,debug=False):
+def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, scorefilter=None,quiet=False,debug=False):
     if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
@@ -65,6 +65,12 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
             continue
 
         if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+str(total)+" = " + str(round((i/total) * 100,2)) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
+
+
+        #is this pair strong enough to use? Assuming moses-style score-vector
+        if scorefilter and not scorefilter(features):
+            skipped += 1
+            continue
 
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
@@ -166,6 +172,8 @@ def main():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-p','--pts',type=float,help="Minimum probability p(t|s) for skipgram consideration (set to a high number)",default=0.75, action='store',required=False)
+    parser.add_argument('-P','--pst',type=float,help="Minimum probability p(s|t) for skipgram consideration (set to a high number)", default=0.75,action='store',required=False)
     parser.add_argument('-D','--debug',help="Enable debug mode", action='store_true',required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
@@ -200,7 +208,8 @@ def main():
         debug = False
 
 
-    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,False, debug)
+    scorefilter = lambda features:  features[0] >= args.pst and features[2] >= args.pts
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,scorefilter,False, debug)
 
     if args.outputfile:
         outfile = args.outputfile
