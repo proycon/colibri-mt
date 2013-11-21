@@ -11,7 +11,7 @@ from copy import copy
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
-def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quiet=False):
+def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, quiet=False):
     if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
@@ -42,11 +42,11 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", quie
 
     if not quiet: print("Building source pattern model",file=sys.stderr)
     sourcemodel = colibricore.IndexedPatternModel()
-    sourcemodel.train(sourcepatternfile,options)
+    sourcemodel.train(sourcepatternfile,options, constrainsourcemodel)
 
     if not quiet: print("Building target pattern model",file=sys.stderr)
     targetmodel = colibricore.IndexedPatternModel()
-    targetmodel.train(targetpatternfile,options)
+    targetmodel.train(targetpatternfile,options, constraintargetmodel)
 
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
     found = 0
@@ -151,6 +151,11 @@ def main():
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
+
+    constrainsourcemodel = None #TODO
+    constraintargetmodel = None
+
+
     alignmodel = FeaturedAlignmentModel()
     if os.path.exists(args.inputfile + '.colibri.alignmodel-keys'):
         print("Loading colibri alignment model",file=sys.stderr)
@@ -161,7 +166,7 @@ def main():
         targetencoder = colibricore.ClassEncoder(args.targetclassfile)
         print("Loading moses phrase table",file=sys.stderr)
         alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
-    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir)
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel)
 
     outfile = os.path.basename(args.inputfile)
     if outfile[-3:] == '.gz': outfile = outfile[:-3]
