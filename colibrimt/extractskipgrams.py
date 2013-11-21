@@ -143,7 +143,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
 def main():
     parser = argparse.ArgumentParser(description="Extract skipgrams from a Moses phrasetable", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-t','--minskiptypes', type=int,help="Minimal skip types", action='store',default=2,required=False)
-    parser.add_argument('-i','--inputfile',type=str,help="Input phrase table", action='store',required=True)
+    parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension) or moses phrasetable ", action='store',required=True)
+    parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension). Same as input if not specified!", default="", action='store',required=False)
     parser.add_argument('-l','--maxlength',type=int,help="Maximum length", action='store',default=8,required=False)
     parser.add_argument('-W','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=False)
     parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
@@ -154,7 +155,7 @@ def main():
     #args.storeconst, args.dataset, args.num, args.bar
 
     if args.constrainsourcemodel:
-        print("Loadin sourceg model for constraints",file=sys.stderr)
+        print("Loadin source model for constraints",file=sys.stderr)
         constrainsourcemodel = colibricore.UnindexedPatternModel(args.constrainsourcemodel)
     else:
         constrainsourcemodel = None
@@ -178,11 +179,14 @@ def main():
         alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
     extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel)
 
-    outfile = os.path.basename(args.inputfile)
-    if outfile[-3:] == '.gz': outfile = outfile[:-3]
-    if outfile[-4:] == '.bz2': outfile = outfile[:-4]
-    if outfile[-11:] == '.phrasetable': outfile = outfile[:-11]
-    if outfile[-12:] == '.phrase-table': outfile = outfile[:-12]
+    if args.outputfile:
+        outfile = args.outputfile
+    else:
+        outfile = os.path.basename(args.inputfile)
+        if outfile[-3:] == '.gz': outfile = outfile[:-3]
+        if outfile[-4:] == '.bz2': outfile = outfile[:-4]
+        if outfile[-11:] == '.phrasetable': outfile = outfile[:-11]
+        if outfile[-12:] == '.phrase-table': outfile = outfile[:-12]
     print("Saving alignment model to " + outfile,file=sys.stderr)
     alignmodel.save(outfile) #extensions will be added automatically
 
