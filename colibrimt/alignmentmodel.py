@@ -81,7 +81,7 @@ class AlignmentModel:
 
     def itemcount(self):
         count = 0
-        for _ in self:
+        for _ in self.items():
             count += 1
         return count
 

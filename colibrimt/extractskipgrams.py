@@ -11,7 +11,7 @@ from copy import copy
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
-def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, quiet=False):
+def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, quiet=False,debug=False):
     if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
@@ -19,10 +19,6 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
             if not constrainsourcemodel or sourcepattern in constrainsourcemodel:
                 f.write(bytes(sourcepattern) + b'\0')
 
-
-    #DEBUG:
-    for sourcepattern in alignmodel.sourcepatterns():
-        pass
 
     if not quiet: print("Writing all target patterns to temporary file",file=sys.stderr)
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
@@ -73,16 +69,19 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
             #find abstractions
+            if debug: print("\tFinding abstractions for sourcepattern ", sourcepattern.tostring(debug[0]) + " with targetpattern " + targetpattern.tostring(debug[1]),file=sys.stderr)
             sourcetemplates = []
             targettemplates = []
 
             for template, count in sourcemodel.gettemplates(sourcepattern):
                 if template.isskipgram() and template in sourcemodel:
                     sourcetemplates.append(template)
+                    if debug: print("\t\tAdded source template ", template.tostring(debug[0]),file=sys.stderr)
 
             for template, count in targetmodel.gettemplates(targetpattern):
                 if template.isskipgram() and template in targetmodel:
                     targettemplates.append(template)
+                    if debug: print("\t\tAdded source template ", template.tostring(debug[1]),file=sys.stderr)
 
             #these will act as a memory buffer, saving time
             sourceinstances = {}
@@ -93,11 +92,16 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
                     if not alignmodel.haspair(sourcetemplate, targettemplate): #each pair needs to be processed only once
                         #we now have two skipgrams, to be proper alignments their gaps must only align with gaps:
 
+
+                        if debug: print("\t\tProcessing skipgram pair ", sourcetemplate.tostring(debug[0]) + " -- " + targettemplate.tostring(debug[1]),file=sys.stderr)
+
                         validalignment=False
                         for sourceindex, targetindex in features[-1]:
                             validalignment = (sourcetemplate.isgap(sourceindex) == targettemplate.isgap(targetindex))
                             if not validalignment: break
                         if not validalignment: continue
+
+                        if debug: print("\t\tAlignment valid! Adding!",file=sys.stderr)
 
                         #if we made it here we have a proper pair!
 
@@ -162,6 +166,7 @@ def main():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-D','--debug',help="Enable debug mode", action='store_true',required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -188,7 +193,7 @@ def main():
         targetencoder = colibricore.ClassEncoder(args.targetclassfile)
         print("Loading moses phrase table",file=sys.stderr)
         alignmodel.loadmosesphrasetable(args.inputfile, sourceencoder, targetencoder)
-    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel)
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,False, args.debug)
 
     if args.outputfile:
         outfile = args.outputfile
