@@ -129,8 +129,9 @@ class AlignmentModel:
             with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
                 pickle.dump(self.values, f)
 
-    def output(self, sourcedecoder, targetdecoder):
+    def output(self, sourcedecoder, targetdecoder, scorefilter=None):
         for sourcepattern, targetpattern, value in self.items():
+            if scorefilter and not scorefilter(value): continue
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
             if not self.multivalue or self.singleintvalue:
@@ -478,7 +479,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     pass
 
 
-def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,quiet=False):
+def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,pst=0.0, pts = 0.0,quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
     if not quiet: print("Reading target encoder " + targetclassfile,file=sys.stderr)
@@ -486,8 +487,15 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     if not quiet: print("Initialising featured alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
-    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel)
+    if pts or pst:
+        scorefilter = lambda scores: scores[2] > pts and scores[0] > pst
+    else:
+        scorefilter = None
+    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
+    if constrainsourcemodel or constraintargetmodel:
+        if not quiet: print("Normalising",file=sys.stderr)
+        model.normalize()
     if not quiet: print("Saving alignment model",file=sys.stderr)
     model.save(outfileprefix)
 
@@ -500,6 +508,8 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s)",default=0.0, action='store',required=False)
+    parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t)", default=0.0,action='store',required=False)
     args = parser.parse_args()
 
     if args.constrainsourcemodel:
@@ -514,7 +524,7 @@ def main_mosesphrasetable2alignmodel():
     else:
         constraintargetmodel = None
 
-    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel)
+    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts)
 
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -563,10 +573,12 @@ def main_extractfeatures():
 
 
 def main_alignmodel():
-    parser = argparse.ArgumentParser(description="Load and view the specified aligment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description="Load and view the specified alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
     parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
+    parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s), assumes a moses-style score vector",default=0.0, action='store',required=False)
+    parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t), assumes a moses-style score vector", default=0.0,action='store',required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -584,7 +596,11 @@ def main_alignmodel():
         featured = False
     model.load(args.inputfile)
     print("Outputting",file=sys.stderr)
-    model.output(sourcedecoder,targetdecoder)
+    if args.pts or args.pst:
+        scorefilter = lambda scores: scores[2] > args.pts and scores[0] > args.pst
+    else:
+        scorefilter = None
+    model.output(sourcedecoder,targetdecoder,scorefilter)
 
 
 
