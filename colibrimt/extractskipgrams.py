@@ -16,7 +16,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
     sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
     with open(sourcepatternfile,'wb') as f:
         for sourcepattern in alignmodel.sourcepatterns():
-            f.write(bytes(sourcepattern) + b'\0')
+            if not constrainsourcemodel or sourcepattern in constrainsourcemodel:
+                f.write(bytes(sourcepattern) + b'\0')
 
 
     #DEBUG:
@@ -27,7 +28,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
     targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
     with open(targetpatternfile,'wb') as f:
         for targetpattern in alignmodel.targetpatterns():
-            f.write(bytes(targetpattern) + b'\0')
+            if not constraintargetmodel or targetpattern in constraintargetmodel:
+                f.write(bytes(targetpattern) + b'\0')
 
 
     options = colibricore.PatternModelOptions()
@@ -66,7 +68,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
             print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
             continue
 
-        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+total+" = " + str(round(i/total,4) * 100) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
+        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+str(total)+" = " + str(round(i/total,4) * 100) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
 
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
