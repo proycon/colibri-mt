@@ -478,12 +478,6 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
 
 
 def main_mosesphrasetable2alignmodel():
-    try:
-        inputfilename,sourceclassfile, targetclassfile,outfileprefix = sys.argv[1:]
-    except:
-        print("mosesphrasetable2alignmodel inputfilename sourceclassfile targetclassfile outfileprefix",file=sys.stderr)
-        return 1
-
     parser = argparse.ArgumentParser(description="Convert Moses phrasetable to Colibri alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--inputfile',type=str,help="Input phrasetable", action='store',required=True)
     parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
