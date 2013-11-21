@@ -266,7 +266,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                         f.write(str(feature))
                 f.write("\n")
 
-    def loadmosesphrasetable(self, filename, sourceencoder, targetencoder, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
+    def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
         """Load a phrase table from file into memory (memory intensive!)"""
         self.phrasetable = {}
 
@@ -336,6 +336,11 @@ class FeaturedAlignmentModel(AlignmentModel):
 
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
+
+            if constrainsourcemodel and source not in constrainsourcemodel:
+                continue
+            if constraintargetmodel and target not in constraintargetmodel :
+                continue
 
             self.add(source,target, scores)
 
@@ -458,7 +463,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     pass
 
 
-def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, quiet=False):
+def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
     if not quiet: print("Reading target encoder " + targetclassfile,file=sys.stderr)
@@ -466,7 +471,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     if not quiet: print("Initialising featured alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
-    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder)
+    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not quiet: print("Saving alignment model",file=sys.stderr)
     model.save(outfileprefix)
@@ -479,7 +484,28 @@ def main_mosesphrasetable2alignmodel():
         print("mosesphrasetable2alignmodel inputfilename sourceclassfile targetclassfile outfileprefix",file=sys.stderr)
         return 1
 
-    mosesphrasetable2alignmodel(inputfilename, sourceclassfile, targetclassfile, outfileprefix)
+    parser = argparse.ArgumentParser(description="Convert Moses phrasetable to Colibri alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-i','--inputfile',type=str,help="Input phrasetable", action='store',required=True)
+    parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
+    parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
+    parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
+    parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    args = parser.parse_args()
+
+    if args.constrainsourcemodel:
+        print("Loadin source model for constraints",file=sys.stderr)
+        constrainsourcemodel = colibricore.UnindexedPatternModel(args.constrainsourcemodel)
+    else:
+        constrainsourcemodel = None
+
+    if args.constraintargetmodel:
+        print("Loading target model for constraints",file=sys.stderr)
+        constraintargetmodel = colibricore.UnindexedPatternModel(args.constraintargetmodel)
+    else:
+        constraintargetmodel = None
+
+    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel)
 
 def main_featureextract():
     parser = argparse.ArgumentParser(description="Extract context features and add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -494,6 +520,7 @@ def main_featureextract():
     if not (len(args.datafile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
         print("Number of mentions of -f, -c, -l and -r has to match",file=sys.stderr)
         sys.exit(2)
+
 
     print("Loading alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
