@@ -51,6 +51,12 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
     found = 0
 
+    skipped = 0
+
+    if not quiet: print("Computing total count",file=sys.stderr)
+    total = alignmodel.itemcount()
+
+
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
         if not isinstance(features, list) and not isinstance(features, tuple):
@@ -60,7 +66,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
             print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
             continue
 
-        if not quiet and (i+1) % 100 == 0: print("@"+str(i), "  found " + str(found) + " skipgram pairs thus-far",file=sys.stderr)
+        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+total+" = " + str(round(i/total,4) * 100) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
+
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
             #find abstractions
@@ -123,6 +130,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
                         #            scorepart_t[1] += instfeatures[1]
                         #            scorepart_s[0] += instfeatures[3]
                         #            scorepart_s[1] += instfeatures[4]
+        else:
+            skipped += 1
 
     print("Unloading models",file=sys.stderr)
     del sourcemodel

@@ -79,6 +79,12 @@ class AlignmentModel:
     def items(self):
         return iter(self)
 
+    def itemcount(self):
+        count = 0
+        for _ in self:
+            count += 1
+        return count
+
     def __getitem__(self, item):
         if self.singleintvalue:
             return self.alignedpatterns[item]
@@ -282,13 +288,17 @@ class FeaturedAlignmentModel(AlignmentModel):
         prevsource = None
         targets = []
 
+
+        added = 0
+        skipped = 0
+
         haswordalignments = False
 
         while True:
             if not quiet:
                 linenum += 1
                 if (linenum % 100000) == 0:
-                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ")",file=sys.stderr)
+                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ") total added: " + str(added) + ", skipped: " + str(skipped),file=sys.stderr)
             line = f.readline()
             if not line:
                 break
@@ -340,10 +350,13 @@ class FeaturedAlignmentModel(AlignmentModel):
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
 
             if constrainsourcemodel and source not in constrainsourcemodel:
+                skipped += 1
                 continue
             if constraintargetmodel and target not in constraintargetmodel :
+                skipped += 1
                 continue
 
+            added += 1
             self.add(source,target, scores)
 
         f.close()
