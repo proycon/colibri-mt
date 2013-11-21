@@ -148,12 +148,22 @@ def main():
     parser.add_argument('-W','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=False)
     parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
+    parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
+    if args.constrainsourcemodel:
+        print("Loadin sourceg model for constraints",file=sys.stderr)
+        constrainsourcemodel = colibricore.UnindexedPatternModel(args.constrainsourcemodel)
+    else:
+        constrainsourcemodel = None
 
-    constrainsourcemodel = None #TODO
-    constraintargetmodel = None
+    if args.constraintargetmodel:
+        print("Loading target model for constraints",file=sys.stderr)
+        constraintargetmodel = colibricore.UnindexedPatternModel(args.constraintargetmodel)
+    else:
+        constraintargetmodel = None
 
 
     alignmodel = FeaturedAlignmentModel()
