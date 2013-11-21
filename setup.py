@@ -30,6 +30,7 @@ setup(
             'colibri-mosesphrasetable2alignmodel = colibrimt.alignmentmodel:main_mosesphrasetable2alignmodel',
             'colibri-extractskipgrams = colibrimt.extractskipgrams:main',
             'colibri-alignmodel = colibrimt.alignmentmodel:main_alignmodel'
+            'colibri-extractfeatures = colibrimt.alignmentmodel:main_extractfeatures',
         ]
     },
     package_data = {},

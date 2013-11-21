@@ -166,6 +166,8 @@ class FeatureConfiguration:
         if isinstance(classdecoder, colibricore.ClassDecoder):
             self.decoders[classdecoder.filename] = classdecoder
             classdecoder = classdecoder.filename
+        elif not isinstance(classdecoder,str):
+            raise ValueError
         self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
 
     def addfeature(self, type):
@@ -501,17 +503,19 @@ def main_mosesphrasetable2alignmodel():
 
     mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel)
 
-def main_featureextract():
+def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
     parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
-    parser.add_argument('-f','--datafile',type=str,help="Data input file, may be specified multiple times, but all data files must cover the exact same data, i.e. have exactly the same indices (describing different factors)", action='append',required=True)
+    parser.add_argument('-s','--sourcemodel',type=str,help="Source model (indexed pattern model)", action='store',required=True)
+    parser.add_argument('-t','--targetmodel',type=str,help="Target model (indexed pattern model)", action='store',required=True)
+    parser.add_argument('-f','--corpusfile',type=str,help="Corpus input file for feature extraction, may be specified multiple times, but all data files must cover the exact same data, i.e. have exactly the same indices (describing different factors)", action='append',required=True)
     parser.add_argument('-c','--classfile',type=str,help="Class file for the specified data file (may be specified multiple times, once per -f)", action='append',required=True)
-    parser.add_argument('-l','--leftsize',type=str,help="Left context size (may be specified multiple times, once per -f)", action='append',required=True)
-    parser.add_argument('-r','--rightsize',type=str,help="Right context size (may be specified multiple times, once per -f)", action='append',required=True)
+    parser.add_argument('-l','--leftsize',type=int,help="Left context size (may be specified multiple times, once per -f)", action='append',required=True)
+    parser.add_argument('-r','--rightsize',type=int,help="Right context size (may be specified multiple times, once per -f)", action='append',required=True)
     args = parser.parse_args()
 
-    if not (len(args.datafile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
+    if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
         print("Number of mentions of -f, -c, -l and -r has to match",file=sys.stderr)
         sys.exit(2)
 
@@ -519,6 +523,30 @@ def main_featureextract():
     print("Loading alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
     model.load(args.inputfile)
+
+
+    print("Loading source model " , args.sourcemodel, file=sys.stderr)
+    sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel)
+
+    print("Loading target model ", args.targetmodel, file=sys.stderr)
+    targetmodel = colibricore.IndexedPatternModel(args.targetmodel)
+
+    corpora = []
+    for corpusfile in args.corpusfile:
+        print("Loading corpus file ", corpusfile, file=sys.stderr)
+        corpora.append(colibricore.IndexedCorpus(corpusfile))
+
+    #classdecoders = []
+    #for classfile in args.classfile:
+    #    print("Loading corpus file ", classfile, file=sys.stderr)
+    #    classdecoders.append(colibricore.ClassDecoder(classfile))
+
+    #add feature configuration
+    for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
+        model.conf.addfactorfeature(classfile,left,right)
+
+    model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
+
 
 
 def main_alignmodel():
