@@ -68,7 +68,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
             print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
             continue
 
-        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+str(total)+" = " + str(round(i/total,4) * 100) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
+        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+str(total)+" = " + str(round((i/total) * 100,2)) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
 
 
         if sourcepattern in sourcemodel and targetpattern in targetmodel:
