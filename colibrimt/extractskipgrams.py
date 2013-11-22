@@ -195,14 +195,20 @@ def main():
     #args.storeconst, args.dataset, args.num, args.bar
 
     if args.constrainsourcemodel:
-        print("Loadin source model for constraints",file=sys.stderr)
-        constrainsourcemodel = colibricore.UnindexedPatternModel(args.constrainsourcemodel)
+        print("Loading source model for constraints",file=sys.stderr)
+        if args.constrainskipgrams:
+            constrainsourcemodel = colibricore.IndexedPatternModel(args.constrainsourcemodel)
+        else:
+            constrainsourcemodel = colibricore.UnindexedPatternModel(args.constrainsourcemodel)
     else:
         constrainsourcemodel = None
 
     if args.constraintargetmodel:
         print("Loading target model for constraints",file=sys.stderr)
-        constraintargetmodel = colibricore.UnindexedPatternModel(args.constraintargetmodel)
+        if args.constrainskipgrams:
+            constraintargetmodel = colibricore.IndexedPatternModel(args.constraintargetmodel)
+        else:
+            constraintargetmodel = colibricore.UnindexedPatternModel(args.constraintargetmodel)
     else:
         constraintargetmodel = None
 
