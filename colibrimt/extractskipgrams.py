@@ -54,6 +54,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
     if not quiet: print("Computing total count",file=sys.stderr)
     total = alignmodel.itemcount()
 
+    addlist = []
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
     for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
@@ -111,7 +112,8 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
 
                         #if we made it here we have a proper pair!
 
-                        alignmodel.add(sourcetemplate,targettemplate, [1.0,0.0,1.0,0.0,features[-2],copy(features[-1])]  ) #lexical probability disabled (0),
+
+                        addlist.append( ( sourcetemplate,targettemplate, [1.0,0.0,1.0,0.0,features[-2],copy(features[-1])])  ) #lexical probability disabled (0),
                         found += 1
 
                         #Now we have to compute a new score vector based on the score vectors of the possible instantiations
@@ -144,6 +146,15 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
                         #            scorepart_s[1] += instfeatures[4]
         else:
             skipped += 1
+
+    print("Adding all found skipgrams",file=sys.stderr)
+    try:
+        while True:
+            s,t,f = addlist.pop()
+            alignmodel.add(s,t,f)
+    except IndexError:
+        pass #nothing more to pop
+
 
     print("Unloading models",file=sys.stderr)
     del sourcemodel
