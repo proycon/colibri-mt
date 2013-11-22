@@ -11,40 +11,44 @@ from copy import copy
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 
 
-def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, scorefilter=None,quiet=False,debug=False):
-    if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
-    sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
-    with open(sourcepatternfile,'wb') as f:
-        for sourcepattern in alignmodel.sourcepatterns():
-            if not constrainsourcemodel or sourcepattern in constrainsourcemodel:
-                f.write(bytes(sourcepattern) + b'\0')
+def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", constrainsourcemodel = None, constraintargetmodel = None, constrainskipgrams=False, scorefilter=None,quiet=False,debug=False):
+    if constrainskipgrams: #strict constraints
+        sourcemodel = constrainsourcemodel
+        targetmodel = constraintargetmodel
+    else:
+        if not quiet: print("Writing all source patterns to temporary file",file=sys.stderr)
+        sourcepatternfile = tmpdir + "/sourcepatterns.colibri.dat"
+        with open(sourcepatternfile,'wb') as f:
+            for sourcepattern in alignmodel.sourcepatterns():
+                if not constrainsourcemodel or sourcepattern in constrainsourcemodel:
+                    f.write(bytes(sourcepattern) + b'\0')
 
 
-    if not quiet: print("Writing all target patterns to temporary file",file=sys.stderr)
-    targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
-    with open(targetpatternfile,'wb') as f:
-        for targetpattern in alignmodel.targetpatterns():
-            if not constraintargetmodel or targetpattern in constraintargetmodel:
-                f.write(bytes(targetpattern) + b'\0')
+        if not quiet: print("Writing all target patterns to temporary file",file=sys.stderr)
+        targetpatternfile = tmpdir + "/targetpatterns.colibri.dat"
+        with open(targetpatternfile,'wb') as f:
+            for targetpattern in alignmodel.targetpatterns():
+                if not constraintargetmodel or targetpattern in constraintargetmodel:
+                    f.write(bytes(targetpattern) + b'\0')
 
 
-    options = colibricore.PatternModelOptions()
-    options.MINTOKENS = 1
-    options.MINSKIPTYPES = minskiptypes
-    options.MAXLENGTH = maxlength
-    options.DOSKIPGRAMS = True
+        options = colibricore.PatternModelOptions()
+        options.MINTOKENS = 1
+        options.MINSKIPTYPES = minskiptypes
+        options.MAXLENGTH = maxlength
+        options.DOSKIPGRAMS = True
 
 
-    #we first build skipgrams from the patterns found in the phrase-table, for both sides independently,
-    #using indexed pattern models
+        #we first build skipgrams from the patterns found in the phrase-table, for both sides independently,
+        #using indexed pattern models
 
-    if not quiet: print("Building source pattern model",file=sys.stderr)
-    sourcemodel = colibricore.IndexedPatternModel()
-    sourcemodel.train(sourcepatternfile,options, constrainsourcemodel)
+        if not quiet: print("Building source pattern model",file=sys.stderr)
+        sourcemodel = colibricore.IndexedPatternModel()
+        sourcemodel.train(sourcepatternfile,options, constrainsourcemodel)
 
-    if not quiet: print("Building target pattern model",file=sys.stderr)
-    targetmodel = colibricore.IndexedPatternModel()
-    targetmodel.train(targetpatternfile,options, constraintargetmodel)
+        if not quiet: print("Building target pattern model",file=sys.stderr)
+        targetmodel = colibricore.IndexedPatternModel()
+        targetmodel.train(targetpatternfile,options, constraintargetmodel)
 
     #then for each pair in the phrasetable, we see if we can find abstracted pairs
     found = 0
@@ -86,11 +90,15 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
 
             for template, count in sourcemodel.gettemplates(sourcepattern):
                 if template.isskipgram() and template in sourcemodel:
+                    if constrainskipgrams and template not in sourcemodel:
+                        continue
                     sourcetemplates.append(template)
                     if debug: print("\t\tAdded source template ", template.tostring(debug[0]),file=sys.stderr)
 
             for template, count in targetmodel.gettemplates(targetpattern):
                 if template.isskipgram() and template in targetmodel:
+                    if constrainskipgrams and template not in targetmodel:
+                        continue
                     targettemplates.append(template)
                     if debug: print("\t\tAdded source template ", template.tostring(debug[1]),file=sys.stderr)
 
@@ -151,9 +159,10 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
         else:
             skipped += 1
 
-    print("Unloading models",file=sys.stderr)
-    del sourcemodel
-    del targetmodel
+    if not constrainskipgrams:
+        print("Unloading models",file=sys.stderr)
+        del sourcemodel
+        del targetmodel
 
 
     #now we are going to renormalise the scores (leave lexical weights intact as is)
@@ -176,6 +185,7 @@ def main():
     parser.add_argument('-W','--tmpdir',type=str,help="Temporary work directory", action='store',default="./",required=False)
     parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
+    parser.add_argument('-s','--constrainskipgrams',help="Strictly constrain skipgrams: only skipgrams present in the constrain models (-m and -M) will be considered", action='store_true',required=False)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-p','--pts',type=float,help="Minimum probability p(t|s) for skipgram consideration (set to a high number)",default=0.75, action='store',required=False)
@@ -215,7 +225,7 @@ def main():
 
 
     scorefilter = lambda features:  features[0] >= args.pst and features[2] >= args.pts
-    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,scorefilter,False, debug)
+    extractskipgrams(alignmodel, args.maxlength, args.minskiptypes, args.tmpdir, constrainsourcemodel, constraintargetmodel,args.constrainskipgrams,scorefilter,False, debug)
 
     if args.outputfile:
         outfile = args.outputfile
