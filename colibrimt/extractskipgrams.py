@@ -55,17 +55,21 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
     total = alignmodel.itemcount()
 
     addlist = []
+    num = 0
 
     if not quiet: print("Finding abstracted pairs",file=sys.stderr)
-    for i, (sourcepattern, targetpattern, features) in enumerate(alignmodel.items()):
+    for sourcepattern, targetpattern, features in alignmodel.items():
         if not isinstance(features, list) and not isinstance(features, tuple):
             print("WARNING: Expected feature vector, got " + str(type(features)),file=sys.stderr)
             continue
         if not isinstance(features[-1], list) and not isinstance(features[-1], tuple):
             print("WARNING: Word alignments missing for a pair, skipping....",file=sys.stderr)
             continue
+        if sourcepattern.isskipgram() or targetpattern.isskipgram():
+            continue
 
-        if not quiet and (i+1) % 100 == 0: print("@"+str(i)+"/"+str(total)+" = " + str(round((i/total) * 100,2)) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
+        num += 1
+        if not quiet and num % 100 == 0: print("@"+str(num)+"/"+str(total)+" = " + str(round((num/total) * 100,2)) + '%' + ",  found " + str(found) + " skipgram pairs thus-far, skipped " + str(skipped),file=sys.stderr)
 
 
         #is this pair strong enough to use? Assuming moses-style score-vector
@@ -113,7 +117,7 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
                         #if we made it here we have a proper pair!
 
 
-                        addlist.append( ( sourcetemplate,targettemplate, [1.0,0.0,1.0,0.0,features[-2],copy(features[-1])])  ) #lexical probability disabled (0),
+                        alignmodel.add(sourcetemplate,targettemplate, [1.0,0.0,1.0,0.0,features[-2],copy(features[-1])]  ) #lexical probability disabled (0),
                         found += 1
 
                         #Now we have to compute a new score vector based on the score vectors of the possible instantiations
@@ -146,15 +150,6 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
                         #            scorepart_s[1] += instfeatures[4]
         else:
             skipped += 1
-
-    print("Adding all found skipgrams",file=sys.stderr)
-    try:
-        while True:
-            s,t,f = addlist.pop()
-            alignmodel.add(s,t,f)
-    except IndexError:
-        pass #nothing more to pop
-
 
     print("Unloading models",file=sys.stderr)
     del sourcemodel
