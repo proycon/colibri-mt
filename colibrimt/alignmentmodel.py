@@ -584,7 +584,7 @@ def main_extractfeatures():
 
     print("Configuration:",model.conf,file=sys.stderr)
 
-    print("Extracting features", corpusfile, file=sys.stderr)
+    print("Extracting features from ", corpusfile, file=sys.stderr)
     model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
 
     print("Saving alignment model", file=sys.stderr)
