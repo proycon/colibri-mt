@@ -420,9 +420,11 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
+            print("DEBUG Processing sentence",file=sys.stderr)
             n = len(sourcepattern)
             featurevector= []
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+                print("DEBUG Processing factor",file=sys.stderr)
                 _,classdecoder, leftcontext, focus, rightcontext = factor
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
@@ -442,6 +444,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             extracted += 1
             yield sentence, token, sourcepattern, targetpattern, featurevector
 
+        print("DEBUG Done",file=sys.stderr)
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
 
