@@ -582,7 +582,7 @@ def main_extractfeatures():
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,True, right)
 
-    print("Configuration:",model.conf,file=sys.stderr)
+    print("Configuration:",model.conf.conf,file=sys.stderr)
 
     print("Extracting features from ", corpusfile, file=sys.stderr)
     model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
