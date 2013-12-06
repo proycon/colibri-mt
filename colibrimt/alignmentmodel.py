@@ -238,6 +238,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
         else:
             preloadeddecoders = (sourcedecoder, targetdecoder)
+        print("DEBUG", repr(preloadeddecoders),file=sys.stderr)
         self.conf.loaddecoders(*preloadeddecoders)
 
         print("Configuration:",len(self.conf),file=sys.stderr)
