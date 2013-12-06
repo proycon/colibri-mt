@@ -418,7 +418,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
             raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
 
-
+        extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
             n = len(sourcepattern)
             featurevector= []
@@ -439,8 +439,10 @@ class FeaturedAlignmentModel(AlignmentModel):
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
+            extracted += 1
             yield sentence, token, sourcepattern, targetpattern, featurevector
 
+        print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
 
     def normalize(self, sumover='s'):
