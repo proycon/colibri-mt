@@ -234,8 +234,10 @@ class FeaturedAlignmentModel(AlignmentModel):
                 yield sourcepattern, targetpattern, featurevector
 
     def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
-        preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
-        print("DEBUG preloadeddecoders=" + repr(preloadeddecoders),file=sys.stderr)
+        if preloadeddecoders:
+            preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
+        else:
+            preloadeddecoders = (sourcedecoder, targetdecoder)
         self.conf.loaddecoders(*preloadeddecoders)
 
         print("Configuration:",len(self.conf),file=sys.stderr)
