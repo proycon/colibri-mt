@@ -233,18 +233,17 @@ class FeaturedAlignmentModel(AlignmentModel):
             for featurevector in self.values[valueid]: #multiple feature vectors per alignment possible
                 yield sourcepattern, targetpattern, featurevector
 
-    def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
+    def output(self, sourcedecoder, targetdecoder, scorefilter=None, *preloadeddecoders):
         if preloadeddecoders:
             preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
         else:
             preloadeddecoders = (sourcedecoder, targetdecoder)
-        print("DEBUG", repr(preloadeddecoders),file=sys.stderr)
         self.conf.loaddecoders(*preloadeddecoders)
 
         print("Configuration:",len(self.conf),file=sys.stderr)
 
-
         for sourcepattern, targetpattern, features in self.items():
+            if scorefilter and not scorefilter(features): continue
             print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
             print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
             if len(features) < len(self.conf):
