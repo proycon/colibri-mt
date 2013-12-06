@@ -171,8 +171,9 @@ def extractskipgrams(alignmodel, maxlength= 8, minskiptypes=2, tmpdir="./", cons
 
 
     print("Cleanup",file=sys.stderr)
-    os.unlink(sourcepatternfile)
-    os.unlink(targetpatternfile)
+    if not constrainskipgrams:
+        os.unlink(sourcepatternfile)
+        os.unlink(targetpatternfile)
 
     return alignmodel
 
