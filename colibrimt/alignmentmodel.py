@@ -235,6 +235,7 @@ class FeaturedAlignmentModel(AlignmentModel):
 
     def output(self, sourcedecoder, targetdecoder, *preloadeddecoders):
         preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
+        print("DEBUG preloadeddecoders=" + repr(preloadeddecoders),file=sys.stderr)
         self.conf.loaddecoders(*preloadeddecoders)
 
         print("Configuration:",len(self.conf),file=sys.stderr)
