@@ -187,7 +187,15 @@ class FeatureConfiguration:
 
 
     def __len__(self):
-        return len(self.conf)
+        count = 0
+        for x in self.conf:
+            if x[0] is colibricore.Pattern:
+                count += x[2] + x[4]
+                if x[3]:
+                    count += 1
+            else:
+                count += 1
+        return count
 
     def __iter__(self):
         for x in self.conf:
