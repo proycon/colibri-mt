@@ -385,11 +385,13 @@ class FeaturedAlignmentModel(AlignmentModel):
     def patternswithindexes(self, sourcemodel, targetmodel):
         """Finds occurrences (positions in the source and target models) for all patterns"""
         for sourcepattern in self.sourcepatterns():
+            print("DEBUG sourcepattern=", sourcepattern,file=sys.stderr)
             if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
             sourceindexes = sourcemodel[sourcepattern]
             for targetpattern in self.targetpatterns(sourcepattern):
+                print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
                 if not targetpattern in targetmodel:
                     print("Warning: a pattern from the phrase table was not found in the target model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                     continue
@@ -397,10 +399,13 @@ class FeaturedAlignmentModel(AlignmentModel):
 
                 #for every occurrence of this pattern in the source
                 for sentence, token in sourceindexes:
+                    print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
                     targetmatch = False
                     for targetsentence,targettoken in targetindexes:
+                        print("DEBUG targetindex=", (targetsentence,targettoken),file=sys.stderr)
                         if sentence == targetsentence:
+                            print("DEBUG Yielding",file=sys.stderr)
                             yield sourcepattern, targetpattern, sentence, token, targetsentence, targettoken
                             targetmatch = True
                             break
