@@ -569,7 +569,11 @@ def main_extractfeatures():
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,right)
 
+    print("Extracting features", corpusfile, file=sys.stderr)
     model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
+
+    print("Saving alignment model", file=sys.stderr)
+    model.save(args.outputfile)
 
 
 
