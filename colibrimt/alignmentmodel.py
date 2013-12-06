@@ -403,7 +403,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
 
-        factorconf = [x for x in self.conf if x[0] == colibricore.Pattern ]
+        factorconf = [x for x in self.conf if x[0] is colibricore.Pattern ]
         if len(factoredcorpora) != len(factorconf):
             raise ValueError("Expected " + str(len(factorconf)) + " instances in factoredcorpora, got " + str(len(factoredcorpora)))
 
@@ -571,6 +571,8 @@ def main_extractfeatures():
     #add feature configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,right)
+
+    print("Configuration:",model.conf,file=sys.stderr)
 
     print("Extracting features", corpusfile, file=sys.stderr)
     model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
