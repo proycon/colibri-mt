@@ -578,7 +578,7 @@ def main_extractfeatures():
 
     #add feature configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
-        model.conf.addfactorfeature(classfile,left,right)
+        model.conf.addfactorfeature(classfile,left,True, right)
 
     print("Configuration:",model.conf,file=sys.stderr)
 
