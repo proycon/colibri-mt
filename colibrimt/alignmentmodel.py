@@ -435,7 +435,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 featurevectors = self[(sourcepattern, targetpattern)]
                 assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
                 scorevector = featurevectors[0] #traditional moses score vector
-                featurevectors.clear() #reset
+                featurevectors = [] #reset
                 prev = (sourcepattern,targetpattern)
 
             featurevector = list(scorevector) #copy of the scorevector will be first
