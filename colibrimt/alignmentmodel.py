@@ -383,10 +383,10 @@ class FeaturedAlignmentModel(AlignmentModel):
             self.conf.addfeature(list)
 
     def patternswithindexes(self, sourcemodel, targetmodel):
-        """Finds occurrences (positions in the source and target models) for all patterns"""
-        print("DEBUG patternswithindexes()",file=sys.stderr)
+        """Finds occurrences (positions in the source and target models) for all patterns in the alignment model"""
+        #print("DEBUG patternswithindexes()",file=sys.stderr)
         for sourcepattern in self.sourcepatterns():
-            print("DEBUG sourcepattern=", sourcepattern,file=sys.stderr)
+            #print("DEBUG sourcepattern=", sourcepattern,file=sys.stderr)
             if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
@@ -400,24 +400,22 @@ class FeaturedAlignmentModel(AlignmentModel):
 
                 #for every occurrence of this pattern in the source
                 for sentence, token in sourceindexes:
-                    print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
+                    #print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
                     targetmatch = False
                     for targetsentence,targettoken in targetindexes:
-                        print("DEBUG targetindex=", (targetsentence,targettoken),file=sys.stderr)
+                        #print("DEBUG targetindex=", (targetsentence,targettoken),file=sys.stderr)
                         if sentence == targetsentence:
-                            print("DEBUG Yielding",file=sys.stderr)
+                            #print("DEBUG Yielding",file=sys.stderr)
                             yield sourcepattern, targetpattern, sentence, token, targetsentence, targettoken
                             targetmatch = True
                             break
 
 
     def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
-        print("DEBUG extractfactorfeatures()",file=sys.stderr)
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
-        print("DEBUG 2",file=sys.stderr)
 
         factorconf = [x for x in self.conf if x[0] is colibricore.Pattern ]
         if len(factoredcorpora) != len(factorconf):
@@ -426,13 +424,24 @@ class FeaturedAlignmentModel(AlignmentModel):
         if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
             raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
 
-        print("DEBUG 3",file=sys.stderr)
+        prev = None
 
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
             print("DEBUG Processing sentence",file=sys.stderr)
             n = len(sourcepattern)
-            featurevector= []
+
+            if (sourcepattern, targetpattern) != prev:
+                featurevectors = self[(sourcepattern, targetpattern)]
+                assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
+                scorevector = featurevectors[0] #traditional moses score vector
+                featurevectors.clear() #reset
+                prev = (sourcepattern,targetpattern)
+
+            featurevector = list(scorevector) #copy of the scorevector will be first
+            #next two features will be the sentence and token, needed for outputting intermediate phrasetable later on
+            featurevector.append(sentence)
+            featurevector.append(token)
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
                 print("DEBUG Processing factor",file=sys.stderr)
                 _,classdecoder, leftcontext, focus, rightcontext = factor
@@ -452,9 +461,9 @@ class FeaturedAlignmentModel(AlignmentModel):
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
             extracted += 1
-            yield sentence, token, sourcepattern, targetpattern, featurevector
+            featurevectors.append(featurevector)
 
-        print("DEBUG Done",file=sys.stderr)
+
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
 
@@ -590,6 +599,10 @@ def main_extractfeatures():
     #for classfile in args.classfile:
     #    print("Loading corpus file ", classfile, file=sys.stderr)
     #    classdecoders.append(colibricore.ClassDecoder(classfile))
+
+    #append the following features (appended to score features)
+    model.conf.addfeature(int) #sentence
+    model.conf.addfeature(int) #token
 
     #add feature configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
