@@ -413,7 +413,6 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
     def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
-        assert False
         print("DEBUG extractfactorfeatures()",file=sys.stderr)
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
