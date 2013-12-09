@@ -413,9 +413,11 @@ class FeaturedAlignmentModel(AlignmentModel):
 
 
     def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+        print("DEBUG extractfactorfeatures()",file=sys.stderr)
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
+        print("DEBUG 2",file=sys.stderr)
 
         factorconf = [x for x in self.conf if x[0] is colibricore.Pattern ]
         if len(factoredcorpora) != len(factorconf):
@@ -423,6 +425,8 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
             raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
+
+        print("DEBUG 3",file=sys.stderr)
 
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
