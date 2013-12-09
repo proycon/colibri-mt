@@ -384,6 +384,7 @@ class FeaturedAlignmentModel(AlignmentModel):
 
     def patternswithindexes(self, sourcemodel, targetmodel):
         """Finds occurrences (positions in the source and target models) for all patterns"""
+        print("DEBUG patternswithindexes()",file=sys.stderr)
         for sourcepattern in self.sourcepatterns():
             print("DEBUG sourcepattern=", sourcepattern,file=sys.stderr)
             if not sourcepattern in sourcemodel:
