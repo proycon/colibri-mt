@@ -479,7 +479,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             #        else:
             #            unigram = factoredcorpus[(sentence,i)]
             #        featurevector.append(unigram)
-            print(featurevector,file=sys.stderr)
+            #print(featurevector,file=sys.stderr)
             extracted += 1
             tmpdata[tuple(featurevector)] += 1
 
