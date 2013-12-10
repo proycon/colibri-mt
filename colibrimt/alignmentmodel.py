@@ -454,8 +454,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     for featurevector, count in tmpdata.items():
                         featurevector = list(featurevector)
                         newfeaturevectors.append(scorevector + featurevector + [count])
-                    self[prev] = newfeaturevectors
-                    pass
+                    yield prev[0], prev[1], newfeaturevectors
 
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
@@ -494,11 +493,14 @@ class FeaturedAlignmentModel(AlignmentModel):
             for featurevector, count in tmpdata.items():
                 featurevector = list(featurevector)
                 newfeaturevectors.append(scorevector + featurevector + [count])
-            self[prev] = newfeaturevectors
+            yield prev[0], prev[1], newfeaturevectors
 
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
+    def addfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+        for sourcepattern, targetpattern, newfeaturevectors in self.extractfactorfeatures(sourcemodel, targetmodel, factoredcorpora):
+            self[(sourcepattern,targetpattern)] = newfeaturevectors
 
     def normalize(self, sumover='s'):
         if self.singleintvalue:
@@ -642,8 +644,8 @@ def main_extractfeatures():
 
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
-    print("Extracting features from ", corpusfile, file=sys.stderr)
-    model.extractfactorfeatures(sourcemodel, targetmodel, corpora)
+    print("Extracting and adding features from ", corpusfile, file=sys.stderr)
+    model.addfactorfeatures(sourcemodel, targetmodel, corpora)
 
     print("Saving alignment model", file=sys.stderr)
     model.save(args.outputfile)

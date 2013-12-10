@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name = "colibrimt",
-    version = "0.1.1",
+    version = "0.1.2",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = ("Colibri MT"),
@@ -34,5 +34,5 @@ setup(
         ]
     },
     package_data = {},
-    install_requires=['colibricore']
+    install_requires=['colibricore','timbl']
 )
