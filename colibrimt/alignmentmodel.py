@@ -389,7 +389,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         l = len(self)
         for i, sourcepattern in enumerate(self.sourcepatterns()):
             if showprogress:
-                print("@" + str(i+1) + "/" + str(l), file=sys.stderr)
+                print("@" + str(i+1) + "/" + str(l), " " , round((i+1/l)*100,2),'%', file=sys.stderr)
             occurrences = 0
             if not sourcepattern in sourcemodel:
                 continue
