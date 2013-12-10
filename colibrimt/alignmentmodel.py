@@ -390,14 +390,13 @@ class FeaturedAlignmentModel(AlignmentModel):
         for i, sourcepattern in enumerate(self.sourcepatterns()):
             if showprogress:
                 print("@" + str(i+1) + "/" + str(l), file=sys.stderr)
+            occurrences = 0
             if not sourcepattern in sourcemodel:
-                print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
             sourceindexes = sourcemodel[sourcepattern]
             for targetpattern in self.targetpatterns(sourcepattern):
                 #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
                 if not targetpattern in targetmodel:
-                    print("Warning: a pattern from the phrase table was not found in the target model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                     continue
                 targetindexes = targetmodel[targetpattern]
 
@@ -410,9 +409,12 @@ class FeaturedAlignmentModel(AlignmentModel):
                         #print("DEBUG targetindex=", (targetsentence,targettoken),file=sys.stderr)
                         if sentence == targetsentence:
                             #print("DEBUG Yielding",file=sys.stderr)
+                            occurrences += 1
                             yield sourcepattern, targetpattern, sentence, token, targetsentence, targettoken
                             targetmatch = True
                             break
+            if showprogress:
+                print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
 
 
     def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
