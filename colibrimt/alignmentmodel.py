@@ -460,25 +460,26 @@ class FeaturedAlignmentModel(AlignmentModel):
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
 
-            featurevector = ['test','test'] #copy of the scorevector will be first
+            featurevector = [] #copy of the scorevector will be first
 
-            #for factoredcorpus, factor in zip(factoredcorpora, factorconf):
-            #    _,classdecoder, leftcontext, focus, rightcontext = factor
-            #    sentencelength = factoredcorpus.sentencelength(sentence)
-            #    for i in range(token - leftcontext,token):
-            #        if token < 0:
-            #            unigram = colibricore.beginpattern
-            #        else:
-            #            unigram = factoredcorpus[(sentence,i)]
-            #        featurevector.append(unigram)
-            #    if focus:
-            #        featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
-            #    for i in range(token + n , token + n + rightcontext):
-            #        if token > sentencelength:
-            #            unigram = colibricore.endpattern
-            #        else:
-            #            unigram = factoredcorpus[(sentence,i)]
-            #        featurevector.append(unigram)
+            for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+                _,classdecoder, leftcontext, focus, rightcontext = factor
+                sentencelength = factoredcorpus.sentencelength(sentence)
+                for i in range(token - leftcontext,token):
+                    if token < 0:
+                        unigram = colibricore.beginpattern
+                    else:
+                        unigram = factoredcorpus[(sentence,i)]
+                    featurevector.append(unigram)
+                if focus:
+                    featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
+                for i in range(token + n , token + n + rightcontext):
+                    if token > sentencelength:
+                        unigram = colibricore.endpattern
+                    else:
+                        unigram = factoredcorpus[(sentence,i)]
+                    featurevector.append(unigram)
+
             #print(featurevector,file=sys.stderr)
             extracted += 1
             tmpdata[tuple(featurevector)] += 1
