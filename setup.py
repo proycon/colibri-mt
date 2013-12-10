@@ -34,5 +34,5 @@ setup(
         ]
     },
     package_data = {},
-    install_requires=['colibricore','python-timbl']
+    install_requires=['colibricore']
 )
