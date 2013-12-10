@@ -670,6 +670,7 @@ def main_extractfeatures():
             if sourcepattern != prevsourcepattern:
                 sourcepattern_s = sourcepattern.tostring(sourcedecoder)
                 trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                print("Writing " + trainfile,file=sys.stderr)
                 if f:
                     f.close()
                 f = open(trainfile,'w',encoding='utf-8' )
