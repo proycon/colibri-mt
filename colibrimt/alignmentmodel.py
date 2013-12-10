@@ -393,26 +393,33 @@ class FeaturedAlignmentModel(AlignmentModel):
             occurrences = 0
             if not sourcepattern in sourcemodel:
                 continue
-            sourceindexes = sourcemodel[sourcepattern]
+
+            sourceindexes = None #loading deferred until really needed
             for targetpattern in self.targetpatterns(sourcepattern):
                 #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
                 if not targetpattern in targetmodel:
                     continue
-                targetindexes = targetmodel[targetpattern]
+
+                if not sourceindexes:
+                    sourceindexes = defaultdict(list)
+                    for sourcesentence, sourcetoken in sourcemodel[sourcepattern]:
+                        sourceindexes[sourcesentence].append(sourcetoken)
+
+                targetindexes = {}
+                for targetsentence, targettoken in targetmodel[targetpattern]:
+                    if targetsentence in sourceindexes:
+                        targetindexes[targetsentence].append(targettoken)
 
                 #for every occurrence of this pattern in the source
-                for sentence, token in sourceindexes:
+                for sentence in targetindexes:
                     #print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
-                    targetmatch = False
-                    for targetsentence,targettoken in targetindexes:
-                        #print("DEBUG targetindex=", (targetsentence,targettoken),file=sys.stderr)
-                        if sentence == targetsentence:
-                            #print("DEBUG Yielding",file=sys.stderr)
+                    for token in sourceindexes[sentence]:
+                        for targettoken in targetindexes[sentence]:
                             occurrences += 1
-                            yield sourcepattern, targetpattern, sentence, token, targetsentence, targettoken
-                            targetmatch = True
+                            yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
                             break
+
             if showprogress:
                 print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
 
