@@ -383,11 +383,13 @@ class FeaturedAlignmentModel(AlignmentModel):
         if haswordalignments:
             self.conf.addfeature(list)
 
-    def patternswithindexes(self, sourcemodel, targetmodel):
+    def patternswithindexes(self, sourcemodel, targetmodel, showprogress=True):
         """Finds occurrences (positions in the source and target models) for all patterns in the alignment model"""
         #print("DEBUG patternswithindexes()",file=sys.stderr)
-        for sourcepattern in self.sourcepatterns():
-            #print("DEBUG sourcepattern=", sourcepattern,file=sys.stderr)
+        l = len(self)
+        for i, sourcepattern in enumerate(self.sourcepatterns()):
+            if showprogress and i % 1000 == 0:
+                print("@" + str(i+1) + "/" + str(l), file=sys.stderr)
             if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
