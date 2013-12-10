@@ -446,15 +446,15 @@ class FeaturedAlignmentModel(AlignmentModel):
 
             if (sourcepattern, targetpattern) != prev:
                 if prev:
-                    #process previous
-                    #newfeaturevectors = []
-                    #featurevectors = self[prev]
-                    #assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
-                    #scorevector = featurevectors[0] #traditional moses score vector
-                    #for featurevector, count in tmpdata.items():
-                    #    featurevector = list(featurevector)
-                    #    newfeaturevectors.append(scorevector + featurevector + [count])
-                    #self[prev] = newfeaturevectors
+                    process previous
+                    newfeaturevectors = []
+                    featurevectors = self[prev]
+                    assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
+                    scorevector = featurevectors[0] #traditional moses score vector
+                    for featurevector, count in tmpdata.items():
+                        featurevector = list(featurevector)
+                        newfeaturevectors.append(scorevector + featurevector + [count])
+                    self[prev] = newfeaturevectors
                     pass
 
                 tmpdata = defaultdict(int) #reset
@@ -478,6 +478,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
+            print(featurevector,file=sys.stderr)
             extracted += 1
             tmpdata[tuple(featurevector)] += 1
 
