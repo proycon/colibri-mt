@@ -405,7 +405,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     for sourcesentence, sourcetoken in sourcemodel[sourcepattern]:
                         sourceindexes[sourcesentence].append(sourcetoken)
 
-                targetindexes = {}
+                targetindexes = defaultdict(list)
                 for targetsentence, targettoken in targetmodel[targetpattern]:
                     if targetsentence in sourceindexes:
                         targetindexes[targetsentence].append(targettoken)
