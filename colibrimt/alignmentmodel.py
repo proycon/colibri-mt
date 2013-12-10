@@ -11,6 +11,7 @@ import argparse
 import pickle
 import os
 from collections import defaultdict
+from urllib.parse import quote_plus, unquote_plus
 
 
 class AlignmentModel:
@@ -253,28 +254,32 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         for sourcepattern, targetpattern, features in self.items():
             if scorefilter and not scorefilter(features): continue
-            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
-            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
-            if len(features) < len(self.conf):
-                print(repr(self.conf.conf),file=sys.stderr)
-                print(repr(features),file=sys.stderr)
-                raise Exception("Expected " + str(len(self.conf)) + " features, got " + str(len(features)))
-            it = iter(features)
-            for i, conf in enumerate(self.conf):
-                if conf[0] == colibricore.Pattern:
-                    _, classdecoder, leftcontext, dofocus, rightcontext = conf
-                    classdecoder = self.conf.decoders[classdecoder]
-                    n = leftcontext + rightcontext
-                    if dofocus: n += 1
-                    for j in range(0,n):
-                        p = next(it)
-                        print(p.tostring(classdecoder) ,end="")
-                        if i < len(self.conf) -1:
-                            #not the last feature yet:
-                            print("\t",end="")
-                else:
-                    print(str(next(it)) + "\t" ,end="")
-            print()
+            print(self.itemtostring(sourcepattern, targetpattern, features))
+
+    def itemtostring(self, sourcepattern,targetpattern, features, conf=None):
+        if not conf: conf = self.conf
+        s = sourcepattern.tostring(sourcedecoder) + "\t"
+        s += targetpattern.tostring(targetdecoder) + "\t"
+        if len(features) < len(conf):
+            print(repr(conf.conf),file=sys.stderr)
+            print(repr(features),file=sys.stderr)
+            raise Exception("Expected " + str(len(conf)) + " features, got " + str(len(features)))
+        it = iter(features)
+        for i, currentconf in enumerate(conf):
+            if currentconf[0] == colibricore.Pattern:
+                _, classdecoder, leftcontext, dofocus, rightcontext = currentconf
+                classdecoder = self.conf.decoders[classdecoder]
+                n = leftcontext + rightcontext
+                if dofocus: n += 1
+                for j in range(0,n):
+                    p = next(it)
+                    s += p.tostring(classdecoder)
+                    if i < len(conf) -1:
+                        #not the last feature yet:
+                        s += "\t"
+            else:
+                s += str(next(it)) + "\t"
+        return s
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
@@ -659,15 +664,22 @@ def main_extractfeatures():
                 print("Unable to build directory " + args.outputfile,file=sys.stderr)
                 sys.exit(2)
 
+        f = None
         prevsourcepattern = None
-        for sourcepattern, targetpattern, featurevectors in model.extractfeatures(sourcemodel, targetmodel, corpora):
+        for sourcepattern, targetpattern, featurevectors in model.extractfactorfeatures(sourcemodel, targetmodel, corpora):
             if sourcepattern != prevsourcepattern:
-                sourcepattern_s = sourcepattern.tostring(
-                trainfile = quote_plus()
-                f = open("")
+                sourcepattern_s = sourcepattern.tostring(sourcedecoder)
+                trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                if f:
+                    f.close()
+                f = open(trainfile,'w',encoding='utf-8' )
                 prevsourcepattern = sourcepattern
 
+            for featurevector in featurevectors:
+                f.write(model.itemtostring(sourcepattern, targetpattern, featurevector) + "\n")
 
+
+        if f: f.close()
 
     else:
         print("Extracting and adding features from ", corpusfile, file=sys.stderr)
