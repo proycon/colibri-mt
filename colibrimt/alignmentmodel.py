@@ -446,7 +446,7 @@ class FeaturedAlignmentModel(AlignmentModel):
 
             if (sourcepattern, targetpattern) != prev:
                 if prev:
-                    process previous
+                    #process previous
                     newfeaturevectors = []
                     featurevectors = self[prev]
                     assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
