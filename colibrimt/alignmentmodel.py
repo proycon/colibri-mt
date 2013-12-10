@@ -388,14 +388,14 @@ class FeaturedAlignmentModel(AlignmentModel):
         #print("DEBUG patternswithindexes()",file=sys.stderr)
         l = len(self)
         for i, sourcepattern in enumerate(self.sourcepatterns()):
-            if showprogress and i % 1000 == 0:
+            if showprogress:
                 print("@" + str(i+1) + "/" + str(l), file=sys.stderr)
             if not sourcepattern in sourcemodel:
                 print("Warning: a pattern from the phrase table was not found in the source model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                 continue
             sourceindexes = sourcemodel[sourcepattern]
             for targetpattern in self.targetpatterns(sourcepattern):
-                print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
+                #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
                 if not targetpattern in targetmodel:
                     print("Warning: a pattern from the phrase table was not found in the target model (pruned for not meeting a threshold most likely)" ,file=sys.stderr)
                     continue
