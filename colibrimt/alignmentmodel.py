@@ -678,9 +678,7 @@ def main_extractfeatures():
             for featurevector in featurevectors:
                 f.write(model.itemtostring(sourcepattern, targetpattern, featurevector) + "\n")
 
-
         if f: f.close()
-
     else:
         print("Extracting and adding features from ", corpusfile, file=sys.stderr)
         model.addfactorfeatures(sourcemodel, targetmodel, corpora)
