@@ -600,13 +600,16 @@ def main_mosesphrasetable2alignmodel():
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
-    parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
+    parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension, or directory when used with -C)", action='store',required=True)
     parser.add_argument('-s','--sourcemodel',type=str,help="Source model (indexed pattern model)", action='store',required=True)
     parser.add_argument('-t','--targetmodel',type=str,help="Target model (indexed pattern model)", action='store',required=True)
+    parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
+    parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-f','--corpusfile',type=str,help="Corpus input file for feature extraction, may be specified multiple times, but all data files must cover the exact same data, i.e. have exactly the same indices (describing different factors)", action='append',required=True)
     parser.add_argument('-c','--classfile',type=str,help="Class file for the specified data file (may be specified multiple times, once per -f)", action='append',required=True)
     parser.add_argument('-l','--leftsize',type=int,help="Left context size (may be specified multiple times, once per -f)", action='append',required=True)
     parser.add_argument('-r','--rightsize',type=int,help="Right context size (may be specified multiple times, once per -f)", action='append',required=True)
+    parser.add_argument('-C','--buildclassifiers',help="Build classifier training data, one classifier expert per pattern, specify a working directory in -o", action='store_true',default=False)
     args = parser.parse_args()
 
     if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
@@ -619,6 +622,10 @@ def main_extractfeatures():
     model.load(args.inputfile)
 
 
+    print("Loading source decoder " + args.sourceclassfile,file=sys.stderr)
+    sourcedecoder = colibricore.ClassDecoder(args.sourceclassfile)
+    print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
+    targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
     print("Loading source model " , args.sourcemodel, file=sys.stderr)
     sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel)
 
@@ -644,11 +651,30 @@ def main_extractfeatures():
 
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
-    print("Extracting and adding features from ", corpusfile, file=sys.stderr)
-    model.addfactorfeatures(sourcemodel, targetmodel, corpora)
+    if args.buildclassifiers:
+        if not os.path.isdir(args.outputfile):
+            try:
+                os.mkdir(args.outputfile)
+            except:
+                print("Unable to build directory " + args.outputfile,file=sys.stderr)
+                sys.exit(2)
 
-    print("Saving alignment model", file=sys.stderr)
-    model.save(args.outputfile)
+        prevsourcepattern = None
+        for sourcepattern, targetpattern, featurevectors in model.extractfeatures(sourcemodel, targetmodel, corpora):
+            if sourcepattern != prevsourcepattern:
+                sourcepattern_s = sourcepattern.tostring(
+                trainfile = quote_plus()
+                f = open("")
+                prevsourcepattern = sourcepattern
+
+
+
+    else:
+        print("Extracting and adding features from ", corpusfile, file=sys.stderr)
+        model.addfactorfeatures(sourcemodel, targetmodel, corpora)
+
+        print("Saving alignment model", file=sys.stderr)
+        model.save(args.outputfile)
 
 
 
