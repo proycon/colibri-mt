@@ -439,6 +439,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         prev = None
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
+        for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
+            pass
+
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
             n = len(sourcepattern)
