@@ -10,6 +10,7 @@ import colibricore
 import argparse
 import pickle
 import os
+from collections import defaultdict
 
 
 class AlignmentModel:
@@ -425,6 +426,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
 
         prev = None
+        tmpdata = defaultdict(int) # featurevector => occurrencecount
 
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
@@ -432,16 +434,21 @@ class FeaturedAlignmentModel(AlignmentModel):
             n = len(sourcepattern)
 
             if (sourcepattern, targetpattern) != prev:
-                featurevectors = self[(sourcepattern, targetpattern)]
-                assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
-                scorevector = featurevectors[0] #traditional moses score vector
-                featurevectors = [] #reset
+                if prev:
+                    #process previous
+                    newfeaturevectors = []
+                    featurevectors = self[prev]
+                    assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
+                    scorevector = featurevectors[0] #traditional moses score vector
+                    for featurevector, count in tmpdata.items():
+                        featurevector = list(featurevector)
+                        newfeaturevectors.append(scorevector + featurevector + [count])
+                    self[prev] = newfeaturevectors
+
+                tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
 
-            featurevector = list(scorevector) #copy of the scorevector will be first
-            #next two features will be the sentence and token, needed for outputting intermediate phrasetable later on
-            featurevector.append(sentence)
-            featurevector.append(token)
+            featurevector = [] #copy of the scorevector will be first
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
                 print("DEBUG Processing factor",file=sys.stderr)
                 _,classdecoder, leftcontext, focus, rightcontext = factor
@@ -461,7 +468,19 @@ class FeaturedAlignmentModel(AlignmentModel):
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
             extracted += 1
-            featurevectors.append(featurevector)
+            tmpdata[tuple(featurevector)] += 1
+
+        #process final pair:
+        if prev:
+            #process previous
+            newfeaturevectors = []
+            featurevectors = self[prev]
+            assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
+            scorevector = featurevectors[0] #traditional moses score vector
+            for featurevector, count in tmpdata.items():
+                featurevector = list(featurevector)
+                newfeaturevectors.append(scorevector + featurevector + [count])
+            self[prev] = newfeaturevectors
 
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
@@ -601,10 +620,9 @@ def main_extractfeatures():
     #    classdecoders.append(colibricore.ClassDecoder(classfile))
 
     #append the following features (appended to score features)
-    model.conf.addfeature(int) #sentence
-    model.conf.addfeature(int) #token
+    model.conf.addfeature(int) #occurrence count for context configuration
 
-    #add feature configuration
+    #add context configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,True, right)
 
