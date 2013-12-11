@@ -254,12 +254,12 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         for sourcepattern, targetpattern, features in self.items():
             if scorefilter and not scorefilter(features): continue
-            print(self.itemtostring(sourcepattern, targetpattern, features))
+            print(self.itemtostring(sourcepattern, targetpattern, features,sourcedecoder, targetdecoder))
 
-    def itemtostring(self, sourcepattern,targetpattern, features, conf=None):
+    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, conf=None):
         if not conf: conf = self.conf
-        s = sourcepattern.tostring(self.sourcedecoder) + "\t"
-        s += targetpattern.tostring(self.targetdecoder) + "\t"
+        s = sourcepattern.tostring(sourcedecoder) + "\t"
+        s += targetpattern.tostring(targetdecoder) + "\t"
         if len(features) < len(conf):
             print(repr(conf.conf),file=sys.stderr)
             print(repr(features),file=sys.stderr)
@@ -680,7 +680,7 @@ def main_extractfeatures():
                 prevsourcepattern = sourcepattern
 
             for featurevector in featurevectors:
-                f.write(model.itemtostring(sourcepattern, targetpattern, featurevector) + "\n")
+                f.write(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder) + "\n")
 
         if f: f.close()
     else:
