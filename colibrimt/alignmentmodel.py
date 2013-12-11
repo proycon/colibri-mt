@@ -450,47 +450,36 @@ class FeaturedAlignmentModel(AlignmentModel):
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
             count+=1
-            print("DEBUG #1   @",count,file=sys.stderr)
             n = len(sourcepattern)
-            print("DEBUG #2", file=sys.stderr)
 
             if (sourcepattern, targetpattern) != prev:
                 if prev:
                     #process previous
                     newfeaturevectors = []
-                    print("DEBUG #2a", file=sys.stderr)
                     featurevectors = self[prev]
-                    print("DEBUG #2b", file=sys.stderr)
                     assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
                     scorevector = featurevectors[0] #traditional moses score vector
                     for featurevector, count in tmpdata.items():
                         featurevector = list(featurevector)
                         newfeaturevectors.append(scorevector + featurevector + [count])
-                    print("DEBUG #2c", file=sys.stderr)
                     yield prev[0], prev[1], newfeaturevectors
-                    print("DEBUG #2d", file=sys.stderr)
 
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
 
             featurevector = [] #local context features
 
-            print("DEBUG #3", file=sys.stderr)
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
                 _,classdecoder, leftcontext, focus, rightcontext = factor
-                print("DEBUG #3a", file=sys.stderr)
                 sentencelength = factoredcorpus.sentencelength(sentence)
-                print("DEBUG #3b", file=sys.stderr)
                 for i in range(token - leftcontext,token):
                     if token < 0:
                         unigram = colibricore.beginpattern
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
-                print("DEBUG #3c", file=sys.stderr)
                 if focus:
                     featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
-                print("DEBUG #3d", file=sys.stderr)
                 for i in range(token + n , token + n + rightcontext):
                     if token > sentencelength:
                         unigram = colibricore.endpattern
@@ -498,7 +487,6 @@ class FeaturedAlignmentModel(AlignmentModel):
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
 
-            print("DEBUG #4", file=sys.stderr)
             #print(featurevector,file=sys.stderr)
             extracted += 1
             tmpdata[tuple(featurevector)] += 1
@@ -682,10 +670,8 @@ def main_extractfeatures():
         f = None
         prevsourcepattern = None
         for sourcepattern, targetpattern, featurevectors in model.extractfactorfeatures(sourcemodel, targetmodel, corpora):
-            if sourcepattern != prevsourcepattern:
-                print("DEBUG pattern to string",file=sys.stderr)
+            if not (prevsourcepattern is None) and sourcepattern != prevsourcepattern:
                 sourcepattern_s = sourcepattern.tostring(sourcedecoder)
-                print("DEBUG: " , sourcepattern_s,file=sys.stderr)
                 trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
                 print("Writing " + trainfile,file=sys.stderr)
                 if f:
