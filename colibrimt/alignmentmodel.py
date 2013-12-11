@@ -209,20 +209,20 @@ class FeatureConfiguration:
         for x in self.conf:
             if forall:
                 if select:
-                    yield select[i]
+                    yield x, select[i]
                 else:
                     yield x
             elif x[0] is colibricore.Pattern and forclassifier:
                 if select:
                     count = x[2] + x[4]
                     if x[3]: count += 1
-                    yield select[i:i+count]
+                    yield x, select[i:i+count]
                     i = (i+count)-1
                 else:
                     yield x
             elif (x[1] and forscore) or (len(x) == 3 and x[2] and forclassifier): #length check necessary for backwards compatibility
                 if select:
-                    yield select[i]
+                    yield x, select[i]
                 else:
                     yield x
 
@@ -292,35 +292,33 @@ class FeaturedAlignmentModel(AlignmentModel):
 
     def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, forscore=True,forclassifier=True,forall=True, conf=None):
         if not conf: conf = self.conf
-        s = ""
+        s = []
         if not forclassifier:
-            s += sourcepattern.tostring(sourcedecoder) + "\t"
-            s += targetpattern.tostring(targetdecoder) + "\t"
+            s.append( sourcepattern.tostring(sourcedecoder) )
+            s.append( targetpattern.tostring(targetdecoder) )
         if len(features) < len(conf):
             print(repr(conf.conf),file=sys.stderr)
             print(repr(features),file=sys.stderr)
             raise Exception("Expected " + str(len(conf)) + " features, got " + str(len(features)))
-        it = iter(features)
-        for i, currentconf in enumerate(conf.items(forscore,forclassifier,forall) ):
+
+        for i, currentconf, feature in enumerate(conf.items(forscore,forclassifier,forall, features) ):
             if currentconf[0] == colibricore.Pattern:
                 _, classdecoder, leftcontext, dofocus, rightcontext = currentconf
                 classdecoder = self.conf.decoders[classdecoder]
                 n = leftcontext + rightcontext
                 if dofocus: n += 1
                 for j in range(0,n):
-                    p = next(it)
+                    p = feature[j]
                     if not isinstance(p,  colibricore.Pattern):
                         raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
-                    s += p.tostring(classdecoder)
-                    if i < len(conf) -1:
-                        #not the last feature yet:
-                        s += "\t"
+                    s.append( p.tostring(classdecoder))
             else:
-                s += str(next(it)) + "\t"
+                s.append(str(feature))
+
+
         if forclassifier:
-            if s and s[-1] != "\t": s += "\t"
-            s += targetpattern.tostring(targetdecoder)
-        return s
+            s.append( targetpattern.tostring(targetdecoder) )
+        return "\t".join(s)
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
