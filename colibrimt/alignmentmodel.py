@@ -458,7 +458,9 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if prev:
                     #process previous
                     newfeaturevectors = []
+                    print("DEBUG #2a", file=sys.stderr)
                     featurevectors = self[prev]
+                    print("DEBUG #2b", file=sys.stderr)
                     assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
                     scorevector = featurevectors[0] #traditional moses score vector
                     for featurevector, count in tmpdata.items():
@@ -469,7 +471,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
 
-            featurevector = [] #copy of the scorevector will be first
+            featurevector = [] #local context features
 
             print("DEBUG #3", file=sys.stderr)
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
