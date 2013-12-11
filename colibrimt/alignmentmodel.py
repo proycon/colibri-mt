@@ -198,21 +198,42 @@ class FeatureConfiguration:
         for x in self.conf:
             yield x
 
-    def items(self, forscore=True,forclassifier=True,forall=True):
+
+
+    def items(self, forscore=True,forclassifier=True,forall=True,select=None):
+        if select:
+            if len(select) != len(self):
+                raise Exception("Select arguments has length ",len(select), ", expected " , len(self))
+
+        i = 0
         for x in self.conf:
             if forall:
-                yield x
+                if select:
+                    yield select[i]
+                else:
+                    yield x
             elif x[0] is colibricore.Pattern and forclassifier:
-                yield x
-            elif x[1] and forscore or (len(x) == 3 and x[2] and forclassifier): #length check necessary for backwards compatibility
-                yield x
+                if select:
+                    count = x[2] + x[4]
+                    if x[3]: count += 1
+                    yield select[i:i+count]
+                    i = (i+count)-1
+                else:
+                    yield x
+            elif (x[1] and forscore) or (len(x) == 3 and x[2] and forclassifier): #length check necessary for backwards compatibility
+                if select:
+                    yield select[i]
+                else:
+                    yield x
 
-    def scorefeatures(self):
-        for x in self.items(True,False,False):
+            i+=1
+
+    def scorefeatures(self, select=None):
+        for x in self.items(True,False,False,select):
             yield x
 
-    def classifierfeatures(self):
-        for x in self.items(False,True,False):
+    def classifierfeatures(self, select=None):
+        for x in self.items(False,True,False,select):
             yield x
 
 
@@ -676,8 +697,8 @@ def main_extractfeatures():
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addcontextfeature(classfile,left,True, right)
 
-    #append the following features (appended to score features)
-    model.conf.addfeature(int) #occurrence count for context configuration
+    #store occurrence info in feature vector (appended to score features)
+    model.conf.addfeature(int,False,False) #occurrence count for context configuration
 
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
