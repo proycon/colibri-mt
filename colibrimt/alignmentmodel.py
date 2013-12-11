@@ -301,7 +301,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             print(repr(features),file=sys.stderr)
             raise Exception("Expected " + str(len(conf)) + " features, got " + str(len(features)))
 
-        for i, currentconf, feature in enumerate(conf.items(forscore,forclassifier,forall, features) ):
+        for i, (currentconf, feature) in enumerate(conf.items(forscore,forclassifier,forall, features) ):
             if currentconf[0] == colibricore.Pattern:
                 _, classdecoder, leftcontext, dofocus, rightcontext = currentconf
                 classdecoder = self.conf.decoders[classdecoder]
