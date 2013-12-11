@@ -171,7 +171,7 @@ class FeatureConfiguration:
         self.conf = []
         self.decoders = {}
 
-    def addfactorfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
+    def addcontextfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
         if isinstance(classdecoder, colibricore.ClassDecoder):
             self.decoders[classdecoder.filename] = classdecoder
             classdecoder = classdecoder.filename
@@ -179,13 +179,8 @@ class FeatureConfiguration:
             raise ValueError
         self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
 
-    def addfeature(self, type):
-        """Will not be propagated to Moses phrasetable"""
-        self.conf.append( ( type,False) )
-
-    def addscorefeature(self, type):
-        """Will be propagated to Moses phrasetable"""
-        self.conf.append( ( type,True) )
+    def addfeature(self, type, score=False, classifier=False):
+        self.conf.append( ( type,score,classifier) )
 
 
     def __len__(self):
@@ -202,6 +197,24 @@ class FeatureConfiguration:
     def __iter__(self):
         for x in self.conf:
             yield x
+
+    def items(self, forscore=True,forclassifier=True,forall=True):
+        for x in self.conf:
+            if forall:
+                yield x
+            elif x[0] is colibricore.Pattern and forclassifier:
+                yield x
+            elif x[1] and forscore or x[2] and forclassifier:
+                yield x
+
+    def scorefeatures(self):
+        for x in self.items(True,False,False):
+            yield x
+
+    def classifierfeatures(self):
+        for x in self.items(False,True,False):
+            yield x
+
 
     def __getitem__(self, index):
         return self.conf[index]
@@ -256,10 +269,10 @@ class FeaturedAlignmentModel(AlignmentModel):
             if scorefilter and not scorefilter(features): continue
             print(self.itemtostring(sourcepattern, targetpattern, features,sourcedecoder, targetdecoder))
 
-    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, timblstyle=False, conf=None):
+    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, forscore=True,forclassifier=True,forall=True, conf=None):
         if not conf: conf = self.conf
         s = ""
-        if not timblstyle:
+        if not forclassifier:
             s += sourcepattern.tostring(sourcedecoder) + "\t"
             s += targetpattern.tostring(targetdecoder) + "\t"
         if len(features) < len(conf):
@@ -267,7 +280,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             print(repr(features),file=sys.stderr)
             raise Exception("Expected " + str(len(conf)) + " features, got " + str(len(features)))
         it = iter(features)
-        for i, currentconf in enumerate(conf):
+        for i, currentconf in enumerate(conf.items(forscore,forclassifier,forall) ):
             if currentconf[0] == colibricore.Pattern:
                 _, classdecoder, leftcontext, dofocus, rightcontext = currentconf
                 classdecoder = self.conf.decoders[classdecoder]
@@ -283,7 +296,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                         s += "\t"
             else:
                 s += str(next(it)) + "\t"
-        if timblstyle:
+        if forclassifier:
             if s and s[-1] != "\t": s += "\t"
             s += targetpattern.tostring(targetdecoder)
         return s
@@ -293,10 +306,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         with open(filename,'w',encoding='utf-8') as f:
             for sourcepattern, targetpattern, features in self:
                 f.write(sourcepattern.tostring(sourcedecoder) + " ||| " + targetpattern.tostring(targetdecoder) + " ||| ")
-                for i, feature, featureconf in enumerate(zip(features, self.conf)):
-                    if featureconf[0] != colibricore.Pattern and featureconf[1]:
-                        if (i > 0): f.write(" ")
-                        f.write(str(feature))
+                for i, feature, featureconf in enumerate(zip(features, self.conf.scorefeatures())):
+                    if (i > 0): f.write(" ")
+                    f.write(str(feature))
                 f.write("\n")
 
     def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
@@ -391,7 +403,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         if haswordalignments:
             l = l - 1
         for x in range(0,l):
-            self.conf.addscorefeature(float)
+            self.conf.addfeature(float,True,False) #score: True, classifier: False
         if haswordalignments:
             self.conf.addfeature(list)
 
@@ -436,7 +448,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
 
 
-    def extractfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+    def extractcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora):
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
@@ -469,7 +481,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     for featurevector, count in tmpdata.items():
                         featurevector = list(featurevector)
                         newfeaturevectors.append(scorevector + featurevector + [count])
-                    yield prev[0], prev[1], newfeaturevectors
+                    yield prev[0], prev[1], newfeaturevectors, scorevector
 
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
@@ -508,13 +520,13 @@ class FeaturedAlignmentModel(AlignmentModel):
             for featurevector, count in tmpdata.items():
                 featurevector = list(featurevector)
                 newfeaturevectors.append(scorevector + featurevector + [count])
-            yield prev[0], prev[1], newfeaturevectors
+            yield prev[0], prev[1], newfeaturevectors, scorevector
 
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
-    def addfactorfeatures(self, sourcemodel, targetmodel, factoredcorpora):
-        for sourcepattern, targetpattern, newfeaturevectors in self.extractfactorfeatures(sourcemodel, targetmodel, factoredcorpora):
+    def addcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, factoredcorpora):
             self[(sourcepattern,targetpattern)] = newfeaturevectors
 
     def normalize(self, sumover='s'):
@@ -625,6 +637,8 @@ def main_extractfeatures():
     parser.add_argument('-l','--leftsize',type=int,help="Left context size (may be specified multiple times, once per -f)", action='append',required=True)
     parser.add_argument('-r','--rightsize',type=int,help="Right context size (may be specified multiple times, once per -f)", action='append',required=True)
     parser.add_argument('-C','--buildclassifiers',help="Build classifier training data, one classifier expert per pattern, specify a working directory in -o", action='store_true',default=False)
+    parser.add_argument('-x','--weighbyoccurrence',help="When building classifier data (-C), use exemplar weighting to reflect occurrence count, rather than duplicating instances", action='store_true',default=False)
+    parser.add_argument('-X','--weighbyscore',help="When building classifier data (-C), use exemplar weighting to weigh in p(t|s) from score vector", action='store_true',default=False)
     args = parser.parse_args()
 
     if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
@@ -660,7 +674,7 @@ def main_extractfeatures():
 
     #add context configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
-        model.conf.addfactorfeature(classfile,left,True, right)
+        model.conf.addcontextfeature(classfile,left,True, right)
 
     #append the following features (appended to score features)
     model.conf.addfeature(int) #occurrence count for context configuration
@@ -679,23 +693,58 @@ def main_extractfeatures():
 
         f = None
         prevsourcepattern = None
-        for sourcepattern, targetpattern, featurevectors in model.extractfactorfeatures(sourcemodel, targetmodel, corpora):
+        firsttargetpattern = None
+        prevtargetpattern = None
+        trainfile = ""
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
-                sourcepattern_s = sourcepattern.tostring(sourcedecoder)
-                trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
-                print("Writing " + trainfile,file=sys.stderr)
-                if f:
+                #write previous buffer to file:
+                if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
+                    #only bother if there are at least two distinct target options
+                    sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
+                    trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                    print("Writing " + trainfile,file=sys.stderr)
+                    f = open(trainfile,'w',encoding='utf-8')
+                    for line, occurrences,pts in buffer:
+                        if args.weighbyscore:
+                            f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                        elif args.weighbyoccurrence:
+                            f.write(line + "\t" + str(occurrences) +  "\n")
+                        else:
+                            for i in range(0,occurrences):
+                                f.write(line + "\n")
                     f.close()
-                f = open(trainfile,'w',encoding='utf-8' )
+
+                buffer = []
                 prevsourcepattern = sourcepattern
+                firsttargetpattern = targetpattern
 
             for featurevector in featurevectors:
-                f.write(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder) + "\n")
+                #last feature holds occurrence count:
+                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )
 
-        if f: f.close()
+            prevtargetpattern = targetpattern
+
+        #write last one to file:
+        if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
+            #only bother if there are at least two distinct target options
+            sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
+            trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+            print("Writing " + trainfile,file=sys.stderr)
+            f = open(trainfile,'w',encoding='utf-8')
+            for line, occurrences,pts in buffer:
+                if args.weighbyscore:
+                    f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                elif args.weighbyoccurrence:
+                    f.write(line + "\t" + str(occurrences) +  "\n")
+                else:
+                    for i in range(0,occurrences):
+                        f.write(line + "\n")
+            f.close()
+
     else:
-        print("Extracting and adding features from ", corpusfile, file=sys.stderr)
-        model.addfactorfeatures(sourcemodel, targetmodel, corpora)
+        print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
+        model.addcontextfeatures(sourcemodel, targetmodel, corpora)
 
         print("Saving alignment model", file=sys.stderr)
         model.save(args.outputfile)
