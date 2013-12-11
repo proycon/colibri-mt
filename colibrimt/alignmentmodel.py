@@ -445,8 +445,12 @@ class FeaturedAlignmentModel(AlignmentModel):
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
 
+        count = 0
+
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
+            count+=1
+            print("DEBUG @",count,file=sys.stderr)
             n = len(sourcepattern)
 
             if (sourcepattern, targetpattern) != prev:
