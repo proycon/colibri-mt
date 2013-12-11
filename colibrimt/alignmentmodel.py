@@ -652,14 +652,13 @@ def main_extractfeatures():
     #    print("Loading corpus file ", classfile, file=sys.stderr)
     #    classdecoders.append(colibricore.ClassDecoder(classfile))
 
-    #append the following features (appended to score features)
-    model.conf.addfeature(int) #occurrence count for context configuration
-
 
     #add context configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,True, right)
 
+    #append the following features (appended to score features)
+    model.conf.addfeature(int) #occurrence count for context configuration
 
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
