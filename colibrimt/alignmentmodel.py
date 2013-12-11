@@ -204,7 +204,7 @@ class FeatureConfiguration:
                 yield x
             elif x[0] is colibricore.Pattern and forclassifier:
                 yield x
-            elif x[1] and forscore or x[2] and forclassifier:
+            elif x[1] and forscore or (len(x) == 3 and x[2] and forclassifier): #length check necessary for backwards compatibility
                 yield x
 
     def scorefeatures(self):
