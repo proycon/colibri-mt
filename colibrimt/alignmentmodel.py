@@ -653,9 +653,11 @@ def main_extractfeatures():
     #append the following features (appended to score features)
     model.conf.addfeature(int) #occurrence count for context configuration
 
+
     #add context configuration
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addfactorfeature(classfile,left,True, right)
+
 
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
@@ -666,6 +668,8 @@ def main_extractfeatures():
             except:
                 print("Unable to build directory " + args.outputfile,file=sys.stderr)
                 sys.exit(2)
+
+        model.conf.loaddecoders(sourcedecoder,targetdecoder)
 
         f = None
         prevsourcepattern = None
