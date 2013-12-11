@@ -670,7 +670,7 @@ def main_extractfeatures():
         f = None
         prevsourcepattern = None
         for sourcepattern, targetpattern, featurevectors in model.extractfactorfeatures(sourcemodel, targetmodel, corpora):
-            if not (prevsourcepattern is None) and sourcepattern != prevsourcepattern:
+            if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 sourcepattern_s = sourcepattern.tostring(sourcedecoder)
                 trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
                 print("Writing " + trainfile,file=sys.stderr)
