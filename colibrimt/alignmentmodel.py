@@ -273,6 +273,8 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if dofocus: n += 1
                 for j in range(0,n):
                     p = next(it)
+                    if not isinstance(p,  colibricore.Pattern):
+                        raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
                     s += p.tostring(classdecoder)
                     if i < len(conf) -1:
                         #not the last feature yet:
