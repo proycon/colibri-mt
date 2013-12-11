@@ -256,10 +256,12 @@ class FeaturedAlignmentModel(AlignmentModel):
             if scorefilter and not scorefilter(features): continue
             print(self.itemtostring(sourcepattern, targetpattern, features,sourcedecoder, targetdecoder))
 
-    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, conf=None):
+    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, timblstyle=False, conf=None):
         if not conf: conf = self.conf
-        s = sourcepattern.tostring(sourcedecoder) + "\t"
-        s += targetpattern.tostring(targetdecoder) + "\t"
+        s = ""
+        if not timblstyle:
+            s += sourcepattern.tostring(sourcedecoder) + "\t"
+            s += targetpattern.tostring(targetdecoder) + "\t"
         if len(features) < len(conf):
             print(repr(conf.conf),file=sys.stderr)
             print(repr(features),file=sys.stderr)
@@ -281,6 +283,9 @@ class FeaturedAlignmentModel(AlignmentModel):
                         s += "\t"
             else:
                 s += str(next(it)) + "\t"
+        if timblstyle:
+            if s and s[-1] != "\t": s += "\t"
+            s += targetpattern.tostring(targetdecoder)
         return s
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
