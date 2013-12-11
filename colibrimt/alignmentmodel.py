@@ -668,7 +668,9 @@ def main_extractfeatures():
         prevsourcepattern = None
         for sourcepattern, targetpattern, featurevectors in model.extractfactorfeatures(sourcemodel, targetmodel, corpora):
             if sourcepattern != prevsourcepattern:
+                print("DEBUG pattern to string",file=sys.stderr)
                 sourcepattern_s = sourcepattern.tostring(sourcedecoder)
+                print("DEBUG: " , sourcepattern_s,file=sys.stderr)
                 trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
                 print("Writing " + trainfile,file=sys.stderr)
                 if f:
