@@ -450,8 +450,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         extracted = 0
         for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
             count+=1
-            print("DEBUG @",count,file=sys.stderr)
+            print("DEBUG #1   @",count,file=sys.stderr)
             n = len(sourcepattern)
+            print("DEBUG #2", file=sys.stderr)
 
             if (sourcepattern, targetpattern) != prev:
                 if prev:
@@ -470,17 +471,22 @@ class FeaturedAlignmentModel(AlignmentModel):
 
             featurevector = [] #copy of the scorevector will be first
 
+            print("DEBUG #3", file=sys.stderr)
             for factoredcorpus, factor in zip(factoredcorpora, factorconf):
                 _,classdecoder, leftcontext, focus, rightcontext = factor
+                print("DEBUG #3a", file=sys.stderr)
                 sentencelength = factoredcorpus.sentencelength(sentence)
+                print("DEBUG #3b", file=sys.stderr)
                 for i in range(token - leftcontext,token):
                     if token < 0:
                         unigram = colibricore.beginpattern
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
+                print("DEBUG #3c", file=sys.stderr)
                 if focus:
                     featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
+                print("DEBUG #3d", file=sys.stderr)
                 for i in range(token + n , token + n + rightcontext):
                     if token > sentencelength:
                         unigram = colibricore.endpattern
@@ -488,6 +494,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                         unigram = factoredcorpus[(sentence,i)]
                     featurevector.append(unigram)
 
+            print("DEBUG #4", file=sys.stderr)
             #print(featurevector,file=sys.stderr)
             extracted += 1
             tmpdata[tuple(featurevector)] += 1
