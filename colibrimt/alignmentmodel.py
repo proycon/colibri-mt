@@ -258,8 +258,8 @@ class FeaturedAlignmentModel(AlignmentModel):
 
     def itemtostring(self, sourcepattern,targetpattern, features, conf=None):
         if not conf: conf = self.conf
-        s = sourcepattern.tostring(sourcedecoder) + "\t"
-        s += targetpattern.tostring(targetdecoder) + "\t"
+        s = sourcepattern.tostring(self.sourcedecoder) + "\t"
+        s += targetpattern.tostring(self.targetdecoder) + "\t"
         if len(features) < len(conf):
             print(repr(conf.conf),file=sys.stderr)
             print(repr(features),file=sys.stderr)
