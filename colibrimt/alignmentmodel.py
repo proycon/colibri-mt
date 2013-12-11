@@ -466,7 +466,9 @@ class FeaturedAlignmentModel(AlignmentModel):
                     for featurevector, count in tmpdata.items():
                         featurevector = list(featurevector)
                         newfeaturevectors.append(scorevector + featurevector + [count])
+                    print("DEBUG #2c", file=sys.stderr)
                     yield prev[0], prev[1], newfeaturevectors
+                    print("DEBUG #2d", file=sys.stderr)
 
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
