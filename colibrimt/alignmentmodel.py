@@ -437,6 +437,8 @@ class FeaturedAlignmentModel(AlignmentModel):
             if not sourcepattern in sourcemodel:
                 continue
 
+            tmpdata = defaultdict(list)
+
             sourceindexes = None #loading deferred until really needed
             for targetpattern in self.targetpatterns(sourcepattern):
                 #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
@@ -453,6 +455,8 @@ class FeaturedAlignmentModel(AlignmentModel):
                     if targetsentence in sourceindexes:
                         targetindexes[targetsentence].append(targettoken)
 
+                ptsscore = self[(sourcepattern,targetpattern)][0][2] #assuming moses style score vector!
+
                 #for every occurrence of this pattern in the source
                 for sentence in targetindexes:
                     #print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
@@ -460,8 +464,13 @@ class FeaturedAlignmentModel(AlignmentModel):
                     for token in sourceindexes[sentence]:
                         for targettoken in targetindexes[sentence]:
                             occurrences += 1
+                            tmpdata[(sentence,token,targettoken)].append( (ptsscore, sourcepattern, targetpattern) )
                             yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
                             break
+
+            for (sentence,token, targettoken),targets  in tmpdata.items():
+                sourcepattern, targetpattern = sorted(targets)[0]
+                yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
 
             if showprogress:
                 print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
