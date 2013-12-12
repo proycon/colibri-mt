@@ -667,7 +667,7 @@ def main_extractfeatures():
     parser.add_argument('-C','--buildclassifiers',help="Build classifier training data, one classifier expert per pattern, specify a working directory in -o", action='store_true',default=False)
     parser.add_argument('-x','--weighbyoccurrence',help="When building classifier data (-C), use exemplar weighting to reflect occurrence count, rather than duplicating instances", action='store_true',default=False)
     parser.add_argument('-X','--weighbyscore',help="When building classifier data (-C), use exemplar weighting to weigh in p(t|s) from score vector", action='store_true',default=False)
-    parser.add_argument('-I','--instancethreshold',type=int,help="Classifiers having less than the specified number of instances will be not be generated", action='store',default=2)
+    parser.add_argument('-I','--instancethreshold',type=int,help="Classifiers (-C) having less than the specified number of instances will be not be generated", action='store',default=2)
     args = parser.parse_args()
 
     if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
