@@ -51,19 +51,22 @@ def main():
         print("Loading test corpus",file=sys.stderr)
         testcorpus = IndexedCorpus(corpusfile)
 
-    if args.alignmodelfile:
+    if not args.train and args.alignmodelfile:
+        if args.inputfile:
+            print("No input file specified (-f)",file=sys.stderr)
+            sys.exit(2)
+
         print("Loading target decoder",file=sys.stderr)
         targetdecoder = ClassDecoder(args.targetclassfile)
         print("Loading alignment model (may take a while)",file=sys.stderr)
         alignmodel = FeaturedAlignmentModel()
         alignmodel.load(args.inputfile)
 
-        if args.inputfile:
-            print("Building constraint model of source patterns",file=sys.stderr)
-            #constain model is needed to constrain the test model
-            constraintmodel = UnindexedPatternModel()
-            for pattern in alignmodel.sourcepatterns():
-                constraintmodel.add(pattern)
+        print("Building constraint model of source patterns",file=sys.stderr)
+        #constain model is needed to constrain the test model
+        constraintmodel = UnindexedPatternModel()
+        for pattern in alignmodel.sourcepatterns():
+            constraintmodel.add(pattern)
 
     if args.inputfile:
         print("Building patternmodel on test corpus",file=sys.stderr)
