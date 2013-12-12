@@ -427,8 +427,7 @@ class FeaturedAlignmentModel(AlignmentModel):
             self.conf.addfeature(list)
 
     def patternswithindexes(self, sourcemodel, targetmodel, showprogress=True):
-        """Finds occurrences (positions in the source and target models) for all patterns in the alignment model"""
-        #print("DEBUG patternswithindexes()",file=sys.stderr)
+        """Finds occurrences (positions in the source and target models) for all patterns in the alignment model. """
         l = len(self)
         for i, sourcepattern in enumerate(self.sourcepatterns()):
             if showprogress:
@@ -445,7 +444,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if not targetpattern in targetmodel:
                     continue
 
-                if not sourceindexes:
+                if not sourceindexes: #loading deferred until here to improve performance, preventing unnecessary loads
                     sourceindexes = defaultdict(list)
                     for sourcesentence, sourcetoken in sourcemodel[sourcepattern]:
                         sourceindexes[sourcesentence].append(sourcetoken)
@@ -463,13 +462,14 @@ class FeaturedAlignmentModel(AlignmentModel):
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
                     for token in sourceindexes[sentence]:
                         for targettoken in targetindexes[sentence]:
-                            occurrences += 1
                             tmpdata[(sentence,token,targettoken)].append( (ptsscore, sourcepattern, targetpattern) )
-                            yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
-                            break
+                            #yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
+                            break #multiple possible matches in same sentence? just pick first one... no word alignments here to resolve this
 
+            #make sure only the strongest targetpattern for a given occurrence is chosen, in case multiple options exist
             for (sentence,token, targettoken),targets  in tmpdata.items():
-                sourcepattern, targetpattern = sorted(targets)[0]
+                ptsscore,sourcepattern, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
+                occurrences += 1
                 yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
 
             if showprogress:
