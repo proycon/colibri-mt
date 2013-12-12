@@ -667,6 +667,7 @@ def main_extractfeatures():
     parser.add_argument('-C','--buildclassifiers',help="Build classifier training data, one classifier expert per pattern, specify a working directory in -o", action='store_true',default=False)
     parser.add_argument('-x','--weighbyoccurrence',help="When building classifier data (-C), use exemplar weighting to reflect occurrence count, rather than duplicating instances", action='store_true',default=False)
     parser.add_argument('-X','--weighbyscore',help="When building classifier data (-C), use exemplar weighting to weigh in p(t|s) from score vector", action='store_true',default=False)
+    parser.add_argument('-I','--instancethreshold',type=int,help="Classifiers having less than the specified number of instances will be not be generated", action='store',default=2)
     args = parser.parse_args()
 
     if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
@@ -729,19 +730,22 @@ def main_extractfeatures():
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
                     #only bother if there are at least two distinct target options
-                    sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
-                    trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
-                    print("Writing " + trainfile,file=sys.stderr)
-                    f = open(trainfile,'w',encoding='utf-8')
-                    for line, occurrences,pts in buffer:
-                        if args.weighbyscore:
-                            f.write(line + "\t" + str(occurrences*pts) +  "\n")
-                        elif args.weighbyoccurrence:
-                            f.write(line + "\t" + str(occurrences) +  "\n")
-                        else:
-                            for i in range(0,occurrences):
-                                f.write(line + "\n")
-                    f.close()
+                    if len(buffer) < args.instancethreshold:
+                        print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
+                    else:
+                        sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
+                        trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                        print("Writing " + trainfile,file=sys.stderr)
+                        f = open(trainfile,'w',encoding='utf-8')
+                        for line, occurrences,pts in buffer:
+                            if args.weighbyscore:
+                                f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                            elif args.weighbyoccurrence:
+                                f.write(line + "\t" + str(occurrences) +  "\n")
+                            else:
+                                for i in range(0,occurrences):
+                                    f.write(line + "\n")
+                        f.close()
 
                 buffer = []
                 prevsourcepattern = sourcepattern
@@ -756,19 +760,22 @@ def main_extractfeatures():
         #write last one to file:
         if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
             #only bother if there are at least two distinct target options
-            sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
-            trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
-            print("Writing " + trainfile,file=sys.stderr)
-            f = open(trainfile,'w',encoding='utf-8')
-            for line, occurrences,pts in buffer:
-                if args.weighbyscore:
-                    f.write(line + "\t" + str(occurrences*pts) +  "\n")
-                elif args.weighbyoccurrence:
-                    f.write(line + "\t" + str(occurrences) +  "\n")
-                else:
-                    for i in range(0,occurrences):
-                        f.write(line + "\n")
-            f.close()
+            if len(buffer) < args.instancethreshold:
+                print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
+            else:
+                sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
+                trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                print("Writing " + trainfile,file=sys.stderr)
+                f = open(trainfile,'w',encoding='utf-8')
+                for line, occurrences,pts in buffer:
+                    if args.weighbyscore:
+                        f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                    elif args.weighbyoccurrence:
+                        f.write(line + "\t" + str(occurrences) +  "\n")
+                    else:
+                        for i in range(0,occurrences):
+                            f.write(line + "\n")
+                f.close()
 
     else:
         print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
