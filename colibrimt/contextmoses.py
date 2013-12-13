@@ -93,9 +93,45 @@ def main():
             classifier.train()
             classifier.save()
     else:
+        #TEST
         if not args.inputfile:
             print("Specify an input file (-f)",file=sys.stderr)
             sys.exit(2)
+
+
+
+        #write intermediate test data (consisting only of indices AND unknown words) and
+
+        f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
+        for sentencenum, line in enumerate(testcorpus.sentences()):
+            sentenceindex = sentencenum + 1
+            tokens = [] #actual string representations
+            for tokenindex,pattern in enumerate(line):
+                #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
+                if not testmodel.covered( (sentenceindex, tokenindex) ):
+                    tokens.append(pattern.tostring(sourcedecoder))
+                else:
+                    tokens.append(str(sentenceindex) + "_" + str(tokenindex))
+            f.write(" ".join(tokens) + "\n")
+        f.close()
+
+        #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
+        ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
+        for pattern in testmodel:
+            #iterate over all occurrences, each will be encoded seperately
+            for sentenceindex, tokenindex in testmodel[pattern]:
+
+        ftable.close()
+
+
+
+
+
+
+
+    #invoke moses
+
+
 
 
 
