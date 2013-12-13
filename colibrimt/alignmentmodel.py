@@ -732,6 +732,14 @@ def main_extractfeatures():
         trainfile = ""
         if args.monolithic:
             f = open(args.outputfile + "/train",'w',encoding='utf-8')
+            f2 = open(args.outputfile + "/sourcepatterns.list",'w',encoding='utf-8')
+
+        fconf = open(args.outputfile + "/classifier.conf",'w',encoding='utf-8')
+
+        classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic }
+        pickle.dump(classifierconf, fconf)
+        fconf.close()
+
 
         for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
@@ -746,6 +754,8 @@ def main_extractfeatures():
                         print("Writing " + trainfile,file=sys.stderr)
                         if args.experts:
                             f = open(trainfile,'w',encoding='utf-8')
+                        elif args.monolithic:
+                            f2.write(sourcepattern_s+"\n")
                         for line, occurrences,pts in buffer:
                             if args.weighbyscore:
                                 f.write(line + "\t" + str(occurrences*pts) +  "\n")
@@ -792,6 +802,7 @@ def main_extractfeatures():
 
         if args.monolithic:
             f.close()
+            f2.close()
 
     else:
         print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
