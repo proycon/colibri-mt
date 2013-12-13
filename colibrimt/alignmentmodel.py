@@ -713,6 +713,9 @@ def main_extractfeatures():
     print("Configuration:",model.conf.conf,file=sys.stderr)
 
     if args.buildclassifiers:
+        if not args.monolithic and not args.experts:
+            args.experts = True
+
         if not os.path.isdir(args.outputfile):
             try:
                 os.mkdir(args.outputfile)
@@ -727,6 +730,9 @@ def main_extractfeatures():
         firsttargetpattern = None
         prevtargetpattern = None
         trainfile = ""
+        if args.monolithic:
+            f = open(args.outputfile + "/train",'w',encoding='utf-8')
+
         for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
@@ -738,7 +744,8 @@ def main_extractfeatures():
                         sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
                         trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
                         print("Writing " + trainfile,file=sys.stderr)
-                        f = open(trainfile,'w',encoding='utf-8')
+                        if args.experts:
+                            f = open(trainfile,'w',encoding='utf-8')
                         for line, occurrences,pts in buffer:
                             if args.weighbyscore:
                                 f.write(line + "\t" + str(occurrences*pts) +  "\n")
@@ -747,7 +754,8 @@ def main_extractfeatures():
                             else:
                                 for i in range(0,occurrences):
                                     f.write(line + "\n")
-                        f.close()
+                        if args.experts:
+                            f.close()
 
                 buffer = []
                 prevsourcepattern = sourcepattern
@@ -759,6 +767,7 @@ def main_extractfeatures():
 
             prevtargetpattern = targetpattern
 
+
         #write last one to file:
         if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
             #only bother if there are at least two distinct target options
@@ -768,7 +777,8 @@ def main_extractfeatures():
                 sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
                 trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
                 print("Writing " + trainfile,file=sys.stderr)
-                f = open(trainfile,'w',encoding='utf-8')
+                if args.experts:
+                    f = open(trainfile,'w',encoding='utf-8')
                 for line, occurrences,pts in buffer:
                     if args.weighbyscore:
                         f.write(line + "\t" + str(occurrences*pts) +  "\n")
@@ -777,7 +787,11 @@ def main_extractfeatures():
                     else:
                         for i in range(0,occurrences):
                             f.write(line + "\n")
-                f.close()
+                if args.experts:
+                    f.close()
+
+        if args.monolithic:
+            f.close()
 
     else:
         print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
