@@ -734,7 +734,7 @@ def main_extractfeatures():
             f = open(args.outputfile + "/train",'w',encoding='utf-8')
             f2 = open(args.outputfile + "/sourcepatterns.list",'w',encoding='utf-8')
 
-        fconf = open(args.outputfile + "/classifier.conf",'w',encoding='utf-8')
+        fconf = open(args.outputfile + "/classifier.conf",'wb')
 
         classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic }
         pickle.dump(classifierconf, fconf)

@@ -8,6 +8,7 @@ import glob
 from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions
 from colibrimt import FeaturedAlignmentModel
 import timbl
+import pickle
 
 def main():
     parser = argparse.ArgumentParser(description="Wrapper around the Moses Decoder that adds support for context features through classifiers.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -22,10 +23,13 @@ def main():
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
-    if not os.path.isdir(args.workdir):
-        print("Work directory " + args.workdir + " does not exist. Did you extract features and create classifier training files using colibri-extractfeatures?" ,file=sys.stderr)
+    if not os.path.isdir(args.workdir) or not os.path.exists(args.workdir + '/classifier.conf'):
+        print("Work directory " + args.workdir + " or classifier configuration therein does not exist. Did you extract features and create classifier training files using colibri-extractfeatures?" ,file=sys.stderr)
         sys.exit(2)
 
+    f = open(args.workdir + '/classifier.conf','rb')
+    classifierconf = pickle.load(f)
+    f.close()
 
 
     if args.inputfile:
