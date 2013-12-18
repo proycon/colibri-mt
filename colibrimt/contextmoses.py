@@ -75,7 +75,7 @@ def main():
     if args.inputfile:
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
-        testmodel = UnindexedPatternModel()
+        testmodel = IndexedPatternModel()
         testmodel.trainconstrainedbyunindexedmodel(corpusfile, options, constraintmodel)
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
@@ -101,7 +101,6 @@ def main():
 
 
         #write intermediate test data (consisting only of indices AND unknown words) and
-
         f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
         for sentencenum, line in enumerate(testcorpus.sentences()):
             sentenceindex = sentencenum + 1
@@ -120,6 +119,7 @@ def main():
         for pattern in testmodel:
             #iterate over all occurrences, each will be encoded seperately
             for sentenceindex, tokenindex in testmodel[pattern]:
+
 
         ftable.close()
 
