@@ -183,7 +183,8 @@ def main():
 
                 #process classifier result
 
-                #write phrasetable entry
+                #write phrasetable entries
+                #ftable.write(tokenspan + " ||| " + classlabel
 
 
             prevpattern = None
