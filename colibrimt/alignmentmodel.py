@@ -736,7 +736,7 @@ def main_extractfeatures():
 
         fconf = open(args.outputfile + "/classifier.conf",'wb')
 
-        classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic }
+        classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic, 'featureconf': model.conf}
         pickle.dump(classifierconf, fconf)
         fconf.close()
 

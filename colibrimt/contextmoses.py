@@ -10,9 +10,33 @@ from colibrimt import FeaturedAlignmentModel
 import timbl
 import pickle
 
+def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
+    factorconf = classifierconf['factorconf']
+    for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+        _,classdecoder, leftcontext, focus, rightcontext = factor
+        sentencelength = factoredcorpus.sentencelength(sentence)
+        for i in range(token - leftcontext,token):
+            if token < 0:
+                unigram = colibricore.beginpattern
+            else:
+                unigram = factoredcorpus[(sentence,i)]
+            featurevector.append(unigram)
+        if focus:
+            featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
+        for i in range(token + n , token + n + rightcontext):
+            if token > sentencelength:
+                unigram = colibricore.endpattern
+            else:
+                unigram = factoredcorpus[(sentence,i)]
+            featurevector.append(unigram)
+        yield featurevector
+
+
+
+
 def main():
     parser = argparse.ArgumentParser(description="Wrapper around the Moses Decoder that adds support for context features through classifiers.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-f','--inputfile', type=str,help="Input text file; the test corpus (plain text, tokenised, one sentence per line)", action='store',default="",required=False)
+    parser.add_argument('-f','--inputfile', type=str,help="Input text file; the test corpus (plain text, tokenised, one sentence per line), may be specified multiple times for each factor", action='append',required=False)
     parser.add_argument('-S','--sourceclassfile', type=str, help="Source class file", action='store',required=True)
     parser.add_argument('-T','--targetclassfile', type=str, help="Target class file", action='store',required=True)
     parser.add_argument('-a','--alignmodelfile', type=str,help="Colibri alignment model (made from phrase translation table)", action='store',default="",required=False)
@@ -32,28 +56,39 @@ def main():
     f.close()
 
 
+
+    #one for each factor
+    corpusfiles = []
+    classfiles = []
+    sourceencoders = []
+    sourcedecoders = []
+    testcorpus = []
+
+
     if args.inputfile:
-        #process inputfile
-        corpusfile = args.workdir + "/" + os.path.basename(args.inputfile).replace('.txt','') + '.colibri.dat'
-        classfile = args.workdir + "/" + os.path.basename(args.inputfile).replace('.txt','') + '.colibri.cls'
+        for i, inputfile in enumerate(args.inputfile):
+            print("Processing factor #" + str(i),file=sys.stderr)
+            #process inputfile
+            corpusfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.dat' )
+            classfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.cls' )
 
-        if os.path.exists(corpusfile) and os.path.exists(classfile):
-            print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
-            print("Loading source class encoder and decoder",file=sys.stderr)
-            sourceencoder = ClassEncoder(args.sourceclassfile)
-            sourcedecoder = ClassDecoder(args.sourceclassfile)
-        else:
-            print("Loading and extending source class encoder",file=sys.stderr)
-            sourceencoder = ClassEncoder(args.sourceclassfile)
-            sourceencoder.build(args.inputfile)
-            sourceencoder.save(classfile)
-            print("Encoding test corpus",file=sys.stderr)
-            sourceencoder.encodefile(args.inputfile, corpusfile)
-            print("Loading source class decoder",file=sys.stderr)
-            sourcedecoder = ClassDecoder(classfile)
+            if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
+                print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
+                print("Loading source class encoder and decoder",file=sys.stderr)
+                sourceencoders.append( ClassEncoder(args.sourceclassfile) )
+                sourcedecoders.append( ClassDecoder(args.sourceclassfile) )
+            else:
+                print("Loading and extending source class encoder",file=sys.stderr)
+                sourceencoders.append( ClassEncoder(args.sourceclassfile) )
+                sourceencoders[i].build(inputfile)
+                sourceencoders[i].save(classfiles[i])
+                print("Encoding test corpus",file=sys.stderr)
+                sourceencoders[i].encodefile(inputfile, corpusfiles[i])
+                print("Loading source class decoder",file=sys.stderr)
+                sourcedecoders.append( ClassDecoder(classfiles[i]) )
 
-        print("Loading test corpus",file=sys.stderr)
-        testcorpus = IndexedCorpus(corpusfile)
+            print("Loading test corpus",file=sys.stderr)
+            testcorpus.append( IndexedCorpus(corpusfile[i]) )
 
     if not args.train and args.alignmodelfile:
         if args.inputfile:
@@ -62,9 +97,10 @@ def main():
 
         print("Loading target decoder",file=sys.stderr)
         targetdecoder = ClassDecoder(args.targetclassfile)
+
         print("Loading alignment model (may take a while)",file=sys.stderr)
         alignmodel = FeaturedAlignmentModel()
-        alignmodel.load(args.inputfile)
+        alignmodel.load(args.inputfile[0])
 
         print("Building constraint model of source patterns",file=sys.stderr)
         #constain model is needed to constrain the test model
@@ -76,7 +112,7 @@ def main():
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
-        testmodel.trainconstrainedbyunindexedmodel(corpusfile, options, constraintmodel)
+        testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
 
@@ -117,8 +153,28 @@ def main():
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
         for pattern in testmodel:
-            #iterate over all occurrences, each will be encoded seperately
+            #iterate over all occurrences, each will be encoded separately
             for sentenceindex, tokenindex in testmodel[pattern]:
+                #compute token span
+                tokenspan = []
+                for t in range(tokenindex, tokenindex + len(pattern)):
+                    tokenspan.append(str(sentenceindex) + "_" + str(t))
+                tokenspan = " ".join(tokenspan)
+
+                #get context configuration
+                extractcontextfeatures(pattern, sentenceindex, tokenindex, testcorpus )
+
+
+
+                #call classifier
+
+                #process classifier result
+
+                #write phrasetable entry
+
+
+
+
 
 
         ftable.close()
