@@ -5,19 +5,21 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, beginpattern, endpattern
 from colibrimt import FeaturedAlignmentModel
 import timbl
 import pickle
+from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
     factorconf = classifierconf['factorconf']
+    featurevector = []
     for factoredcorpus, factor in zip(factoredcorpora, factorconf):
         _,classdecoder, leftcontext, focus, rightcontext = factor
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if token < 0:
-                unigram = colibricore.beginpattern
+                unigram = beginpattern
             else:
                 unigram = factoredcorpus[(sentence,i)]
             featurevector.append(unigram)
@@ -25,11 +27,11 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
         for i in range(token + n , token + n + rightcontext):
             if token > sentencelength:
-                unigram = colibricore.endpattern
+                unigram = endpattern
             else:
                 unigram = factoredcorpus[(sentence,i)]
             featurevector.append(unigram)
-        yield featurevector
+    return featurevector
 
 
 
@@ -144,7 +146,7 @@ def main():
             for tokenindex,pattern in enumerate(line):
                 #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
                 if not testmodel.covered( (sentenceindex, tokenindex) ):
-                    tokens.append(pattern.tostring(sourcedecoder))
+                    tokens.append(pattern.tostring(sourcedecoders[0]))
                 else:
                     tokens.append(str(sentenceindex) + "_" + str(tokenindex))
             f.write(" ".join(tokens) + "\n")
@@ -152,6 +154,8 @@ def main():
 
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
+        prevpattern = None
+        classifier = None
         for pattern in testmodel:
             #iterate over all occurrences, each will be encoded separately
             for sentenceindex, tokenindex in testmodel[pattern]:
@@ -162,17 +166,27 @@ def main():
                 tokenspan = " ".join(tokenspan)
 
                 #get context configuration
-                extractcontextfeatures(pattern, sentenceindex, tokenindex, testcorpus )
+                featurevector = extractcontextfeatures(classifierconf, pattern, sentenceindex, tokenindex, testcorpus)
 
+                classifier = None
 
+                #load classifier
+                if not prevpattern or pattern != prevpattern:
+                    classifierprefix = args.outputfile + "/" + quote_plus(pattern.tostring(sourcedecoders[0]))
+                    if os.path.exists(classifierprefix + ".ibase"):
+                        classifier = timbl.TimblClassifier(classifierprefix, args.timbloptions)
+                    elif os.path.exists(classifierprefix + ".train"):
+                        raise Exception("Classifier "  + classifierprefix + " not trained!")
 
                 #call classifier
+                classlabel, distribution, distance = classifier.classify(featurevector)
 
                 #process classifier result
 
                 #write phrasetable entry
 
 
+            prevpattern = None
 
 
 
