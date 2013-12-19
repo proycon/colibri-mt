@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function, unicode_literals, division, absolute_import
+
 import argparse
 import sys
 import os
@@ -14,6 +15,7 @@ from urllib.parse import quote_plus, unquote_plus
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
     factorconf = classifierconf['factorconf']
     featurevector = []
+    n = len(pattern)
     for factoredcorpus, factor in zip(factoredcorpora, factorconf):
         _,classdecoder, leftcontext, focus, rightcontext = factor
         sentencelength = factoredcorpus.sentencelength(sentence)
@@ -91,7 +93,7 @@ def main():
                 sourcedecoders.append( ClassDecoder(classfiles[i]) )
 
             print("Loading test corpus",file=sys.stderr)
-            testcorpus.append( IndexedCorpus(corpusfile[i]) )
+            testcorpus.append( IndexedCorpus(corpusfiles[i]) )
 
     if not args.train and args.alignmodelfile:
         if args.inputfile:
@@ -143,7 +145,7 @@ def main():
 
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
-        for sentencenum, line in enumerate(testcorpus.sentences()):
+        for sentencenum, line in enumerate(testcorpus[0].sentences()):
             sentenceindex = sentencenum + 1
             tokens = [] #actual string representations
             for tokenindex,pattern in enumerate(line):
