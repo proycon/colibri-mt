@@ -49,6 +49,7 @@ def main():
     parser.add_argument('-O','--timbloptions', type="str", help="Options for the Timbl classifier", action="store_true", default="-a 0 -k 1")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
     parser.add_argument('-H','--scorehandling', type="str", help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
+    parser.add_argument('--lm', type="str", help="Language Model", action="store", default="", required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -68,6 +69,7 @@ def main():
     sourceencoders = []
     sourcedecoders = []
     testcorpus = []
+
 
 
     if args.inputfile:
@@ -222,13 +224,51 @@ def main():
 
         ftable.close()
 
+    tweights = "1\n1\n1\n1\n1\n"
+    if args.scorehandling == "append":
+        tweights += "1\n"
 
+    #write moses.ini
+    f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
+    f.write("""
+#Moses INI, produced by mtwrapper.py
+[input-factors]
+0
 
+[mapping]
+T 0
 
+# translation tables: source-factors, target-factors, number of scores, file
+[ttable-file]
+0 0 0 5 {phrasetable}
 
+[lmodel-file]
+0 0 3 {lm}
 
+[ttable-limit]
+20
+
+[weight-d]
+1
+
+[weight-l]
+1
+
+[weight-t]
+{tweights}
+1
+1
+1
+1
+1
+
+[weight-w]
+0
+""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, tweights = tweights)
+    f.close()
 
     #invoke moses
+
 
 
 
