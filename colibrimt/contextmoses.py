@@ -46,6 +46,7 @@ def main():
     parser.add_argument('--train', help="Train classifiers", action="store_true", default=False)
     parser.add_argument('-O','--timbloptions', type="str", help="Options for the Timbl classifier", action="store_true", default="-a 0 -k 1")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
+    parser.add_argument('-H','--scorehandling', type="str", help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -97,6 +98,8 @@ def main():
             print("No input file specified (-f)",file=sys.stderr)
             sys.exit(2)
 
+        print("Loading target encoder",file=sys.stderr)
+        targetencoder = ClassEncoder(args.targetclassfile)
         print("Loading target decoder",file=sys.stderr)
         targetdecoder = ClassDecoder(args.targetclassfile)
 
@@ -156,35 +159,58 @@ def main():
         ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
         prevpattern = None
         classifier = None
-        for pattern in testmodel:
+        for sourcepattern in testmodel:
             #iterate over all occurrences, each will be encoded separately
-            for sentenceindex, tokenindex in testmodel[pattern]:
+            for sentenceindex, tokenindex in testmodel[sourcepattern]:
                 #compute token span
                 tokenspan = []
-                for t in range(tokenindex, tokenindex + len(pattern)):
+                for t in range(tokenindex, tokenindex + len(sourcepattern)):
                     tokenspan.append(str(sentenceindex) + "_" + str(t))
                 tokenspan = " ".join(tokenspan)
 
                 #get context configuration
-                featurevector = extractcontextfeatures(classifierconf, pattern, sentenceindex, tokenindex, testcorpus)
+                featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex, testcorpus)
 
                 classifier = None
 
                 #load classifier
-                if not prevpattern or pattern != prevpattern:
-                    classifierprefix = args.outputfile + "/" + quote_plus(pattern.tostring(sourcedecoders[0]))
+                if not prevpattern or sourcepattern != prevpattern:
+                    classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
                     if os.path.exists(classifierprefix + ".ibase"):
                         classifier = timbl.TimblClassifier(classifierprefix, args.timbloptions)
                     elif os.path.exists(classifierprefix + ".train"):
                         raise Exception("Classifier "  + classifierprefix + " not trained!")
 
+
                 #call classifier
                 classlabel, distribution, distance = classifier.classify(featurevector)
 
                 #process classifier result
+                translationcount = 0
+                for targetpattern_s, score in distribution:
+                    if args.scorehandling == 'replace':
+                        scorevector = [score]
+                    else:
+                        targetpattern = targetencoder.buildpattern(targetpattern_s)
+                        if (sourcepattern, targetpattern) in alignmodel:
+                            scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                        else:
+                            continue
 
-                #write phrasetable entries
-                #ftable.write(tokenspan + " ||| " + classlabel
+                        if args.scorehandling == 'append':
+                            scorevector.append(score)
+                        elif args.scorehandling == 'weighed':
+                            raise NotImplementedError
+
+                        #TODO: implemented weighed!
+                        translationcount += 1
+
+                        #write phrasetable entries
+                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(scorevector) + "\n")
+
+                if translationcount == 0:
+                    print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
+
 
 
             prevpattern = None
