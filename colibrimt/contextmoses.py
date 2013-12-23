@@ -245,7 +245,7 @@ def main():
                         translationcount += 1
 
                         #write phrasetable entries
-                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(scorevector) + "\n")
+                        ftable.write(tokenspan + " ||| " + targetpattern.tostring(targetdecoder) + " ||| " + " ".join(scorevector) + "\n")
 
 
 
