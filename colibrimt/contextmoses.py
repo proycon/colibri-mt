@@ -259,7 +259,7 @@ T 0
 
 [weight-w]
 0
-""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, tweights = tweights)
+""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, tweights=tweights))
     f.close()
 
     #invoke moses
