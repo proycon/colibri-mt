@@ -35,6 +35,14 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             featurevector.append(unigram)
     return featurevector
 
+def gettimbloptions(timbloptions, classifierconf):
+    if timbloptions.find("vdb") == -1:
+        timbloptions += " -vdb"
+    if timbloptions.find("G0") == -1:
+        timbloptions += " -G0"
+    if classifierconf['weighbyoccurrence'] or classifierconf['weighbyscore']:
+        timbloptions += " -s"
+    return timbloptions
 
 EXEC_MOSES = "moses"
 
@@ -139,11 +147,7 @@ def main():
         for trainfile in glob.glob(args.workdir + "/*.train"):
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
-            timbloptions = args.timbloptions
-            if timbloptions.find("vdb") == -1:
-                timbloptions += " -vdb"
-            if timbloptions.find("G0") == -1:
-                timbloptions += " -G0"
+            timbloptions = gettimbloptions(args.timbloptions)
             classifier = timbl.TimblClassifier(trainfile.replace('train',''), timbloptions)
             classifier.train()
             classifier.save()
@@ -191,11 +195,7 @@ def main():
                 if not prevpattern or sourcepattern != prevpattern:
                     classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
                     if os.path.exists(classifierprefix + ".ibase"):
-                        timbloptions = args.timbloptions
-                        if timbloptions.find("vdb") == -1:
-                            timbloptions += " -vdb"
-                        if timbloptions.find("G0") == -1:
-                            timbloptions += " -G0"
+                        timbloptions = gettimbloptions(args.timbloptions)
                         classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                     elif os.path.exists(classifierprefix + ".train"):
                         raise Exception("Classifier "  + classifierprefix + " not trained!")
