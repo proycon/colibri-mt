@@ -189,46 +189,66 @@ def main():
                 #get context configuration
                 featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex, testcorpus)
 
-                classifier = None
-
-                #load classifier
-                if not prevpattern or sourcepattern != prevpattern:
-                    classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
-                    if os.path.exists(classifierprefix + ".ibase"):
-                        timbloptions = gettimbloptions(args.timbloptions, classifierconf)
-                        classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
-                    elif os.path.exists(classifierprefix + ".train"):
-                        raise Exception("Classifier "  + classifierprefix + " not trained!")
-
-
-                #call classifier
-                classlabel, distribution, distance = classifier.classify(featurevector)
-
-                #process classifier result
                 translationcount = 0
-                for targetpattern_s, score in distribution:
-                    if args.scorehandling == 'replace':
-                        scorevector = [score]
-                    else:
-                        targetpattern = targetencoder.buildpattern(targetpattern_s)
-                        if (sourcepattern, targetpattern) in alignmodel:
-                            scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                if not args.ignoreclassifier:
+                    classifier = None
+
+                    #load classifier
+                    if not prevpattern or sourcepattern != prevpattern:
+                        classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
+                        if os.path.exists(classifierprefix + ".ibase"):
+                            timbloptions = gettimbloptions(args.timbloptions, classifierconf)
+                            classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
+                        elif os.path.exists(classifierprefix + ".train"):
+                            raise Exception("Classifier "  + classifierprefix + " not trained!")
+
+
+                    #call classifier
+                    classlabel, distribution, distance = classifier.classify(featurevector)
+
+                    #process classifier result
+                    for targetpattern_s, score in distribution:
+                        if args.scorehandling == 'replace':
+                            scorevector = [score]
                         else:
-                            continue
+                            targetpattern = targetencoder.buildpattern(targetpattern_s)
+                            if (sourcepattern, targetpattern) in alignmodel:
+                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                            else:
+                                continue
 
-                        if args.scorehandling == 'append':
-                            scorevector.append(score)
-                        elif args.scorehandling == 'weighed':
-                            raise NotImplementedError
+                            if args.scorehandling == 'append':
+                                scorevector.append(score)
+                            elif args.scorehandling == 'weighed':
+                                raise NotImplementedError #TODO: implemented weighed!
 
-                        #TODO: implemented weighed!
                         translationcount += 1
 
                         #write phrasetable entries
                         ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(scorevector) + "\n")
 
-                if translationcount == 0:
-                    print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
+                    if translationcount == 0:
+                        print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
+
+                else:
+                    #ignore classifier
+                    for targetpattern in alignmodel.targetpatterns(sourcepattern):
+                        scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+
+                        if args.scorehandling == 'append':
+                            scorevector.append(scorevector[2])
+                        elif args.scorehandling == 'replace':
+                            scorevector = [scorevector[2]]
+                        elif args.scorehandling == 'weighed':
+                            raise NotImplementedError #TODO: implemented weighed!
+
+                        translationcount += 1
+
+                        #write phrasetable entries
+                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(scorevector) + "\n")
+
+
+
 
 
 
