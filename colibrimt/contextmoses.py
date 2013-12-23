@@ -36,7 +36,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
     return featurevector
 
 
-
+EXEC_MOSES = "moses"
 
 def main():
     parser = argparse.ArgumentParser(description="Wrapper around the Moses Decoder that adds support for context features through classifiers.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -46,10 +46,15 @@ def main():
     parser.add_argument('-a','--alignmodelfile', type=str,help="Colibri alignment model (made from phrase translation table)", action='store',default="",required=False)
     parser.add_argument('-w','--workdir', type=str,help="Working directory, should contain classifier training files", action='store',default="",required=True)
     parser.add_argument('--train', help="Train classifiers", action="store_true", default=False)
-    parser.add_argument('-O','--timbloptions', type="str", help="Options for the Timbl classifier", action="store_true", default="-a 0 -k 1")
+    parser.add_argument('-O','--timbloptions', type=str, help="Options for the Timbl classifier", action="store_true", default="-a 0 -k 1")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
-    parser.add_argument('-H','--scorehandling', type="str", help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
-    parser.add_argument('--lm', type="str", help="Language Model", action="store", default="", required=False)
+    parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
+    parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
+    parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
+    parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
+    parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=1, required=False)
+    parser.add_argument('--tweight', help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
+    parser.add_argument('--wweight', type=float,help="Word penalty weight", action="store", default=0  ,required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -224,9 +229,13 @@ def main():
 
         ftable.close()
 
-    tweights = "1\n1\n1\n1\n1\n"
-    if args.scorehandling == "append":
-        tweights += "1\n"
+    if not args.tweight:
+        tweights = "1\n1\n1\n1\n1\n"
+        if args.scorehandling == "append":
+            tweights += "1\n"
+    else:
+        tweights = "\n".join([ str(x) for x in args.tweight])
+
 
     #write moses.ini
     f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
@@ -243,30 +252,28 @@ T 0
 0 0 0 5 {phrasetable}
 
 [lmodel-file]
-0 0 3 {lm}
+0 0 {lmorder} {lm}
 
 [ttable-limit]
 20
 
 [weight-d]
-1
+{dweight}
 
 [weight-l]
-1
+{lmweight}
 
 [weight-t]
 {tweights}
 
 [weight-w]
-0
-""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, tweights=tweights))
+{wweight}
+""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, wweight=args.wweight))
     f.close()
 
     #invoke moses
-
-
-
-
+    os.chdir(args.workdir)
+    r = os.system(EXEC_MOSES + " -f " + args.workdir + "/moses.ini < " + args.workdir + "/test.txt > " + args.workdir + "/output.txt")
 
 
 if __name__ == '__main__':
