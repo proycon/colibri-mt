@@ -231,7 +231,7 @@ def main():
     #write moses.ini
     f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
     f.write("""
-#Moses INI, produced by mtwrapper.py
+#Moses INI, produced by contextmoses.py
 [input-factors]
 0
 
@@ -256,11 +256,6 @@ T 0
 
 [weight-t]
 {tweights}
-1
-1
-1
-1
-1
 
 [weight-w]
 0
