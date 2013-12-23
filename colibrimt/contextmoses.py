@@ -139,7 +139,12 @@ def main():
         for trainfile in glob.glob(args.workdir + "/*.train"):
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
-            classifier = timbl.TimblClassifier(trainfile.replace('train',''), args.timbloptions)
+            timbloptions = args.timbloptions
+            if timbloptions.find("vdb") == -1:
+                timbloptions += " -vdb"
+            if timbloptions.find("G0") == -1:
+                timbloptions += " -G0"
+            classifier = timbl.TimblClassifier(trainfile.replace('train',''), timbloptions)
             classifier.train()
             classifier.save()
     else:
@@ -186,7 +191,12 @@ def main():
                 if not prevpattern or sourcepattern != prevpattern:
                     classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
                     if os.path.exists(classifierprefix + ".ibase"):
-                        classifier = timbl.TimblClassifier(classifierprefix, args.timbloptions)
+                        timbloptions = args.timbloptions
+                        if timbloptions.find("vdb") == -1:
+                            timbloptions += " -vdb"
+                        if timbloptions.find("G0") == -1:
+                            timbloptions += " -G0"
+                        classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                     elif os.path.exists(classifierprefix + ".train"):
                         raise Exception("Classifier "  + classifierprefix + " not trained!")
 
