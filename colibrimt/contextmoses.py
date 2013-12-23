@@ -53,7 +53,7 @@ def main():
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
     parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
     parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=1, required=False)
-    parser.add_argument('--tweight', help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
+    parser.add_argument('--tweight', type=float, help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
     parser.add_argument('--wweight', type=float,help="Word penalty weight", action="store", default=0  ,required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
