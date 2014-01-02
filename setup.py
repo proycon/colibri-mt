@@ -31,7 +31,8 @@ setup(
             'colibri-extractskipgrams = colibrimt.extractskipgrams:main',
             'colibri-alignmodel = colibrimt.alignmentmodel:main_alignmodel',
             'colibri-extractfeatures = colibrimt.alignmentmodel:main_extractfeatures',
-            'colibri-evaluate = colibrimt.evaluation:main'
+            'colibri-evaluate = colibrimt.evaluation:main',
+            'colibri-contextmoses = colibrimt.contextmoses:main'
         ]
     },
     package_data = {},
