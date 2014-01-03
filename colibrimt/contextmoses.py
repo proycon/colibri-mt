@@ -119,7 +119,7 @@ def main():
 
         print("Loading alignment model (may take a while)",file=sys.stderr)
         alignmodel = FeaturedAlignmentModel()
-        alignmodel.load(args.inputfile[0])
+        alignmodel.load(args.alignmodelfile)
 
         print("Building constraint model of source patterns",file=sys.stderr)
         #constain model is needed to constrain the test model
