@@ -160,7 +160,7 @@ def main():
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args.timbloptions, classifierconf)
-            classifier = timbl.TimblClassifier(trainfile.replace('train',''), timbloptions)
+            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
             classifier.train()
             classifier.save()
     else:
