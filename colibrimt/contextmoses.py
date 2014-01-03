@@ -7,7 +7,7 @@ import sys
 import os
 import glob
 from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, BEGINPATTERN, ENDPATTERN
-from colibrimt import FeaturedAlignmentModel
+from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
 from urllib.parse import quote_plus, unquote_plus
