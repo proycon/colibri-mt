@@ -133,11 +133,15 @@ def main():
         testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
+    elif args.train and args.inputfile:
+        if not args.alignmodelfile:
+            print("No alignment model specified (-a)",file=sys.stderr)
+        sys.exit(2)
     elif not args.train:
         if not args.inputfile:
             print("No input file specified (-f)",file=sys.stderr)
         if not args.alignmodelfile:
-            print("No alignment model specified (-f)",file=sys.stderr)
+            print("No alignment model specified (-a)",file=sys.stderr)
         sys.exit(2)
 
     if args.train:
