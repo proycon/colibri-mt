@@ -170,6 +170,7 @@ def main():
             sys.exit(2)
 
 
+        print("Writing intermediate test data",file=sys.stderr)
 
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
@@ -185,11 +186,14 @@ def main():
             f.write(" ".join(tokens) + "\n")
         f.close()
 
+        print("Creating intermediate phrase-table",file=sys.stderr)
+
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
         prevpattern = None
         classifier = None
         for sourcepattern in testmodel:
+            sourcepattern_s = sourcepattern.tostring(sourcedecoders[0])
             #iterate over all occurrences, each will be encoded separately
             for sentenceindex, tokenindex in testmodel[sourcepattern]:
                 #compute token span
@@ -207,13 +211,16 @@ def main():
 
                     #load classifier
                     if not prevpattern or sourcepattern != prevpattern:
-                        classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern.tostring(sourcedecoders[0]))
+                        classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern_s)
                         if os.path.exists(classifierprefix + ".ibase"):
+                            print("Loading classifier " + classifierprefix,file=sys.stderr)
                             timbloptions = gettimbloptions(args.timbloptions, classifierconf)
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(classifierprefix + ".train"):
                             raise Exception("Classifier "  + classifierprefix + " not trained!")
 
+
+                    print("Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s ,file=sys.stderr)
 
                     #call classifier
                     classlabel, distribution, distance = classifier.classify(featurevector)
