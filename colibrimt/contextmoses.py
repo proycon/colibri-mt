@@ -271,17 +271,17 @@ def main():
 
         ftable.close()
 
-    if not args.tweight:
-        tweights = "1\n1\n1\n1\n1\n"
-        if args.scorehandling == "append":
-            tweights += "1\n"
-    else:
-        tweights = "\n".join([ str(x) for x in args.tweight])
+        if not args.tweight:
+            tweights = "1\n1\n1\n1\n1\n"
+            if args.scorehandling == "append":
+                tweights += "1\n"
+        else:
+            tweights = "\n".join([ str(x) for x in args.tweight])
 
 
-    #write moses.ini
-    f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
-    f.write("""
+        #write moses.ini
+        f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
+        f.write("""
 #Moses INI, produced by contextmoses.py
 [input-factors]
 0
@@ -311,11 +311,11 @@ T 0
 [weight-w]
 {wweight}
 """.format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, wweight=args.wweight))
-    f.close()
+        f.close()
 
-    #invoke moses
-    os.chdir(args.workdir)
-    r = os.system(EXEC_MOSES + " -f " + args.workdir + "/moses.ini < " + args.workdir + "/test.txt > " + args.workdir + "/output.txt")
+        #invoke moses
+        os.chdir(args.workdir)
+        r = os.system(EXEC_MOSES + " -f " + args.workdir + "/moses.ini < " + args.workdir + "/test.txt > " + args.workdir + "/output.txt")
 
 
 if __name__ == '__main__':
