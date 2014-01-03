@@ -110,6 +110,8 @@ class AlignmentModel:
         return self.alignedpatterns.haspair(sourcepattern, targetpattern)
 
     def load(self, fileprefix):
+        if not os.path.exists(fileprefix + ".colibri.alignmodel-keys"):
+            raise IOError("File not found: " + fileprefix + ".colibri.alignmodel-keys")
         self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
         print( "Loaded keys: alignments for " + str(len(self.alignedpatterns)) + " source patterns",file=sys.stderr)
         if os.path.exists(fileprefix + ".colibri.alignmodel-values"):
@@ -265,7 +267,9 @@ class FeaturedAlignmentModel(AlignmentModel):
         if os.path.exists(fileprefix + ".colibri.alignmodel-featconf"):
             with open(fileprefix + ".colibri.alignmodel-featconf",'rb') as f:
                 self.conf.conf = pickle.load(f)
-        super().load(fileprefix)
+            super().load(fileprefix)
+        else:
+            raise IOError("File not found: " + fileprefix + ".colibri.alignmodel-featconf")
 
     def save(self, fileprefix):
         with open(fileprefix + ".colibri.alignmodel-featconf",'wb') as f:
