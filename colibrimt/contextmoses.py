@@ -13,7 +13,7 @@ import pickle
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
-    factorconf = classifierconf['factorconf']
+    factorconf = classifierconf['featureconf']
     featurevector = []
     n = len(pattern)
     for factoredcorpus, factor in zip(factoredcorpora, factorconf):
