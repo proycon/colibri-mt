@@ -54,7 +54,7 @@ def main():
     parser.add_argument('-a','--alignmodelfile', type=str,help="Colibri alignment model (made from phrase translation table)", action='store',default="",required=False)
     parser.add_argument('-w','--workdir', type=str,help="Working directory, should contain classifier training files", action='store',default="",required=True)
     parser.add_argument('--train', help="Train classifiers", action="store_true", default=False)
-    parser.add_argument('-O','--timbloptions', type=str, help="Options for the Timbl classifier", action="store_true", default="-a 0 -k 1")
+    parser.add_argument('-O','--timbloptions', type=str, help="Options for the Timbl classifier", action="store", default="-a 0 -k 1")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
     parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
     parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
