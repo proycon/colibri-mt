@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, beginpattern, endpattern
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, BEGINPATTERN, ENDPATTERN
 from colibrimt import FeaturedAlignmentModel
 import timbl
 import pickle
@@ -21,7 +21,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if token < 0:
-                unigram = beginpattern
+                unigram = BEGINPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             featurevector.append(unigram)
@@ -29,7 +29,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
         for i in range(token + n , token + n + rightcontext):
             if token > sentencelength:
-                unigram = endpattern
+                unigram = ENDPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             featurevector.append(unigram)
