@@ -110,10 +110,7 @@ def main():
             print("Loading test corpus",file=sys.stderr)
             testcorpus.append( IndexedCorpus(corpusfiles[i]) )
 
-    if not args.train and args.alignmodelfile:
-        if args.inputfile:
-            print("No input file specified (-f)",file=sys.stderr)
-            sys.exit(2)
+    if args.inputfile and args.alignmodelfile:
 
         print("Loading target encoder",file=sys.stderr)
         targetencoder = ClassEncoder(args.targetclassfile)
@@ -130,13 +127,18 @@ def main():
         for pattern in alignmodel.sourcepatterns():
             constraintmodel.add(pattern)
 
-    if args.inputfile:
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
         testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
+    elif not args.train:
+        if not args.inputfile:
+            print("No input file specified (-f)",file=sys.stderr)
+        if not args.alignmodelfile:
+            print("No alignment model specified (-f)",file=sys.stderr)
+        sys.exit(2)
 
     if args.train:
         #training mode
@@ -145,6 +147,12 @@ def main():
         else:
             print("Training all classifiers (you may want to constrain by test data using -f)",file=sys.stderr)
         for trainfile in glob.glob(args.workdir + "/*.train"):
+            if args.inputfile:
+                sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
+                sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
+                if not sourcepattern in testmodel:
+                    continue
+
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args.timbloptions, classifierconf)
