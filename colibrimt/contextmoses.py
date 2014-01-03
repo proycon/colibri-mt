@@ -176,6 +176,7 @@ def main():
         f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
         for sentencenum, line in enumerate(testcorpus[0].sentences()):
             sentenceindex = sentencenum + 1
+            print("@" + str(sentenceindex),file=sys.stderr)
             tokens = [] #actual string representations
             for tokenindex,pattern in enumerate(line):
                 #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
