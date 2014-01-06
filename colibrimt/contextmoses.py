@@ -224,7 +224,7 @@ def main():
                             raise Exception("Classifier "  + classifierprefix + " not trained!")
 
 
-                    print("Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s ,file=sys.stderr)
+                    print("Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
 
                     #call classifier
                     classlabel, distribution, distance = classifier.classify(featurevector)
