@@ -215,7 +215,7 @@ def main():
 
                     #load classifier
                     if not prevpattern or sourcepattern != prevpattern:
-                        classifierprefix = args.outputfile + "/" + quote_plus(sourcepattern_s)
+                        classifierprefix = args.workdir + "/" + quote_plus(sourcepattern_s)
                         if os.path.exists(classifierprefix + ".ibase"):
                             print("Loading classifier " + classifierprefix,file=sys.stderr)
                             timbloptions = gettimbloptions(args.timbloptions, classifierconf)
