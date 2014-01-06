@@ -16,7 +16,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
     factorconf = classifierconf['featureconf']
     featurevector = []
     n = len(pattern)
-    for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+    for factoredcorpus, factor in zip(factoredcorpora, factorconf.items(False,True,False)):
         print("DEBUG: " + str(repr(factor)),file=sys.stderr)
         if factor[0] is Pattern:
             _,classdecoder, leftcontext, focus, rightcontext = factor
@@ -78,8 +78,6 @@ def main():
     classifierconf = pickle.load(f)
     f.close()
 
-    print("Feature conf: ", repr(classifierconf['featureconf']) ,file=sys.stderr)
-    print("Feature conf: ", repr(classifierconf['featureconf'].conf) ,file=sys.stderr)
 
 
 
