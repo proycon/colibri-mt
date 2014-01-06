@@ -22,6 +22,8 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
         else:
             continue
         classdecoder = factorconf.decoders[classdecoder]
+        print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
+        print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if token < 0:
