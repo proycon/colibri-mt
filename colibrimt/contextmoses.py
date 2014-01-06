@@ -17,7 +17,6 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
     featurevector = []
     n = len(pattern)
     for factoredcorpus, factor in zip(factoredcorpora, factorconf.items(False,True,False)):
-        print("DEBUG: " + str(repr(factor)),file=sys.stderr)
         if factor[0] is Pattern:
             _,classdecoder, leftcontext, focus, rightcontext = factor
         else:
@@ -28,15 +27,15 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
                 unigram = BEGINPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
-            featurevector.append(unigram)
+            featurevector.append(unigram.tostring(classdecoder))
         if focus:
-            featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
+            featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)].tosring(classdecoder))
         for i in range(token + n , token + n + rightcontext):
             if token > sentencelength:
                 unigram = ENDPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
-            featurevector.append(unigram)
+            featurevector.append(unigram.tostring(classdecoder))
     return featurevector
 
 def gettimbloptions(timbloptions, classifierconf):
