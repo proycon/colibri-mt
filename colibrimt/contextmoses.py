@@ -259,7 +259,7 @@ def main():
                         translationcount += 1
 
                         #write phrasetable entries
-                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(scorevector) + "\n")
+                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
 
                     if translationcount == 0:
                         print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
