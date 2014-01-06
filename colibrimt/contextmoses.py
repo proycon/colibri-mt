@@ -241,7 +241,7 @@ def main():
                     classlabel, distribution, distance = classifier.classify(featurevector)
 
                     #process classifier result
-                    for targetpattern_s, score in distribution:
+                    for targetpattern_s, score in distribution.items():
                         if args.scorehandling == 'replace':
                             scorevector = [score]
                         else:
