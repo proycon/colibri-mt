@@ -21,6 +21,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             _,classdecoder, leftcontext, focus, rightcontext = factor
         else:
             continue
+        classdecoder = factorconf.decoders[classdecoder]
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if token < 0:
@@ -113,6 +114,9 @@ def main():
 
             print("Loading test corpus",file=sys.stderr)
             testcorpus.append( IndexedCorpus(corpusfiles[i]) )
+
+    print("Loading decoders for feature configuration",file=sys.stderr)
+    classifierconf['featureconf'].loaddecoders(*sourcedecoders)
 
     if args.inputfile and args.alignmodelfile:
 
