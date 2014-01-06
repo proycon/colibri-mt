@@ -30,7 +30,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
                 unigram = factoredcorpus[(sentence,i)]
             featurevector.append(unigram.tostring(classdecoder))
         if focus:
-            featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)].tosring(classdecoder))
+            featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)].tostring(classdecoder))
         for i in range(token + n , token + n + rightcontext):
             if token > sentencelength:
                 unigram = ENDPATTERN
