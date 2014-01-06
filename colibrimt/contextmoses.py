@@ -21,6 +21,8 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             _,classdecoder, leftcontext, focus, rightcontext = factor
         else:
             continue
+        print("DEBUG: Available decoders: ", repr(factoconf.decoders.keys()) ,file=sys.stderr)
+        print("DEBUG: Requested decoder: ", classdecoder ,file=sys.stderr)
         classdecoder = factorconf.decoders[classdecoder]
         print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
         print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
