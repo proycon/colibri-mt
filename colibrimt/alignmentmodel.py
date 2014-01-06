@@ -251,8 +251,12 @@ class FeatureConfiguration:
                     foundinargs = False
                     for x in args:
                         if x.filename == decoderfile:
+                            print("Linking decoder " + x.filename,file=sys.stderr)
                             self.decoders[x.filename] = x
+                            foundinargs = True
+                            break
                     if not foundinargs:
+                        print("Loading decoder " + decoderfile,file=sys.stderr)
                         self.decoders[decoderfile] = colibricore.ClassDecoder(decoderfile)
 
 
