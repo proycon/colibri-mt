@@ -78,6 +78,9 @@ def main():
     classifierconf = pickle.load(f)
     f.close()
 
+    print("Feature conf: ", repr(classifierconf['featureconf']) ,file=sys.stderr)
+    print("Feature conf: ", repr(classifierconf['featureconf'].conf) ,file=sys.stderr)
+
 
 
     #one for each factor
