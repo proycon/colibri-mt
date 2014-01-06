@@ -222,7 +222,6 @@ def main():
 
                 translationcount = 0
                 if not args.ignoreclassifier:
-                    classifier = None
 
                     #load classifier
                     if not prevpattern or sourcepattern != prevpattern:
@@ -233,8 +232,11 @@ def main():
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(classifierprefix + ".train"):
                             raise Exception("Classifier "  + classifierprefix + " not trained!")
+                        else:
+                            #no classifier
+                            classifier = None
 
-
+                if classifier:
                     print("Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
 
                     #call classifier
@@ -265,7 +267,7 @@ def main():
                         print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
 
                 else:
-                    #ignore classifier
+                    #ignore classifier or no classifier present for this item
                     for targetpattern in alignmodel.targetpatterns(sourcepattern):
                         scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
 
