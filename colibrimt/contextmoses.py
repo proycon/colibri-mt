@@ -17,6 +17,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
     featurevector = []
     n = len(pattern)
     for factoredcorpus, factor in zip(factoredcorpora, factorconf):
+        print("DEBUG: " + str(repr(factor)),file=sys.stderr)
         if factor[0] is Pattern:
             _,classdecoder, leftcontext, focus, rightcontext = factor
         else:
@@ -208,6 +209,8 @@ def main():
 
                 #get context configuration
                 featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex, testcorpus)
+                if not featurevector:
+                    raise Exception("No features returned")
 
                 translationcount = 0
                 if not args.ignoreclassifier:
