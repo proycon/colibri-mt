@@ -184,6 +184,10 @@ class FeatureConfiguration:
     def addfeature(self, type, score=False, classifier=False):
         self.conf.append( ( type,score,classifier) )
 
+    def __setstate__(self,state):
+        super().__setstate__(state)
+        #after unpickling
+        self.decoders = {}
 
     def __len__(self):
         count = 0
