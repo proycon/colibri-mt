@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, BEGINPATTERN, ENDPATTERN
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, Pattern, BEGINPATTERN, ENDPATTERN
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
@@ -17,7 +17,10 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
     featurevector = []
     n = len(pattern)
     for factoredcorpus, factor in zip(factoredcorpora, factorconf):
-        _,classdecoder, leftcontext, focus, rightcontext = factor
+        if factor is colibricore.Pattern:
+            _,classdecoder, leftcontext, focus, rightcontext = factor
+        else:
+            continue
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if token < 0:
