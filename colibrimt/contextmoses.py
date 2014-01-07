@@ -363,7 +363,6 @@ T 0
         f.close()
 
         #invoke moses
-        os.chdir(args.workdir)
         r = os.system(EXEC_MOSES + " -f " + args.workdir + "/moses.ini < " + args.workdir + "/test.txt > " + args.workdir + "/output.txt")
 
 
