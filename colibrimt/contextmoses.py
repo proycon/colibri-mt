@@ -87,7 +87,7 @@ def main():
     classifierconf = pickle.load(f)
     f.close()
 
-    if args.inpufile:
+    if args.inputfile:
         #Updat classifier configuration:
         #Replace original class file with extended class file (to be generated later)
         index = 0
