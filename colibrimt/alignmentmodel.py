@@ -328,7 +328,12 @@ class FeaturedAlignmentModel(AlignmentModel):
                     p = feature[j]
                     if not isinstance(p,  colibricore.Pattern):
                         raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
-                    s.append( p.tostring(classdecoder))
+                    feature_s = p.tostring(classdecoder)
+                    if not feature_s:
+                        print("Feature: " + str(repr(bytes(p))) ,file=sys.stderr)
+                        print("Feature vector thus far: " + str(repr(s)),file=sys.stderr)
+                        raise Exception("Empty feature! Not allowed!")
+                    s.append(feature_s)
             else:
                 s.append(str(feature))
 
