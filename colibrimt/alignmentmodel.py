@@ -546,14 +546,18 @@ class FeaturedAlignmentModel(AlignmentModel):
                         unigram = colibricore.beginpattern
                     else:
                         unigram = factoredcorpus[(sentence,i)]
+                    assert len(unigram) == 1
                     featurevector.append(unigram)
                 if focus:
-                    featurevector.append(factoredcorpus[(sentence,token):(sentence,token+n)])
+                    focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
+                    assert len(focuspattern) >= 1
+                    featurevector.append(focuspattern)
                 for i in range(token + n , token + n + rightcontext):
                     if token > sentencelength:
                         unigram = colibricore.endpattern
                     else:
                         unigram = factoredcorpus[(sentence,i)]
+                    assert len(unigram) == 1
                     featurevector.append(unigram)
 
             #print(featurevector,file=sys.stderr)
