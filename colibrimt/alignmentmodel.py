@@ -542,6 +542,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 _,classdecoder, leftcontext, focus, rightcontext = factor
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
+                    print("DEBUG: ", sentence, i,file=sys.stderr)
                     if token < 0:
                         unigram = colibricore.beginpattern
                     else:
