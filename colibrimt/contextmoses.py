@@ -223,6 +223,9 @@ def main():
                 featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex, testcorpus)
                 if not featurevector:
                     raise Exception("No features returned")
+                if any( [ not x for x in featurevector ] ):
+                    print("ERROR: Empty feature in  " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+                    raise Exception("Empty feature found in featurevector")
 
                 translationcount = 0
                 if not args.ignoreclassifier:
