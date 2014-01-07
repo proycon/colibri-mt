@@ -184,7 +184,7 @@ class FeatureConfiguration:
     def addfeature(self, type, score=False, classifier=False):
         self.conf.append( ( type,score,classifier) )
 
-    def __getstate__(self,state):
+    def __getstate__(self):
         result = self.__dict__.copy()
         del result['decoders']
         return result
