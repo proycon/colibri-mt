@@ -10,6 +10,7 @@ from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatter
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
+import time
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
@@ -21,11 +22,11 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             _,classdecoder, leftcontext, focus, rightcontext = factor
         else:
             continue
-        print("DEBUG: Available decoders: ", repr(factorconf.decoders.keys()) ,file=sys.stderr)
-        print("DEBUG: Requested decoder: ", classdecoder ,file=sys.stderr)
+        #print("DEBUG: Available decoders: ", repr(factorconf.decoders.keys()) ,file=sys.stderr)
+        #print("DEBUG: Requested decoder: ", classdecoder ,file=sys.stderr)
         classdecoder = factorconf.decoders[classdecoder]
-        print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
-        print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
+        #print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
+        #print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
         sentencelength = factoredcorpus.sentencelength(sentence)
         for i in range(token - leftcontext,token):
             if i < 0:
@@ -238,7 +239,8 @@ def main():
                             timbloptions = gettimbloptions(args.timbloptions, classifierconf)
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(classifierprefix + ".train"):
-                            raise Exception("Classifier "  + classifierprefix + " not trained!")
+                            print("ERROR: Classifier "  + classifierprefix + " built but not trained!!!!",file=sys.stderr)
+                            time.sleep(1)
                         else:
                             #no classifier
                             classifier = None
