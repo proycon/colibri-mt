@@ -209,8 +209,6 @@ class FeatureConfiguration:
         for x in self.conf:
             yield x
 
-
-
     def items(self, forscore=True,forclassifier=True,forall=True,select=None):
         if select:
             if len(select) != len(self):
@@ -251,6 +249,9 @@ class FeatureConfiguration:
     def __getitem__(self, index):
         return self.conf[index]
 
+
+    def __setitem__(self, index, value):
+        self.conf[index] = value
 
     def loaddecoders(self, *args):
         for item in self:

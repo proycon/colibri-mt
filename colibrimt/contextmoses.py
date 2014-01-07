@@ -87,7 +87,23 @@ def main():
     classifierconf = pickle.load(f)
     f.close()
 
+    if args.inpufile:
+        #Updat classifier configuration:
+        #Replace original class file with extended class file (to be generated later)
+        index = 0
+        for i, feature in enumerate(classifierconf['featureconf']):
+            if feature[0] is Pattern:
+                if index >= len(args.inputfile):
+                    raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration, you need to specify all")
 
+
+                C, classdecoder, leftcontext, dofocus, rightcontext = feature
+                classdecoder = args.inputfile[index].replace('.txt','.colibri.cls')
+
+                feature = (C, classdecoder,leftcontext, dofocus, rightcontext)
+                classifierconf['featureconf'][i] = feature
+
+                index += 1
 
 
     #one for each factor
@@ -109,8 +125,8 @@ def main():
             if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
                 print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
                 print("Loading source class encoder and decoder",file=sys.stderr)
-                sourceencoders.append( ClassEncoder(args.sourceclassfile) )
-                sourcedecoders.append( ClassDecoder(args.sourceclassfile) )
+                sourceencoders.append( ClassEncoder(classfiles[i]) )
+                sourcedecoders.append( ClassDecoder(classfiles[i]) )
             else:
                 print("Loading and extending source class encoder",file=sys.stderr)
                 sourceencoders.append( ClassEncoder(args.sourceclassfile) )
