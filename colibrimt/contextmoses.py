@@ -122,20 +122,20 @@ def main():
             corpusfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.dat' )
             classfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.cls' )
 
-            if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
-                print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
-                print("Loading source class encoder and decoder",file=sys.stderr)
-                sourceencoders.append( ClassEncoder(classfiles[i]) )
-                sourcedecoders.append( ClassDecoder(classfiles[i]) )
-            else:
-                print("Loading and extending source class encoder",file=sys.stderr)
-                sourceencoders.append( ClassEncoder(args.sourceclassfile) )
-                sourceencoders[i].build(inputfile)
-                sourceencoders[i].save(classfiles[i])
-                print("Encoding test corpus",file=sys.stderr)
-                sourceencoders[i].encodefile(inputfile, corpusfiles[i])
-                print("Loading source class decoder",file=sys.stderr)
-                sourcedecoders.append( ClassDecoder(classfiles[i]) )
+            #if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
+            #    print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
+            #    print("Loading source class encoder and decoder",file=sys.stderr)
+            #    sourceencoders.append( ClassEncoder(classfiles[i]) )
+            #    sourcedecoders.append( ClassDecoder(classfiles[i]) )
+            #else:
+            print("Loading and extending source class encoder",file=sys.stderr)
+            sourceencoders.append( ClassEncoder(args.sourceclassfile) )
+            sourceencoders[i].build(inputfile)
+            sourceencoders[i].save(classfiles[i])
+            print("Encoding test corpus",file=sys.stderr)
+            sourceencoders[i].encodefile(inputfile, corpusfiles[i])
+            print("Loading source class decoder",file=sys.stderr)
+            sourcedecoders.append( ClassDecoder(classfiles[i]) )
 
             print("Loading test corpus",file=sys.stderr)
             testcorpus.append( IndexedCorpus(corpusfiles[i]) )
