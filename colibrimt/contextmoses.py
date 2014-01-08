@@ -98,7 +98,7 @@ def main():
 
 
                 C, classdecoder, leftcontext, dofocus, rightcontext = feature
-                classdecoder = args.inputfile[index].replace('.txt','.colibri.cls')
+                classdecoder = os.path.basename(args.inputfile[index]).replace('.txt','.colibri.cls')
 
                 feature = (C, classdecoder,leftcontext, dofocus, rightcontext)
                 classifierconf['featureconf'][i] = feature
