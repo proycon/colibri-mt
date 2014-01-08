@@ -48,11 +48,8 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             featurevector.append(unigram.tostring(classdecoder))
     return featurevector
 
-def gettimbloptions(timbloptions, classifierconf):
-    if timbloptions.find("vdb") == -1:
-        timbloptions += " -vdb"
-    if timbloptions.find("G0") == -1:
-        timbloptions += " -G0"
+def gettimbloptions(args, classifierconf):
+    timbloptions = "-a " + args.ta + " -k " + args.tk + " -w " + args.tw + " -m " + args.tm + " -d " + args.td  + " -vdb -G0"
     if classifierconf['weighbyoccurrence'] or classifierconf['weighbyscore']:
         timbloptions += " -s"
     return timbloptions
@@ -67,7 +64,12 @@ def main():
     parser.add_argument('-a','--alignmodelfile', type=str,help="Colibri alignment model (made from phrase translation table)", action='store',default="",required=False)
     parser.add_argument('-w','--workdir', type=str,help="Working directory, should contain classifier training files", action='store',default="",required=True)
     parser.add_argument('--train', help="Train classifiers", action="store_true", default=False)
-    parser.add_argument('-O','--timbloptions', type=str, help="Options for the Timbl classifier", action="store", default="-a 0 -k 1")
+    #parser.add_argument('-O','--timbloptions', type=str, help="Options for the Timbl classifier", action="store", default="-a 0 -k 1")
+    parser.add_argument('--ta', type=str, help="Timbl algorithm", action="store", default="0")
+    parser.add_argument('--tk', type=str, help="Timbl k value", action="store", default="1")
+    parser.add_argument('--tw', type=str, help="Timbl weighting", action="store", default="gr")
+    parser.add_argument('--tm', type=str, help="Timbl feature metrics", action="store", default="O")
+    parser.add_argument('--td', type=str, help="Timbl distance metric", action="store", default="Z")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
     parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
     parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
@@ -75,13 +77,24 @@ def main():
     parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
     parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=1, required=False)
     parser.add_argument('--tweight', type=float, help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
-    parser.add_argument('--wweight', type=float,help="Word penalty weight", action="store", default=0  ,required=False)
+    parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
+    parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
     if not os.path.isdir(args.workdir) or not os.path.exists(args.workdir + '/classifier.conf'):
         print("Work directory " + args.workdir + " or classifier configuration therein does not exist. Did you extract features and create classifier training files using colibri-extractfeatures?" ,file=sys.stderr)
         sys.exit(2)
+
+    if args.classifierdir:
+        classifierdir = args.classifierdir
+    else:
+        classifierdir = args.workdir
+
+    if args.decodedir:
+        decodedir = args.decodedir
+    else:
+        decodedir = args.workdir
 
     f = open(args.workdir + '/classifier.conf','rb')
     classifierconf = pickle.load(f)
@@ -192,9 +205,12 @@ def main():
 
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
-            timbloptions = gettimbloptions(args.timbloptions, classifierconf)
+            timbloptions = gettimbloptions(args, classifierconf)
             classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
             classifier.train()
+            if args.classifierdir:
+                #ugly hack since we want ibases in a different location
+                classifier.fileprefix.replace(args.workdir, args.classifierdir)
             classifier.save()
     else:
         #TEST
@@ -204,9 +220,8 @@ def main():
 
 
         print("Writing intermediate test data",file=sys.stderr)
-
         #write intermediate test data (consisting only of indices AND unknown words) and
-        f = open(args.workdir + "/test.txt",'w',encoding='utf-8')
+        f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
         for sentencenum, line in enumerate(testcorpus[0].sentences()):
             sentenceindex = sentencenum + 1
             print("@" + str(sentenceindex),file=sys.stderr)
@@ -223,7 +238,7 @@ def main():
         print("Creating intermediate phrase-table",file=sys.stderr)
 
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
-        ftable = open(args.workdir + "/phrase-table", 'w',encoding='utf-8')
+        ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
         prevpattern = None
         classifier = None
         for sourcepattern in testmodel:
@@ -249,13 +264,13 @@ def main():
 
                     #load classifier
                     if not prevpattern or sourcepattern != prevpattern:
-                        classifierprefix = args.workdir + "/" + quote_plus(sourcepattern_s)
+                        classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
                         if os.path.exists(classifierprefix + ".ibase"):
                             print("Loading classifier " + classifierprefix,file=sys.stderr)
-                            timbloptions = gettimbloptions(args.timbloptions, classifierconf)
+                            timbloptions = gettimbloptions(args, classifierconf)
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
-                        elif os.path.exists(classifierprefix + ".train"):
-                            print("ERROR: Classifier "  + classifierprefix + " built but not trained!!!!",file=sys.stderr)
+                        elif os.path.exists(args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"):
+                            print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!",file=sys.stderr)
                             time.sleep(1)
                         else:
                             #no classifier
@@ -329,7 +344,7 @@ def main():
 
 
         #write moses.ini
-        f = open(args.workdir + '/moses.ini','w',encoding='utf-8')
+        f = open(decodedir + '/moses.ini','w',encoding='utf-8')
         f.write("""
 #Moses INI, produced by contextmoses.py
 [input-factors]
@@ -359,11 +374,11 @@ T 0
 
 [weight-w]
 {wweight}
-""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights.split("\n")), wweight=args.wweight))
+""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights.split("\n")), wweight=args.wweight))
         f.close()
 
         #invoke moses
-        r = os.system(EXEC_MOSES + " -f " + args.workdir + "/moses.ini < " + args.workdir + "/test.txt > " + args.workdir + "/output.txt")
+        r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
 
 
 if __name__ == '__main__':
