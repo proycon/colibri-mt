@@ -340,7 +340,7 @@ T 0
 
 # translation tables: source-factors, target-factors, number of scores, file
 [ttable-file]
-0 0 0 5 {phrasetable}
+0 0 0 {lentweights} {phrasetable}
 
 [lmodel-file]
 0 0 {lmorder} {lm}
@@ -359,7 +359,7 @@ T 0
 
 [weight-w]
 {wweight}
-""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, wweight=args.wweight))
+""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights), wweight=args.wweight))
         f.close()
 
         #invoke moses
