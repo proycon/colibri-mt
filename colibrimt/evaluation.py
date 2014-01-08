@@ -137,7 +137,7 @@ def initevaluate(inp, ref, out, matrexdir):
 
     for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
         f.write( "<" + t + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
-        f.write("<DOC docid=\"colibrita\" sysid=\"colibrita\">\n")
+        f.write("<DOC docid=\"colibri\" sysid=\"colibri\">\n")
 
 
     count = 0
