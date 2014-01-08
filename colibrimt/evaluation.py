@@ -139,6 +139,9 @@ def initevaluate(inp, ref, out, matrexdir, workdir):
         f.write( "<" + t + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
         f.write("<DOC docid=\"colibrita\" sysid=\"colibrita\">\n")
 
+
+    count = 0
+
     while True:
         try:
             inp_s = next(inp_it)
@@ -147,10 +150,10 @@ def initevaluate(inp, ref, out, matrexdir, workdir):
         except StopIteration:
             break
 
-
-        matrexsrc.write("<seg id=\"" + str(inp_s.id) + "\">" + inp_s + "</seg>\n")
-        matrextgt.write("<seg id=\"" + str(ref_s.id) + "\">" + ref_s + "</seg>\n")
-        matrexout.write("<seg id=\"" + str(out_s.id) + "\">" + out_s + "</seg>\n")
+        count += 1
+        matrexsrc.write("<seg id=\"" + str(count) + "\">" + inp_s + "</seg>\n")
+        matrextgt.write("<seg id=\"" + str(count) + "\">" + ref_s + "</seg>\n")
+        matrexout.write("<seg id=\"" + str(count) + "\">" + out_s + "</seg>\n")
 
 
     for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
