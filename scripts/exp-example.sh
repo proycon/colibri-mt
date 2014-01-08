@@ -7,7 +7,7 @@ EXPDIR=/scratch/proycon/colibri-mt/
 TRAINSOURCE=europarl50k-en-train
 TRAINTARGET=europarl50k-fr-train
 
-#Test data - o *.txt extension, will be appended automatically, these files are expected to be in your $EXPDIR
+#Test data - No *.txt extension, will be appended automatically, these files are expected to be in your $EXPDIR
 TESTSOURCE=europarl50k-en-test
 TESTTARGET=europarl50k-fr-test
 
@@ -43,8 +43,9 @@ WWEIGHT=0
 
 
 #$NAME will be the basis of a directory that holds all data for this experiment,
-#classifier data will be in a subdir thereof (with options encoded in directory name)
-#decoding output and scores will again be in a subdir of the classifier directory
+#classifier training data will be in a subdir thereof (with options encoded in directory name)
+#classifier output date will again be in a deeper subdir 
+#and decoding output and scores will again be in a deeper subdir
 NAME="europarl50k-$SOURCELANG-$TARGETLANG-t$OCCURRENCES-l$MAXLENGTH"
 
 
