@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--workdir','-w',type=str,help='Work directory', action='store',default=".")
     args = parser.parse_args()
 
-    matrexsrcfile, matrextgtfile, matrexoutfile = initevaluate(open(args.input,'r',encoding='utf-8'), open(args.ref,'r',encoding='utf-8'), open(args.out,'r',encoding='utf-8'), args.matrexdir, args.workdir)
+    matrexsrcfile, matrextgtfile, matrexoutfile = initevaluate(args.input, args.ref, args.out,  args.matrexdir, args.workdir)
 
     outprefix = '.'.join(args.out.split('.')[:-1])
 
@@ -115,15 +115,21 @@ def main():
 
 
 def initevaluate(inp, ref, out, matrexdir, workdir):
+
+    matrexsrcfile = out.replace('.xml','') + '.matrex-src.xml'
+    matrextgtfile = out.replace('.xml','') + '.matrex-ref.xml'
+    matrexoutfile = out.replace('.xml','') + '.matrex-out.xml'
+
+    inp = open(inp,'r',encoding='utf-8')
+    ref = open(ref,'r',encoding='utf-8')
+    out = open(out,'r',encoding='utf-8')
+
     inp_it = iter(inp)
     ref_it = iter(ref)
     out_it = iter(out)
 
 
 
-    matrexsrcfile = out.filename.replace('.xml','') + '.matrex-src.xml'
-    matrextgtfile = out.filename.replace('.xml','') + '.matrex-ref.xml'
-    matrexoutfile = out.filename.replace('.xml','') + '.matrex-out.xml'
 
     matrexsrc = open(matrexsrcfile ,'w', encoding='utf-8')
     matrextgt = open(matrextgtfile ,'w', encoding='utf-8')
