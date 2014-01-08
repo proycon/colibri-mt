@@ -114,7 +114,7 @@ def main():
     mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, outprefix)
 
 
-def initevaluate(inp, ref, out, matrexdir, workdir):
+def initevaluate(inp, ref, out, matrexdir):
 
     matrexsrcfile = out.replace('.xml','') + '.matrex-src.xml'
     matrextgtfile = out.replace('.xml','') + '.matrex-ref.xml'
