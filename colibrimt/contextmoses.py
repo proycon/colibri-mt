@@ -119,8 +119,8 @@ def main():
         for i, inputfile in enumerate(args.inputfile):
             print("Processing factor #" + str(i),file=sys.stderr)
             #process inputfile
-            corpusfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.dat' )
-            classfiles.append( args.workdir + "/" + os.path.basename(inputfile).replace('.txt','') + '.colibri.cls' )
+            corpusfiles.append(  os.path.basename(inputfile).replace('.txt','') + '.colibri.dat' )
+            classfiles.append(  os.path.basename(inputfile).replace('.txt','') + '.colibri.cls' )
 
             #if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
             #    print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
