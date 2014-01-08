@@ -359,7 +359,7 @@ T 0
 
 [weight-w]
 {wweight}
-""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights.split("\n"), wweight=args.wweight))
+""".format(phrasetable=args.workdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights.split("\n")), wweight=args.wweight))
         f.close()
 
         #invoke moses
