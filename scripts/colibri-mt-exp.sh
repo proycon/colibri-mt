@@ -12,6 +12,12 @@ if [ ! -d "$NAME" ]; then
 fi
 cd $NAME
 
+
+if [ ! -f "$TARGETLANG.lm" ]; then
+    echo -e "${blue}Building language model${NC}">&2
+    ngram-count -text ../$TRAINTARGET.txt -order 3 -interpolate -kndiscount -unk -lm $TARGETLANG.lm
+fi
+
 if [ ! -f "$NAME.phrasetable" ]; then
     echo -e "${blue}Building phrasetable${NC}">&2
     ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
@@ -27,6 +33,10 @@ if [ ! -f "$NAME.phrasetable" ]; then
     gunzip "$NAME.phrasetable.gz"
 fi
 
+if [ "$LASTSTAGE" = "buildphrasetable" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
+fi
 
 if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
     echo -e "${blue}Building source patternmodel${NC}">&2
@@ -65,15 +75,25 @@ if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
     fi
 fi
 
+if [ "$LASTSTAGE" = "patternmodels" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
+fi
+
 if [ ! -f "$NAME.colibri.alignmodel-featconf" ]; then
     echo -e "${blue}Converting phrasetable to alignment model${NC}">&2
-    CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p 0.05 -P 0.05"
+    CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
     echo $CMD>&2
     $CMD
     if [[ $? -ne 0 ]]; then
         echo -e "${red}Error in colibri-mosesphrasetable2alignmodel${NC}" >&2
         exit 2
     fi
+fi
+
+if [ "$LASTSTAGE" = "buildalignmentmodel" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
 fi
 
 EXTRAOPTIONS=""
@@ -99,6 +119,11 @@ if [ ! -d $CLASSIFIERDIR ]; then
     fi
 fi
 
+if [ "$LASTSTAGE" = "featureextraction" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
+fi
+
 CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 if [ ! -d $CLASSIFIERDIR/$CLASSIFIERSUBDIR ]; then
     mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR
@@ -113,9 +138,9 @@ if [ $? -ne 0 ]; then
     $CMD
 fi
 
-if [ ! -f "$TARGETLANG.lm" ]; then
-    echo -e "${blue}Building language model${NC}">&2
-    ngram-count -text ../$TRAINTARGET.txt -order 3 -interpolate -kndiscount -unk -lm $TARGETLANG.lm
+if [ "$LASTSTAGE" = "trainclassifiers" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
 fi
 
 TWEIGHTS_COMMA=""
@@ -149,6 +174,10 @@ elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
     fi
 fi
 
+if [ "$LASTSTAGE" = "decoder" ]; then
+    echo "Halting after this stage as requested"
+    exit 0
+fi
 
 echo -e "${blue}Evaluating${NC}">&2
 colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 

@@ -15,9 +15,11 @@ TESTTARGET=europarl50k-fr-test
 SOURCELANG=en
 TARGETLANG=fr
 
-#Colibri patternmodeller options, puts a contraint on patterns used. Stricter constraints effectively prune the phrasetable
+#Colibri options, puts a contraint on patterns used. Stricter constraints effectively prune the phrasetable
 OCCURRENCES=2
 MAXLENGTH=8
+MIN_PTS=0.05
+MIN_PST=0.05
 
 #Classifier options
 CLASSIFIERTYPE='X' # Can be X for experts, M for monolithic, and I for ignoring the classifier
@@ -41,6 +43,7 @@ LMWEIGHT=1
 DWEIGHT=1
 WWEIGHT=0
 
+LASTSTAGE="evaluation" #can be set to (in order): buildphrasetable,patternmodels, buildalignmentmodel, featureextraction, trainclassifiers to halt the script earlier
 
 #$NAME will be the basis of a directory that holds all data for this experiment,
 #classifier training data will be in a subdir thereof (with options encoded in directory name)
