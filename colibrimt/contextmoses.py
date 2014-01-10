@@ -1,4 +1,62 @@
+#!/usr/bin/env python3
 
+from __future__ import print_function, unicode_literals, division, absolute_import
+
+import argparse
+import sys
+import os
+import glob
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, Pattern, BEGINPATTERN, ENDPATTERN
+from colibrimt.alignmentmodel import FeaturedAlignmentModel
+import timbl
+import pickle
+import time
+from urllib.parse import quote_plus, unquote_plus
+
+def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
+    factorconf = classifierconf['featureconf']
+    featurevector = []
+    n = len(pattern)
+    for factoredcorpus, factor in zip(factoredcorpora, factorconf.items(False,True,False)):
+        if factor[0] is Pattern:
+            _,classdecoder, leftcontext, focus, rightcontext = factor
+        else:
+            continue
+        #print("DEBUG: Available decoders: ", repr(factorconf.decoders.keys()) ,file=sys.stderr)
+        #print("DEBUG: Requested decoder: ", classdecoder ,file=sys.stderr)
+        classdecoder = factorconf.decoders[classdecoder]
+        #print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
+        #print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
+        sentencelength = factoredcorpus.sentencelength(sentence)
+        for i in range(token - leftcontext,token):
+            if i < 0:
+                unigram = BEGINPATTERN
+            else:
+                unigram = factoredcorpus[(sentence,i)]
+            assert len(unigram) == 1
+            featurevector.append(unigram.tostring(classdecoder))
+        if focus:
+            focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
+            assert len(focuspattern) >= 1
+            featurevector.append(focuspattern.tostring(classdecoder))
+        for i in range(token + n , token + n + rightcontext):
+            if i >= sentencelength:
+                unigram = ENDPATTERN
+            else:
+                unigram = factoredcorpus[(sentence,i)]
+            assert len(unigram) == 1
+            featurevector.append(unigram.tostring(classdecoder))
+    return featurevector
+
+def gettimbloptions(args, classifierconf):
+    timbloptions = "-a " + args.ta + " -k " + args.tk + " -w " + args.tw + " -m " + args.tm + " -d " + args.td  + " -vdb -G0"
+    if classifierconf['weighbyoccurrence'] or classifierconf['weighbyscore']:
+        timbloptions += " -s"
+    return timbloptions
+
+EXEC_MOSES = "moses"
+
+def main():
     parser = argparse.ArgumentParser(description="Wrapper around the Moses Decoder that adds support for context features through classifiers.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-f','--inputfile', type=str,help="Input text file; the test corpus (plain text, tokenised, one sentence per line), may be specified multiple times for each factor", action='append',required=False)
     parser.add_argument('-S','--sourceclassfile', type=str, help="Source class file", action='store',required=True)
