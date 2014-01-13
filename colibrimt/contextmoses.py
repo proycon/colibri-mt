@@ -272,6 +272,8 @@ def main():
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"):
                             print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!",file=sys.stderr)
+                            print("Classifier dir: ", classifierdir,file=sys.stderr)
+                            print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
                             time.sleep(1)
                         else:
                             #no classifier
