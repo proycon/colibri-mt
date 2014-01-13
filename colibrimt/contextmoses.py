@@ -219,7 +219,6 @@ def main():
             if args.classifierdir:
                 #remove copy
                 os.unlink(trainfile)
-
     else:
         #TEST
         if not args.inputfile:
