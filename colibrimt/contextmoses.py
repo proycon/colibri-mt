@@ -11,6 +11,7 @@ from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
 import time
+import shutil
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
@@ -207,12 +208,18 @@ def main():
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
-            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
-            classifier.train()
             if args.classifierdir:
                 #ugly hack since we want ibases in a different location
-                classifier.fileprefix.replace(args.workdir, args.classifierdir)
+                trainfilecopy = trainfile.replace(args.workdir, args.classifierdir)
+                shutil.copyfile(trainfile, trainfilecopy)
+                trainfile = trainfilecopy
+            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
+            classifier.train()
             classifier.save()
+            if args.classifierdir:
+                #remove copy
+                os.unlink(trainfile)
+
     else:
         #TEST
         if not args.inputfile:
