@@ -22,12 +22,12 @@ if [ ! -f "$NAME.phrasetable" ]; then
     echo -e "${blue}Building phrasetable${NC}">&2
     ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
     ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
-    if [ ! -n "$MOSESONLY" ]; then
+    if [ "$MOSESONLY" = "1" ]; then
         LASTSTEP=9
     else
         LASTSTEP=8
     fi
-    CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
+    CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step $LASTSTEP"
     echo $CMD>&2
     $CMD
     if [[ $? -ne 0 ]]; then
@@ -38,7 +38,7 @@ if [ ! -f "$NAME.phrasetable" ]; then
     gunzip "$NAME.phrasetable.gz"
 fi
 
-if [ ! -n "$MOSESONLY" ]; then
+if [ "$MOSESONLY" = "1" ]; then
      
     echo -e "${blue}Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
     moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
