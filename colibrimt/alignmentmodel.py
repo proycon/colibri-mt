@@ -444,8 +444,8 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         self.conf = FeatureConfiguration()
         l = len(scores)
-        if haswordalignments:
-            l = l - 1
+        #if haswordalignments: #why did I do this?
+        #   l = l - 1
         for x in range(0,l):
             self.conf.addfeature(float,True,False) #score: True, classifier: False
         if haswordalignments:
@@ -802,7 +802,7 @@ def main_extractfeatures():
 
             for featurevector in featurevectors:
                 #last feature holds occurrence count:
-                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )
+                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
             prevtargetpattern = targetpattern
 
