@@ -11,6 +11,7 @@ from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
 import time
+import shutil
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
@@ -207,12 +208,17 @@ def main():
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
-            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
-            classifier.train()
             if args.classifierdir:
                 #ugly hack since we want ibases in a different location
-                classifier.fileprefix.replace(args.workdir, args.classifierdir)
+                trainfilecopy = trainfile.replace(args.workdir, args.classifierdir)
+                shutil.copyfile(trainfile, trainfilecopy)
+                trainfile = trainfilecopy
+            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
+            classifier.train()
             classifier.save()
+            if args.classifierdir:
+                #remove copy
+                os.unlink(trainfile)
     else:
         #TEST
         if not args.inputfile:
@@ -272,6 +278,8 @@ def main():
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"):
                             print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!",file=sys.stderr)
+                            print("Classifier dir: ", classifierdir,file=sys.stderr)
+                            print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
                             time.sleep(1)
                         else:
                             #no classifier
