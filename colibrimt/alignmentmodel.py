@@ -213,7 +213,7 @@ class FeatureConfiguration:
         if select:
             if len(select) != len(self):
                 print("ERROR DEBUG: select=", str(repr(select)),file=sys.stderr)
-                print("ERROR DEBUG: FeatureConfiguration=", str(repr(self)),file=sys.stderr)
+                print("ERROR DEBUG: FeatureConfiguration=", str(repr(self.data)),file=sys.stderr)
                 raise Exception("Select arguments has length ",len(select), ", expected " , len(self))
 
         i = 0
