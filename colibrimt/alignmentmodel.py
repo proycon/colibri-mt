@@ -733,13 +733,15 @@ def main_extractfeatures():
 
 
     #add context configuration
+    print("Adding context features to feature configuration", file=sys.stderr)
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addcontextfeature(classfile,left,True, right)
 
     #store occurrence info in feature vector (appended to score features)
+    print("Adding occurrence count feature to feature configuration", file=sys.stderr)
     model.conf.addfeature(int,False,False) #occurrence count for context configuration
 
-    print("Configuration:",model.conf.conf,file=sys.stderr)
+    print("Configuration:", model.conf.conf,file=sys.stderr)
 
     if args.buildclassifiers:
         if not args.monolithic and not args.experts:
