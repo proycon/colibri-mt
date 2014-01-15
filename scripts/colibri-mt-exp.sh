@@ -33,8 +33,10 @@ if [ ! -f "$NAME.phrasetable" ]; then
         echo -e "${red}Error in Moses${NC}" >&2
         exit 2
     fi
-    mv "model/phrase-table.gz" "$NAME.phrasetable.gz"
-    gunzip "$NAME.phrasetable.gz"
+    if [ "$MOSESONLY" != "1" ]; then
+        mv "model/phrase-table.gz" "$NAME.phrasetable.gz"
+        gunzip "$NAME.phrasetable.gz"
+    fi
 fi
 
 if [ "$MOSESONLY" = "1" ]; then
