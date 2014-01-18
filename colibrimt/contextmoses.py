@@ -346,10 +346,13 @@ def main():
 
         if not args.tweight:
             tweights = "1\n1\n1\n1\n1\n"
+            lentweights = 5
             if args.scorehandling == "append":
                 tweights += "1\n"
+                lentweights = 6
         else:
             tweights = "\n".join([ str(x) for x in args.tweight])
+            lentweights = len(args.tweight)
 
 
         #write moses.ini
@@ -383,7 +386,7 @@ T 0
 
 [weight-w]
 {wweight}
-""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=len(tweights.split("\n")), wweight=args.wweight))
+""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight))
         f.close()
 
         #invoke moses
