@@ -180,9 +180,12 @@ if [ "$LASTSTAGE" = "decoder" ]; then
     exit 0
 fi
 
-echo -e "${blue}Evaluating${NC}">&2
-colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
+if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/summary.score" ]; then
+    echo -e "${blue}Evaluating${NC}">&2
+    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
 
-echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
-echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
-echo "All done..."
+    echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
+    echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
+    echo "All done..."
+fi
+
