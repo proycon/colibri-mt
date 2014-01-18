@@ -212,6 +212,8 @@ class FeatureConfiguration:
     def items(self, forscore=True,forclassifier=True,forall=True,select=None):
         if select:
             if len(select) != len(self):
+                print("ERROR DEBUG: select=", str(repr(select)),file=sys.stderr)
+                print("ERROR DEBUG: FeatureConfiguration=", str(repr(self.conf)),file=sys.stderr)
                 raise Exception("Select arguments has length ",len(select), ", expected " , len(self))
 
         i = 0
@@ -442,8 +444,8 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         self.conf = FeatureConfiguration()
         l = len(scores)
-        if haswordalignments:
-            l = l - 1
+        #if haswordalignments: #why did I do this?
+        #   l = l - 1
         for x in range(0,l):
             self.conf.addfeature(float,True,False) #score: True, classifier: False
         if haswordalignments:
@@ -731,13 +733,15 @@ def main_extractfeatures():
 
 
     #add context configuration
+    print("Adding context features to feature configuration", file=sys.stderr)
     for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
         model.conf.addcontextfeature(classfile,left,True, right)
 
     #store occurrence info in feature vector (appended to score features)
+    print("Adding occurrence count feature to feature configuration", file=sys.stderr)
     model.conf.addfeature(int,False,False) #occurrence count for context configuration
 
-    print("Configuration:",model.conf.conf,file=sys.stderr)
+    print("Configuration:", model.conf.conf,file=sys.stderr)
 
     if args.buildclassifiers:
         if not args.monolithic and not args.experts:
@@ -800,7 +804,7 @@ def main_extractfeatures():
 
             for featurevector in featurevectors:
                 #last feature holds occurrence count:
-                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )
+                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
             prevtargetpattern = targetpattern
 
