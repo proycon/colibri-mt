@@ -197,22 +197,12 @@ else
         exit 0
     fi
 
-<<<<<<< HEAD
-if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/summary.score" ]; then
-    echo -e "${blue}Evaluating${NC}">&2
-    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
+    if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/summary.score" ]; then
+        echo -e "${blue}Evaluating${NC}">&2
+        colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
 
-    echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
-    echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
-    echo "All done..."
+        echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
+        echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
+        echo "All done..."
+    fi
 fi
-
-=======
-    echo -e "${blue}Evaluating${NC}">&2
-    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
-
-    echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
-    echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
-fi
-echo "All done..."
->>>>>>> 56891e04f237ce845b6537b9089a5f13ebced1d9
