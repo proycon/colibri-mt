@@ -40,12 +40,14 @@ if [ ! -f "$NAME.phrasetable" ]; then
 fi
 
 if [ "$MOSESONLY" = "1" ]; then
-     
-    echo -e "${blue}Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-    moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
+    
+    if [ ! -f model/moses.ini ]; then
+        echo -e "${blue}Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
+        moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
 
-    echo -e "${blue}Evaluating${NC}">&2
-    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
+        echo -e "${blue}Evaluating${NC}">&2
+        colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
+    fi
 
 else
 
