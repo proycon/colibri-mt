@@ -449,7 +449,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         #if haswordalignments: #why did I do this?
         #   l = l - 1
         for x in range(0,l):
-            if isinstance(x, float):
+            if isinstance(scores[x], float):
                 self.conf.addfeature(float,True,False) #score: True, classifier: False
         if haswordalignments:
             self.conf.addfeature(list)
