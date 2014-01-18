@@ -283,6 +283,7 @@ class FeaturedAlignmentModel(AlignmentModel):
         if os.path.exists(fileprefix + ".colibri.alignmodel-featconf"):
             with open(fileprefix + ".colibri.alignmodel-featconf",'rb') as f:
                 self.conf.conf = pickle.load(f)
+            print("Loaded configuration:",repr(self.conf.conf),file=sys.stderr)
             super().load(fileprefix)
         else:
             raise IOError("File not found: " + fileprefix + ".colibri.alignmodel-featconf")
@@ -290,6 +291,7 @@ class FeaturedAlignmentModel(AlignmentModel):
     def save(self, fileprefix):
         with open(fileprefix + ".colibri.alignmodel-featconf",'wb') as f:
             pickle.dump(self.conf.conf, f)
+            print("Saved configuration:",repr(self.conf.conf),file=sys.stderr)
         super().save(fileprefix)
 
     def __iter__(self):
@@ -447,7 +449,8 @@ class FeaturedAlignmentModel(AlignmentModel):
         #if haswordalignments: #why did I do this?
         #   l = l - 1
         for x in range(0,l):
-            self.conf.addfeature(float,True,False) #score: True, classifier: False
+            if isinstance(x, float):
+                self.conf.addfeature(float,True,False) #score: True, classifier: False
         if haswordalignments:
             self.conf.addfeature(list)
 
