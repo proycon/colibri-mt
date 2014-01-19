@@ -34,6 +34,10 @@ for tweight in ${TWEIGHTS[*]}; do
     fi
     TWEIGHTS_OPTIONS="${TWEIGHTS_OPTIONS} --tweight $tweight"
 done
+if [ -z $TWEIGHTS_COMMA ]; then
+    echo "No tweights? tweights=$TWEIGHTS">&2
+    exit 2
+fi
 CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
 CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
