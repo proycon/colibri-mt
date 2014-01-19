@@ -36,6 +36,8 @@ if [ ! -f "$NAME.phrasetable" ]; then
     if [ "$MOSESONLY" != "1" ]; then
         mv "model/phrase-table.gz" "$NAME.phrasetable.gz"
         gunzip "$NAME.phrasetable.gz"
+    else
+        touch $NAME.phrasetable #just a dummy
     fi
 fi
 
