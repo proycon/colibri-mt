@@ -26,6 +26,7 @@ fi
 TWEIGHTS_COMMA=""
 TWEIGHTS_OPTIONS=""
 for tweight in ${TWEIGHTS[*]}; do
+    echo $tweight
     if [ ! -z "${TWEIGHTS_COMMA}" ]; then
         TWEIGHTS_COMMA="${TWEIGHTS_COMMA},${tweight}"
     else
