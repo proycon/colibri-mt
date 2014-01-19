@@ -202,7 +202,7 @@ def main():
             #monolithic
             trainfile = args.workdir + "/train"
             #build a classifier
-            print("Training " + trainfile,file=sys.stderr)
+            print("Training monolithic classifier " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
             if args.classifierdir:
                 #ugly hack since we want ibases in a different location
