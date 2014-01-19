@@ -26,12 +26,12 @@ fi
 TWEIGHTS_COMMA=""
 TWEIGHTS_OPTIONS=""
 for tweight in ${TWEIGHTS[*]}; do
-if [ -n $TWEIGHTS_COMMA ]; then
-    TWEIGHTS_COMMA="$TWEIGHTS_COMMA,$tweight"
-else
-    TWEIGHTS_COMMA="$tweight"
-fi
-TWEIGHTS_OPTIONS="$TWEIGHTS_OPTIONS --tweight $tweight"
+    if [ -n $TWEIGHTS_COMMA ]; then
+        TWEIGHTS_COMMA="$TWEIGHTS_COMMA,$tweight"
+    else
+        TWEIGHTS_COMMA="$tweight"
+    fi
+    TWEIGHTS_OPTIONS="$TWEIGHTS_OPTIONS --tweight $tweight"
 done
 CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
 CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
