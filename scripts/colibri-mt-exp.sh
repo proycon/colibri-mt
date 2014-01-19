@@ -2,6 +2,7 @@
 
 blue='\e[1;34m'
 red='\e[1;31m'
+yellow='\e[1;33m'
 NC='\e[0m' # No Color
 
 
@@ -12,6 +13,32 @@ if [ ! -d "$NAME" ]; then
 fi
 cd $NAME
 
+EXTRAOPTIONS=""
+EXTRANAME=""
+if [ "$WEIGHBYOCCURRENCE" = "1" ]; then
+    EXTRAOPTIONS="$EXTRAOPTIONS -w"
+    EXTRANAME="${EXTRANAME}w"
+fi
+if [ "$WEIGHBYSCORE" = "1" ]; then
+    EXTRAOPTIONS="$EXTRAOPTIONS -W"
+    EXTRANAME="${EXTRANAME}W"
+fi
+TWEIGHTS_COMMA=""
+TWEIGHTS_OPTIONS=""
+for tweight in ${TWEIGHTS[*]}; do
+if [ -n $TWEIGHTS_COMMA ]; then
+    TWEIGHTS_COMMA="$TWEIGHTS_COMMA,$tweight"
+else
+    TWEIGHTS_COMMA="$tweight"
+fi
+TWEIGHTS_OPTIONS="$TWEIGHTS_OPTIONS --tweight $tweight"
+done
+CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
+CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
+DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
+
+
+echo -e "${yellow}****************** STARTING EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************${NC}" >&2
 
 if [ ! -f "$TARGETLANG.lm" ]; then
     echo -e "${blue}Building language model${NC}">&2
@@ -124,17 +151,6 @@ else
         exit 0
     fi
 
-    EXTRAOPTIONS=""
-    EXTRANAME=""
-    if [ "$WEIGHBYOCCURRENCE" = "1" ]; then
-        EXTRAOPTIONS="$EXTRAOPTIONS -w"
-        EXTRANAME="${EXTRANAME}w"
-    fi
-    if [ "$WEIGHBYSCORE" = "1" ]; then
-        EXTRAOPTIONS="$EXTRAOPTIONS -W"
-        EXTRANAME="${EXTRANAME}W"
-    fi
-    CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
     if [ ! -d $CLASSIFIERDIR ]; then
         echo -e "${blue}Extracting features and building classifiers${NC}">&2
         mkdir $CLASSIFIERDIR
@@ -152,7 +168,6 @@ else
         exit 0
     fi
 
-    CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
     if [ ! -d $CLASSIFIERDIR/$CLASSIFIERSUBDIR ]; then
         mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR
     fi 
@@ -171,18 +186,7 @@ else
         exit 0
     fi
 
-    TWEIGHTS_COMMA=""
-    TWEIGHTS_OPTIONS=""
-    for tweight in ${TWEIGHTS[*]}; do
-    if [ -n $TWEIGHTS_COMMA ]; then
-        TWEIGHTS_COMMA="$TWEIGHTS_COMMA,$tweight"
-    else
-        TWEIGHTS_COMMA="$tweight"
-    fi
-    TWEIGHTS_OPTIONS="$TWEIGHTS_OPTIONS --tweight $tweight"
-    done
 
-    DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
     if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ]; then
         mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
         echo -e "${blue}Processing test data and invoking moses${NC}">&2
@@ -217,3 +221,5 @@ else
         echo "All done..."
     fi
 fi
+
+echo -e "***************** FINISHED EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************" >&2
