@@ -18,31 +18,24 @@ if [ ! -f "$TARGETLANG.lm" ]; then
     ngram-count -text ../$TRAINTARGET.txt -order 3 -interpolate -kndiscount -unk -lm $TARGETLANG.lm
 fi
 
-if [ ! -f "$NAME.phrasetable" ]; then
-    echo -e "${blue}Building phrasetable${NC}">&2
-    ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
-    ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
-    if [ "$MOSESONLY" = "1" ]; then
-        CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 9 --lm 0:3:$EXPDIR/$NAME/$TARGETLANG.lm"
-    else
-        CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
-    fi
-    echo $CMD>&2
-    $CMD
-    if [[ $? -ne 0 ]]; then
-        echo -e "${red}Error in Moses${NC}" >&2
-        exit 2
-    fi
-    if [ "$MOSESONLY" != "1" ]; then
-        mv "model/phrase-table.gz" "$NAME.phrasetable.gz"
-        gunzip "$NAME.phrasetable.gz"
-    else
-        touch $NAME.phrasetable #just a dummy
-    fi
-fi
 
 if [ "$MOSESONLY" = "1" ]; then
     
+    if [ ! -f model/phrase-table.gz ]; then
+        echo -e "${blue}Building phrasetable${NC}">&2
+        ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
+        ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
+        CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 9 --lm 0:3:$EXPDIR/$NAME/$TARGETLANG.lm"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in Moses${NC}" >&2
+            exit 2
+        fi
+        cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
+        gunzip "$NAME.phrasetable.gz"
+    fi
+
     if [ ! -f model/moses.ini ]; then
         echo -e "${blue}Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
         moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
@@ -53,6 +46,20 @@ if [ "$MOSESONLY" = "1" ]; then
 
 else
 
+    if [ ! -f "$NAME.phrasetable" ]; then
+        echo -e "${blue}Building phrasetable${NC}">&2
+        ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
+        ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
+        CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in Moses${NC}" >&2
+            exit 2
+        fi
+        cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
+        gunzip "$NAME.phrasetable.gz"
+    fi
 
     if [ "$LASTSTAGE" = "buildphrasetable" ]; then
         echo "Halting after this stage as requested"
