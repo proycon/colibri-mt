@@ -198,13 +198,9 @@ def main():
             print("Training classifiers (constrained by test data)",file=sys.stderr)
         else:
             print("Training all classifiers (you may want to constrain by test data using -f)",file=sys.stderr)
-        for trainfile in glob.glob(args.workdir + "/*.train"):
-            if args.inputfile:
-                sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
-                sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
-                if not sourcepattern in testmodel:
-                    continue
-
+        if os.path.exists(args.workdir + "/train"):
+            #monolithic
+            trainfile = args.workdir + "/train"
             #build a classifier
             print("Training " + trainfile,file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
@@ -213,12 +209,35 @@ def main():
                 trainfilecopy = trainfile.replace(args.workdir, args.classifierdir)
                 shutil.copyfile(trainfile, trainfilecopy)
                 trainfile = trainfilecopy
-            classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
+            classifier = timbl.TimblClassifier(trainfile, timbloptions)
             classifier.train()
             classifier.save()
             if args.classifierdir:
                 #remove copy
                 os.unlink(trainfile)
+        else:
+            #experts
+            for trainfile in glob.glob(args.workdir + "/*.train"):
+                if args.inputfile:
+                    sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
+                    sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
+                    if not sourcepattern in testmodel:
+                        continue
+
+                #build a classifier
+                print("Training " + trainfile,file=sys.stderr)
+                timbloptions = gettimbloptions(args, classifierconf)
+                if args.classifierdir:
+                    #ugly hack since we want ibases in a different location
+                    trainfilecopy = trainfile.replace(args.workdir, args.classifierdir)
+                    shutil.copyfile(trainfile, trainfilecopy)
+                    trainfile = trainfilecopy
+                classifier = timbl.TimblClassifier(trainfile.replace('.train',''), timbloptions)
+                classifier.train()
+                classifier.save()
+                if args.classifierdir:
+                    #remove copy
+                    os.unlink(trainfile)
     else:
         #TEST
         if not args.inputfile:
