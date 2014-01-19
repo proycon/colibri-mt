@@ -44,7 +44,7 @@ if [ -z $TWEIGHTS_COMMA ]; then
 fi
 CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
 if [ "$IGNORECLASSIFIER" = "1" ]; then
-    CLASSIFIERSUBDIR="classifiers-H{$SCOREHANDLING}-ignored"
+    CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ignored"
 else
     CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 fi
