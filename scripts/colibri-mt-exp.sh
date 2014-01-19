@@ -230,4 +230,8 @@ else
     fi
 fi
 
-echo -e "****************** FINISHED EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************" >&2
+if [ "$MOSESONLY" = "1" ]; then
+    echo -e "****************** FINISHED EXPERIMENT $NAME (MOSES-ONLY) *******************************" >&2
+else
+    echo -e "****************** FINISHED EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************" >&2
+fi
