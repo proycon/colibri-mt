@@ -43,7 +43,11 @@ if [ -z $TWEIGHTS_COMMA ]; then
     exit 2
 fi
 CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
-CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
+if [ "$IGNORECLASSIFIER" = "1" ]; then
+    CLASSIFIERSUBDIR="classifiers-H{$SCOREHANDLING}-ignored"
+else
+    CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
+fi
 DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
 
 
@@ -188,10 +192,12 @@ else
 
     ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
     if [ $? -ne 0 ]; then
-        echo -e "${blue}Training classifiers${NC}">&2
-        CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
-        echo $CMD>&2
-        $CMD
+        if [ "$IGNORECLASSIFIER" != 1 ]; then
+            echo -e "${blue}Training classifiers${NC}">&2
+            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            echo $CMD>&2
+            $CMD
+        fi
     fi
 
     if [ "$LASTSTAGE" = "trainclassifiers" ]; then
