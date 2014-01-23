@@ -198,7 +198,7 @@ def main():
             print("Training classifiers (constrained by test data)",file=sys.stderr)
         else:
             print("Training all classifiers (you may want to constrain by test data using -f)",file=sys.stderr)
-        if os.path.exists(args.workdir + "/train.train"):
+        if 'monolithic' in classifierconf and classifierconf['monolithic']:
             #monolithic
             trainfile = args.workdir + "/train"
             #build a classifier
@@ -261,12 +261,18 @@ def main():
             f.write(" ".join(tokens) + "\n")
         f.close()
 
+        if classifierconf['monolithic']:
+            print("Loading monolithic classifier",file=sys.stderr)
+            timbloptions = gettimbloptions(args, classifierconf)
+            classifier = timbl.TimblClassifier(classifierdir + "/train", timbloptions)
+        else:
+            classifier = None
+
         print("Creating intermediate phrase-table",file=sys.stderr)
 
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
         prevpattern = None
-        classifier = None
         for sourcepattern in testmodel:
             sourcepattern_s = sourcepattern.tostring(sourcedecoders[0])
             #iterate over all occurrences, each will be encoded separately
@@ -286,7 +292,7 @@ def main():
                     raise Exception("Empty feature found in featurevector")
 
                 translationcount = 0
-                if not args.ignoreclassifier:
+                if not args.ignoreclassifier and not classifierconf['monolithic']:
 
                     #load classifier
                     if not prevpattern or sourcepattern != prevpattern:
