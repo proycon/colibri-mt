@@ -765,7 +765,7 @@ def main_extractfeatures():
         prevtargetpattern = None
         trainfile = ""
         if args.monolithic:
-            f = open(args.outputfile + "/train",'w',encoding='utf-8')
+            f = open(args.outputfile + "/train.train",'w',encoding='utf-8')
             f2 = open(args.outputfile + "/sourcepatterns.list",'w',encoding='utf-8')
 
         fconf = open(args.outputfile + "/classifier.conf",'wb')
