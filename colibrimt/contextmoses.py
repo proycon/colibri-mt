@@ -198,7 +198,7 @@ def main():
             print("Training classifiers (constrained by test data)",file=sys.stderr)
         else:
             print("Training all classifiers (you may want to constrain by test data using -f)",file=sys.stderr)
-        if os.path.exists(args.workdir + "/train"):
+        if os.path.exists(args.workdir + "/train.train"):
             #monolithic
             trainfile = args.workdir + "/train"
             #build a classifier
@@ -207,14 +207,14 @@ def main():
             if args.classifierdir:
                 #ugly hack since we want ibases in a different location
                 trainfilecopy = trainfile.replace(args.workdir, args.classifierdir)
-                shutil.copyfile(trainfile, trainfilecopy)
+                shutil.copyfile(trainfile+".train", trainfilecopy+".train")
                 trainfile = trainfilecopy
             classifier = timbl.TimblClassifier(trainfile, timbloptions)
             classifier.train()
             classifier.save()
             if args.classifierdir:
                 #remove copy
-                os.unlink(trainfile)
+                os.unlink(trainfile+".train")
         else:
             #experts
             for trainfile in glob.glob(args.workdir + "/*.train"):
