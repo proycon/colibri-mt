@@ -216,11 +216,17 @@ else
     fi 
 
 
+    if [ ! -z "$TESTFACTOR" ]; then
+        FACTOROPTIONS="-f ../$TESTFACTOR.txt"
+    else
+        FACTOROPTIONS=""
+    fi
+
     ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
     if [ $? -ne 0 ]; then
         if [ "$IGNORECLASSIFIER" != 1 ]; then
             echo -e "${blue}Training classifiers${NC}">&2
-            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD
         fi
@@ -235,7 +241,7 @@ else
     if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ]; then
         mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
         echo -e "${blue}Processing test data and invoking moses${NC}">&2
-        CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+        CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
