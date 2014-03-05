@@ -129,8 +129,9 @@ else
     fi
 
 
+
     if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
-        echo -e "${blue}Building source patternmodel${NC}">&2
+        echo -e "${blue}Building target patternmodel${NC}">&2
         CMD="colibri-classencode ../$TRAINTARGET.txt"
         echo $CMD>&2
         $CMD
@@ -139,6 +140,43 @@ else
             exit 2
         fi
         CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in Patternmodeller${NC}" >&2
+            exit 2
+        fi
+    fi
+
+    if [ ! -z "$TRAINSOURCE_FACTOR" ] && [ ! -f "${TRAINSOURCE_FACTOR}.colibri.indexedpatternmodel" ]; then
+        echo -e "${blue}Building source patternmodel for factor 1${NC}">&2
+        CMD="colibri-classencode ../${TRAINSOURCE_FACTOR}.txt"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in classencode${NC}" >&2
+            exit 2
+        fi
+        CMD="colibri-patternmodeller -f ${TRAINSOURCE_FACTOR}.colibri.dat -o ${TRAINSOURCE_FACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in Patternmodeller${NC}" >&2
+            exit 2
+        fi
+    fi
+
+
+    if [ ! -z "$TRAINTARGET_FACTOR" ] && [ ! -f "${TRAINTARGET_FACTOR}.colibri.indexedpatternmodel" ]; then
+        echo -e "${blue}Building target patternmodel for factor 1${NC}">&2
+        CMD="colibri-classencode ../${TRAINTARGET_FACTOR}.txt"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in classencode${NC}" >&2
+            exit 2
+        fi
+        CMD="colibri-patternmodeller -f ${TRAINTARGET_FACTOR}.colibri.dat -o ${TRAINTARGET_FACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
