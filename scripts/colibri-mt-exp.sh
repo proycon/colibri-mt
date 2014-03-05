@@ -148,16 +148,16 @@ else
         fi
     fi
 
-    if [ ! -z "$TRAINSOURCE_FACTOR" ] && [ ! -f "${TRAINSOURCE_FACTOR}.colibri.indexedpatternmodel" ]; then
+    if [ ! -z "$TRAINFACTOR" ] && [ ! -f "${TRAINFACTOR}.colibri.indexedpatternmodel" ]; then
         echo -e "${blue}Building source patternmodel for factor 1${NC}">&2
-        CMD="colibri-classencode ../${TRAINSOURCE_FACTOR}.txt"
+        CMD="colibri-classencode ../${TRAINFACTOR}.txt"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in classencode${NC}" >&2
             exit 2
         fi
-        CMD="colibri-patternmodeller -f ${TRAINSOURCE_FACTOR}.colibri.dat -o ${TRAINSOURCE_FACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+        CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
@@ -167,23 +167,6 @@ else
     fi
 
 
-    if [ ! -z "$TRAINTARGET_FACTOR" ] && [ ! -f "${TRAINTARGET_FACTOR}.colibri.indexedpatternmodel" ]; then
-        echo -e "${blue}Building target patternmodel for factor 1${NC}">&2
-        CMD="colibri-classencode ../${TRAINTARGET_FACTOR}.txt"
-        echo $CMD>&2
-        $CMD
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in classencode${NC}" >&2
-            exit 2
-        fi
-        CMD="colibri-patternmodeller -f ${TRAINTARGET_FACTOR}.colibri.dat -o ${TRAINTARGET_FACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-        echo $CMD>&2
-        $CMD
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Patternmodeller${NC}" >&2
-            exit 2
-        fi
-    fi
 
     if [ "$LASTSTAGE" = "patternmodels" ]; then
         echo "Halting after this stage as requested"
@@ -209,7 +192,12 @@ else
     if [ ! -d $CLASSIFIERDIR ]; then
         echo -e "${blue}Extracting features and building classifiers${NC}">&2
         mkdir $CLASSIFIERDIR
-        CMD="colibri-extractfeatures -i $NAME -s $TRAINSOURCE.colibri.indexedpatternmodel -t $TRAINTARGET.colibri.indexedpatternmodel -f $TRAINSOURCE.colibri.dat -l $LEFT -r $RIGHT -c $TRAINSOURCE.colibri.cls -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -C -$CLASSIFIERTYPE -o $CLASSIFIERDIR -I $INSTANCETHRESHOLD $EXTRAOPTIONS"
+        if [ ! -z "$TRAINFACTOR" ]; then
+            FACTOROPTIONS="-f ${TRAINFACTOR}.colibri.dat -l $LEFT -r $RIGHT -c ${TRAINFACTOR}.colibri.cls"
+        else
+            FACTOROPTIONS=""
+        fi
+        CMD="colibri-extractfeatures -i $NAME -s $TRAINSOURCE.colibri.indexedpatternmodel -t $TRAINTARGET.colibri.indexedpatternmodel -f $TRAINSOURCE.colibri.dat -l $LEFT -r $RIGHT -c $TRAINSOURCE.colibri.cls $FACTOROPTIONS -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -C -$CLASSIFIERTYPE -o $CLASSIFIERDIR -I $INSTANCETHRESHOLD $EXTRAOPTIONS"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
