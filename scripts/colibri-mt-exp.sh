@@ -70,6 +70,9 @@ if [ "$MOSESONLY" = "1" ]; then
         ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
         ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
         CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 9 --lm 0:3:$EXPDIR/$NAME/$TARGETLANG.lm"
+        if [ ! -z "$REORDERING" ]; then
+            CMD="$CMD -reordering $REORDERING"
+        fi
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
@@ -95,6 +98,9 @@ else
         ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
         ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
         CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
+        if [ ! -z "$REORDERING" ]; then
+            CMD="$CMD -reordering $REORDERING"
+        fi
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
