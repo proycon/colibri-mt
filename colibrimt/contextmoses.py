@@ -273,7 +273,8 @@ def main():
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
         prevpattern = None
-        for sourcepattern in testmodel:
+        sourcepatterncount = len(testmodel)
+        for i, sourcepattern in enumerate(testmodel):
             sourcepattern_s = sourcepattern.tostring(sourcedecoders[0])
             #iterate over all occurrences, each will be encoded separately
             for sentenceindex, tokenindex in testmodel[sourcepattern]:
@@ -311,7 +312,7 @@ def main():
                             classifier = None
 
                 if classifier:
-                    print("Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+                    print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
 
                     #call classifier
                     classlabel, distribution, distance = classifier.classify(featurevector)
