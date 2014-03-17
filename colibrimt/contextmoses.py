@@ -73,6 +73,9 @@ def main():
     parser.add_argument('--td', type=str, help="Timbl distance metric", action="store", default="Z")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
     parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
+    parser.add_argument('--mosesdir', type='str',help='Path to Moses directory (required for MERT)', default="")
+    parser.add_argument('--mert', action="store_true",help="Do MERT parameter tuning", required=False)
+    parser.add_argument('--ref', action="store_true",help="Reference corpus (target corpus, plain text)", required=False)
     parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
     parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
@@ -92,6 +95,10 @@ def main():
         classifierdir = args.classifierdir
     else:
         classifierdir = args.workdir
+
+    if args.mert and not args.mosesdir:
+        print("--mert requires --mosesdir to be set",file=sys.stderr)
+        sys.exit(2)
 
     if args.decodedir:
         decodedir = args.decodedir
@@ -429,8 +436,12 @@ T 0
 """.format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight))
         f.close()
 
-        #invoke moses
-        r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
+        if args.mert:
+            #invoke moses
+            r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " " + EXEC_MOSES + ' -f ' + decodedir + "/moses.ini")
+        else:
+            #invoke moses
+            r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
 
 
 if __name__ == '__main__':
