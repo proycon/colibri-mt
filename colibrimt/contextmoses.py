@@ -354,7 +354,7 @@ def main():
                             statistical = False
                     else:
                         print("Not in classifier. Falling back to statistical baseline.",file=sys.stderr)
-                        statistical = False
+                        statistical = True
 
                 else:
                     statistical = True
