@@ -3,6 +3,7 @@
 blue='\e[1;34m'
 red='\e[1;31m'
 yellow='\e[1;33m'
+yellow='\e[1;35m'
 NC='\e[0m' # No Color
 
 
