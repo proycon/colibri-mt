@@ -65,8 +65,8 @@ fi
 
 if [ "$MOSESONLY" = "1" ]; then
     
-    if [ ! -f model/phrase-table.gz ]; then
-        echo -e "${blue}[$NAME (Moses only)] -- Building phrasetable${NC}">&2
+    if [ ! -f model/phrase-table.gz ] || [ ! -f model/moses.ini ]; then
+        echo -e "${blue}[$NAME (Moses only)]\nBuilding phrasetable${NC}">&2
         ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
         ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
         CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 9 --lm 0:3:$EXPDIR/$NAME/$TARGETLANG.lm"
@@ -81,14 +81,22 @@ if [ "$MOSESONLY" = "1" ]; then
         fi
         cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
         gunzip "$NAME.phrasetable.gz"
+    else
+        echo -e "${magenta}[$NAME (Moses only)]\nPhrase-table already built${NC}">&2
     fi
 
-    if [ ! -f model/moses.ini ]; then
+    if [ ! -f output.mosesonly.txt ]; then
         echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
         moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
+    else
+        echo -e "${magenta}[$NAME (Moses only)]\nMoses output already exists ${NC}">&2
+    fi
 
+    if [ ! -f output.mosesonly.summary.score ]; then
         echo -e "${blue}[$NAME (Moses only)]\nEvaluating${NC}">&2
         colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
+    else
+        echo -e "${magenta}[$NAME (Moses only)]\nEvaluation already done${NC}">&2
     fi
 
 else
@@ -109,6 +117,8 @@ else
         fi
         cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
         gunzip "$NAME.phrasetable.gz"
+    else
+        echo -e "${magenta}[$NAME]\nPhrase-table already built${NC}">&2
     fi
 
     if [ "$LASTSTAGE" = "buildphrasetable" ]; then
@@ -132,6 +142,8 @@ else
             echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
             exit 2
         fi
+    else
+        echo -e "${magenta}[$NAME]\nSource patternmodel already built${NC}">&2
     fi
 
 
@@ -152,6 +164,8 @@ else
             echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
             exit 2
         fi
+    else
+        echo -e "${magenta}[$NAME]\nTarget patternmodel already built${NC}">&2
     fi
 
     if [ ! -z "$TRAINFACTOR" ] && [ ! -f "${TRAINFACTOR}.colibri.indexedpatternmodel" ]; then
@@ -188,6 +202,8 @@ else
             echo -e "${red}[$NAME]\nError in colibri-mosesphrasetable2alignmodel${NC}" >&2
             exit 2
         fi
+    else
+        echo -e "${magenta}[$NAME]\nAlignment model already built${NC}">&2
     fi
 
     if [ "$LASTSTAGE" = "buildalignmentmodel" ]; then
@@ -210,6 +226,8 @@ else
             echo -e "${red}[$NAME/$CLASSIFIERDIR]\nError in colibri-extractfeatures${NC}" >&2
             exit 2
         fi
+    else
+        echo -e "${magenta}[$NAME/$CLASSIFIERDIR]\nClassifiers already built${NC}">&2
     fi
 
     if [ "$LASTSTAGE" = "featureextraction" ]; then
@@ -262,6 +280,8 @@ else
             echo -e "${red}Error in moses${NC}" >&2
             exit 2
         fi
+    else
+        echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nDecoder already ran${NC}">&2
     fi
 
     if [ "$LASTSTAGE" = "decoder" ]; then
@@ -275,7 +295,10 @@ else
 
         echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
         echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
-        echo "All done..."
+    else
+        echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nEvaluation already done${NC}">&2
+        echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
+        echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
     fi
 fi
 
@@ -284,3 +307,5 @@ if [ "$MOSESONLY" = "1" ]; then
 else
     echo -e "****************** FINISHED EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************" >&2
 fi
+
+echo "All done..."
