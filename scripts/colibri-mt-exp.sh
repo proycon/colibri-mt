@@ -52,11 +52,59 @@ fi
 DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
 
 
+
 if [ "$MOSESONLY" = "1" ]; then
     echo -e "${yellow}****************** STARTING EXPERIMENT $NAME (MOSES-ONLY) *******************************${NC}" >&2
 else
     echo -e "${yellow}****************** STARTING EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************${NC}" >&2
 fi
+
+
+####### integrity checks ###################
+
+if [ ! -f "$EXPDIR/${TRAINSOURCE}.txt" ]; then
+    echo -e "${red}TRAINSOURCE does not exist: $EXPDIR/${TRAINSOURCE}.txt ${NC}" >&2
+    exit 2
+fi
+if [ ! -f "$EXPDIR/${TRAINTARGET}.txt" ]; then
+    echo -e "${red}TRAINTARGET does not exist: $EXPDIR/${TRAINTARGET}.txt ${NC}" >&2
+    exit 2
+fi
+
+if [ ! -f "$EXPDIR/${TESTSOURCE}.txt" ]; then
+    echo -e "${red}TESTSOURCE does not exist: $EXPDIR/${TESTSOURCE}.txt ${NC}" >&2
+    exit 2
+fi
+if [ ! -f "$EXPDIR/${TESTTARGET}.txt" ]; then
+    echo -e "${red}TESTTARGET does not exist: $EXPDIR/${TESTTARGET}.txt ${NC}" >&2
+    exit 2
+fi
+
+if [ "$MERT" = "1" ]; then
+    if [ -z "$DEVSOURCE" ]; then
+        echo -e "${red}MERT is enabled but no DEVSOURCE is specified!${NC}" >&2
+        exit 2
+    fi
+    if [ -z "$DEVTARGET" ]; then
+        echo -e "${red}MERT is enabled but no DEVTARGET is specified!${NC}" >&2
+        exit 2
+    fi
+    if [ ! -f "$EXPDIR/${DEVSOURCE}.txt" ]; then
+        echo -e "${red}DEVSOURCE does not exist: $EXPDIR/${DEVSOURCE}.txt ${NC}" >&2
+        exit 2
+    fi
+    if [ ! -f "$EXPDIR/${DEVTARGET}.txt" ]; then
+        echo -e "${red}DEVTARGET does not exist: $EXPDIR/${DEVTARGET}.txt ${NC}" >&2
+        exit 2
+    fi
+fi
+
+
+
+##############################
+
+
+
 
 if [ ! -f "$TARGETLANG.lm" ]; then
     echo -e "${blue}$NAME -- Building language model${NC}">&2
