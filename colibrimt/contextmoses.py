@@ -265,7 +265,7 @@ def main():
         if classifierconf['monolithic']:
             print("Loading classifier index for monolithic classifier",file=sys.stderr)
 
-            with open(classifierdir + "/sourcepatterns.list",'r',encoding='utf-8') as f:
+            with open(args.workdir + "/sourcepatterns.list",'r',encoding='utf-8') as f:
                 for line in f:
                     classifierindex.add(line.strip())
 
