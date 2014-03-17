@@ -58,7 +58,7 @@ else
 fi
 
 if [ ! -f "$TARGETLANG.lm" ]; then
-    echo -e "${blue}Building language model${NC}">&2
+    echo -e "${blue}$NAME -- Building language model${NC}">&2
     ngram-count -text ../$TRAINTARGET.txt -order 3 -interpolate -kndiscount -unk -lm $TARGETLANG.lm
 fi
 
@@ -84,17 +84,17 @@ if [ "$MOSESONLY" = "1" ]; then
     fi
 
     if [ ! -f model/moses.ini ]; then
-        echo -e "${blue}Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
+        echo -e "${blue}$NAME -- Invoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
         moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
 
-        echo -e "${blue}Evaluating${NC}">&2
+        echo -e "${blue}$NAME -- Evaluating${NC}">&2
         colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
     fi
 
 else
 
     if [ ! -f "$NAME.phrasetable" ]; then
-        echo -e "${blue}Building phrasetable${NC}">&2
+        echo -e "${blue}[$NAME] -- Building phrasetable${NC}">&2
         ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
         ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
         CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
@@ -104,7 +104,7 @@ else
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Moses${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in Moses${NC}" >&2
             exit 2
         fi
         cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
@@ -117,19 +117,19 @@ else
     fi
 
     if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
-        echo -e "${blue}Building source patternmodel${NC}">&2
+        echo -e "${blue}[$NAME] -- Building source patternmodel${NC}">&2
         CMD="colibri-classencode ../$TRAINSOURCE.txt"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in classencode${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in classencode${NC}" >&2
             exit 2
         fi
         CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Patternmodeller${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in Patternmodeller${NC}" >&2
             exit 2
         fi
     fi
@@ -137,37 +137,37 @@ else
 
 
     if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
-        echo -e "${blue}Building target patternmodel${NC}">&2
+        echo -e "${blue}[$NAME] -- Building target patternmodel${NC}">&2
         CMD="colibri-classencode ../$TRAINTARGET.txt"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in classencode${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in classencode${NC}" >&2
             exit 2
         fi
         CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Patternmodeller${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in Patternmodeller${NC}" >&2
             exit 2
         fi
     fi
 
     if [ ! -z "$TRAINFACTOR" ] && [ ! -f "${TRAINFACTOR}.colibri.indexedpatternmodel" ]; then
-        echo -e "${blue}Building source patternmodel for factor 1${NC}">&2
+        echo -e "${blue}[$NAME] -- Building source patternmodel for factor 1${NC}">&2
         CMD="colibri-classencode ../${TRAINFACTOR}.txt"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in classencode${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in classencode${NC}" >&2
             exit 2
         fi
         CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Patternmodeller${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in Patternmodeller${NC}" >&2
             exit 2
         fi
     fi
@@ -175,17 +175,17 @@ else
 
 
     if [ "$LASTSTAGE" = "patternmodels" ]; then
-        echo "Halting after this stage as requested"
+        echo "[$NAME] -- Halting after this stage as requested"
         exit 0
     fi
 
     if [ ! -f "$NAME.colibri.alignmodel-featconf" ]; then
-        echo -e "${blue}Converting phrasetable to alignment model${NC}">&2
+        echo -e "${blue}[$NAME] -- Converting phrasetable to alignment model${NC}">&2
         CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in colibri-mosesphrasetable2alignmodel${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in colibri-mosesphrasetable2alignmodel${NC}" >&2
             exit 2
         fi
     fi
@@ -196,7 +196,7 @@ else
     fi
 
     if [ ! -d $CLASSIFIERDIR ]; then
-        echo -e "${blue}Extracting features and building classifiers${NC}">&2
+        echo -e "${blue}[$NAME] -- Extracting features and building classifiers${NC}">&2
         mkdir $CLASSIFIERDIR
         if [ ! -z "$TRAINFACTOR" ]; then
             FACTOROPTIONS="-f ${TRAINFACTOR}.colibri.dat -l $LEFT -r $RIGHT -c ${TRAINFACTOR}.colibri.cls"
@@ -207,13 +207,13 @@ else
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in colibri-extractfeatures${NC}" >&2
+            echo -e "${red}[$NAME] -- Error in colibri-extractfeatures${NC}" >&2
             exit 2
         fi
     fi
 
     if [ "$LASTSTAGE" = "featureextraction" ]; then
-        echo "Halting after this stage as requested"
+        echo "[$NAME] -- Halting after this stage as requested"
         exit 0
     fi
 
@@ -231,7 +231,7 @@ else
     ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
     if [ $? -ne 0 ]; then
         if [ "$IGNORECLASSIFIER" != 1 ]; then
-            echo -e "${blue}Training classifiers${NC}">&2
+            echo -e "${blue}[$NAME] -- Training classifiers${NC}">&2
             CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD
@@ -239,14 +239,14 @@ else
     fi
 
     if [ "$LASTSTAGE" = "trainclassifiers" ]; then
-        echo "Halting after this stage as requested"
+        echo "[$NAME] -- Halting after this stage as requested"
         exit 0
     fi
 
 
     if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ]; then
         mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
-        echo -e "${blue}Processing test data and invoking moses${NC}">&2
+        echo -e "${blue}[$NAME] -- Processing test data and invoking moses${NC}">&2
         CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
         echo $CMD>&2
         $CMD
@@ -255,7 +255,7 @@ else
             exit 2
         fi
     elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
-        echo -e "${blue}Invoking moses on previously generated test data${NC}">&2
+        echo -e "${blue}[$NAME] -- Invoking moses on previously generated test data${NC}">&2
         #copy back, paths are relative
         moses -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
         if [[ $? -ne 0 ]]; then
@@ -265,12 +265,12 @@ else
     fi
 
     if [ "$LASTSTAGE" = "decoder" ]; then
-        echo "Halting after this stage as requested"
+        echo "[$NAME] -- Halting after this stage as requested"
         exit 0
     fi
 
     if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ]; then
-        echo -e "${blue}Evaluating${NC}">&2
+        echo -e "${blue}[$NAME] -- Evaluating${NC}">&2
         colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
 
         echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"

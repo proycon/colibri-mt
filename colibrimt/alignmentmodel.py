@@ -685,7 +685,7 @@ def main_mosesphrasetable2alignmodel():
     mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts,args.nonorm)
 
 def main_extractfeatures():
-    parser = argparse.ArgumentParser(description="Extract context features and add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description="Extract context features and build classifier data (-C) or add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
     parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension, or directory when used with -C)", action='store',required=True)
     parser.add_argument('-s','--sourcemodel',type=str,help="Source model (indexed pattern model)", action='store',required=True)
