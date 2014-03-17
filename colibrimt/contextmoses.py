@@ -87,7 +87,7 @@ def main():
     if not os.path.isdir(args.workdir) or not os.path.exists(args.workdir + '/classifier.conf'):
         print("Work directory " + args.workdir + " or classifier configuration therein does not exist. Did you extract features and create classifier training files using colibri-extractfeatures?" ,file=sys.stderr)
         sys.exit(2)
-
+s
     if args.classifierdir:
         classifierdir = args.classifierdir
     else:
@@ -261,7 +261,14 @@ def main():
             f.write(" ".join(tokens) + "\n")
         f.close()
 
+        classifierindex = set()
         if classifierconf['monolithic']:
+            print("Loading classifier index for monolithic classifier",file=sys.stderr)
+
+            with open(classifierdir + "/sourcepatterns.list",'r',encoding='utf-8') as f:
+                for line in f:
+                    classifierindex.add(line.strip())
+
             print("Loading monolithic classifier",file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
             classifier = timbl.TimblClassifier(classifierdir + "/train", timbloptions)
@@ -311,37 +318,42 @@ def main():
                             #no classifier
                             classifier = None
 
+
                 if classifier:
-                    print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+                    if not classifierconf['monolithic'] or (classifierconf['monolithic'] and sourcepattern_s in classifierindex):
+                        print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
 
-                    #call classifier
-                    classlabel, distribution, distance = classifier.classify(featurevector)
+                        #call classifier
+                        classlabel, distribution, distance = classifier.classify(featurevector)
 
-                    #process classifier result
-                    for targetpattern_s, score in distribution.items():
-                        if args.scorehandling == 'replace':
-                            scorevector = [score]
-                        else:
-                            targetpattern = targetencoder.buildpattern(targetpattern_s)
-                            if (sourcepattern, targetpattern) in alignmodel:
-                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                        #process classifier result
+                        for targetpattern_s, score in distribution.items():
+                            if args.scorehandling == 'replace':
+                                scorevector = [score]
                             else:
-                                continue
+                                targetpattern = targetencoder.buildpattern(targetpattern_s)
+                                if (sourcepattern, targetpattern) in alignmodel:
+                                    scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                                else:
+                                    continue
 
-                            if args.scorehandling == 'append':
-                                scorevector.append(score)
-                            elif args.scorehandling == 'weighed':
-                                raise NotImplementedError #TODO: implemented weighed!
+                                if args.scorehandling == 'append':
+                                    scorevector.append(score)
+                                elif args.scorehandling == 'weighed':
+                                    raise NotImplementedError #TODO: implemented weighed!
 
-                        translationcount += 1
+                            translationcount += 1
 
-                        #write phrasetable entries
-                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
+                            #write phrasetable entries
+                            ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
 
-                    if translationcount == 0:
-                        print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
-                        statistical = True
+                        if translationcount == 0:
+                            print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
+                            statistical = True
+                        else:
+                            statistical = False
                     else:
+                        print("Not in classifier. Falling back to statistical baseline.",file=sys.stderr)
                         statistical = False
 
                 else:
