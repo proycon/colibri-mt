@@ -339,9 +339,15 @@ def main():
                         ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
 
                     if translationcount == 0:
-                        print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table!",file=sys.stderr)
+                        print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
+                        statistical = True
+                    else:
+                        statistical = False
 
                 else:
+                    statistical = True
+
+                if statistical:
                     #ignore classifier or no classifier present for this item
                     for targetpattern in alignmodel.targetpatterns(sourcepattern):
                         scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
@@ -357,10 +363,6 @@ def main():
 
                         #write phrasetable entries
                         ftable.write(tokenspan + " ||| " + targetpattern.tostring(targetdecoder) + " ||| " + " ".join([ str(x) for x in scorevector]) + "\n")
-
-
-
-
 
 
             prevpattern = None
