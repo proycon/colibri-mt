@@ -84,6 +84,7 @@ def main():
     parser.add_argument('--tweight', type=float, help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
+    parser.add_argument('--skipdecoder',action="store_true",default=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -436,12 +437,13 @@ T 0
 """.format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight))
         f.close()
 
-        if args.mert:
-            #invoke moses
-            r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " " + EXEC_MOSES + ' -f ' + decodedir + "/moses.ini")
-        else:
-            #invoke moses
-            r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
+        if not args.skipdecoder:
+            if args.mert:
+                #invoke moses
+                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " " + EXEC_MOSES + ' -f ' + decodedir + "/moses.ini")
+            else:
+                #invoke moses
+                r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
 
 
 if __name__ == '__main__':
