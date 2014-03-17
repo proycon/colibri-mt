@@ -87,7 +87,7 @@ def main():
     if not os.path.isdir(args.workdir) or not os.path.exists(args.workdir + '/classifier.conf'):
         print("Work directory " + args.workdir + " or classifier configuration therein does not exist. Did you extract features and create classifier training files using colibri-extractfeatures?" ,file=sys.stderr)
         sys.exit(2)
-s
+
     if args.classifierdir:
         classifierdir = args.classifierdir
     else:
