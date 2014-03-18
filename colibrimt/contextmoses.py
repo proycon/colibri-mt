@@ -425,8 +425,6 @@ T 0
 [ttable-limit]
 20
 
-[weight-d]
-{dweight}
 
 [weight-l]
 {lmweight}
@@ -436,7 +434,32 @@ T 0
 
 [weight-w]
 {wweight}
+
 """.format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight))
+
+        if args.reordering:
+            f.write("""
+# distortion (reordering) files
+[distortion-file]
+0-0 {reordering} 6 {reorderingtable}
+
+# distortion (reordering) weight
+[weight-d]
+0.3
+0.3
+0.3
+0.3
+0.3
+0.3
+0.3
+
+""".format(reordering=args.reordering,reorderingtable=args.reorderingtable))
+        else:
+            f.write("""
+[weight-d]
+{dweight}""".format(dweight=args.dweight))
+
+
         f.close()
 
         if not args.skipdecoder:
