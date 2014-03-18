@@ -146,28 +146,46 @@ if [ "$MOSESONLY" = "1" ]; then
 
     if [ "$MERT" = 1 ]; then
         echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f mert-work/moses.ini"
+        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f model/moses.ini"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in Moses${NC}" >&2
             exit 2
         fi
+
+        if [ ! -f output.mosesonly-mert.txt ]; then
+            echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
+            moses -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt
+        else
+            echo -e "${magenta}[$NAME (Moses only, mert)]\nMoses output already exists ${NC}">&2
+        fi
+
+        if [ ! -f output.mosesonly-mert.summary.score ]; then
+            echo -e "${blue}[$NAME (Moses only, mert)]\nEvaluating${NC}">&2
+            colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly-mert.txt 
+        else
+            echo -e "${magenta}[$NAME (Moses only, mert)]\nEvaluation already done${NC}">&2
+        fi
+    else
+        #no mert
+
+        if [ ! -f output.mosesonly.txt ]; then
+            echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
+            moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
+        else
+            echo -e "${magenta}[$NAME (Moses only)]\nMoses output already exists ${NC}">&2
+        fi
+
+        if [ ! -f output.mosesonly.summary.score ]; then
+            echo -e "${blue}[$NAME (Moses only)]\nEvaluating${NC}">&2
+            colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
+        else
+            echo -e "${magenta}[$NAME (Moses only)]\nEvaluation already done${NC}">&2
+        fi
     fi
 
-    if [ ! -f output.mosesonly.txt ]; then
-        echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-        moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
-    else
-        echo -e "${magenta}[$NAME (Moses only)]\nMoses output already exists ${NC}">&2
-    fi
 
-    if [ ! -f output.mosesonly.summary.score ]; then
-        echo -e "${blue}[$NAME (Moses only)]\nEvaluating${NC}">&2
-        colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly.txt 
-    else
-        echo -e "${magenta}[$NAME (Moses only)]\nEvaluation already done${NC}">&2
-    fi
 
 else
 
