@@ -49,8 +49,12 @@ if [ "$IGNORECLASSIFIER" = "1" ]; then
 else
     CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 fi
-DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
-DECODEMERTDIR="decode-mert"
+if [ "$MERT" = "1" ]; then
+    DECODEDIR="decode-mert"
+else
+    DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}"
+fi
+DECODEMERTDIR="dev-mert"
 
 
 
@@ -337,13 +341,22 @@ else
 
     if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
         mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
-        echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nProcessing test data and invoking moses${NC}">&2
+        echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
         CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+        if [ "$MERT" = "1" ]; then
+            CMD="$CMD --skipdecoder"
+        fi
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in colibri-contextmoses${NC}" >&2
             exit 2
+        fi
+        if [ "$MERT" = "1" ]; then
+            #copy moses ini from mert
+            cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/
+            #replace phrase-table reference 
+            sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini
         fi
     elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
         echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
@@ -356,6 +369,8 @@ else
     else
         echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nDecoder already ran${NC}">&2
     fi
+
+
 
     if [ "$LASTSTAGE" = "decoder" ]; then
         echo "[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR] -- Halting after this stage as requested"
