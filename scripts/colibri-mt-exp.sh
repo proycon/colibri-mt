@@ -144,6 +144,20 @@ if [ "$MOSESONLY" = "1" ]; then
         echo -e "${magenta}[$NAME (Moses only)]\nPhrase-table already built${NC}">&2
     fi
 
+    if [ "$MERT" = 1 ]; then
+        echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
+        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f model/moses.ini"
+        echo $CMD>&2
+        $CMD
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}Error in Moses${NC}" >&2
+            exit 2
+        fi
+
+        #copy moses ini from mert
+        cp -f mert-work/moses.ini ./
+    fi
+
     if [ ! -f output.mosesonly.txt ]; then
         echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
         moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
