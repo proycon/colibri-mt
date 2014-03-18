@@ -146,16 +146,13 @@ if [ "$MOSESONLY" = "1" ]; then
 
     if [ "$MERT" = 1 ]; then
         echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f model/moses.ini"
+        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f mert-work/moses.ini"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in Moses${NC}" >&2
             exit 2
         fi
-
-        #copy moses ini from mert
-        cp -f mert-work/moses.ini ./
     fi
 
     if [ ! -f output.mosesonly.txt ]; then
