@@ -457,7 +457,8 @@ T 0
         else:
             f.write("""
 [weight-d]
-{dweight}""".format(dweight=args.dweight))
+{dweight}
+""".format(dweight=args.dweight))
 
 
         f.close()
