@@ -36,8 +36,10 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
-                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
-            featurevector.append(unigram.tostring(classdecoder))
+                print("ERROR: Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)),file=sys.stderr)
+                featurevector.append("ERROR")
+            else:
+                featurevector.append(unigram.tostring(classdecoder))
         if focus:
             focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
             assert len(focuspattern) >= 1
@@ -48,8 +50,10 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
-                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
-            featurevector.append(unigram.tostring(classdecoder))
+                print("ERROR: Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)),file=sys.stderr)
+                featurevector.append("ERROR")
+            else:
+                featurevector.append(unigram.tostring(classdecoder))
     return featurevector
 
 def gettimbloptions(args, classifierconf):
