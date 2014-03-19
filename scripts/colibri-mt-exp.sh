@@ -57,6 +57,9 @@ else
 fi
 DECODEMERTDIR="dev-mert"
 
+if [ -z "$THREADS" ]; then
+    THREADS=1
+fi
 
 
 if [ "$MOSESONLY" = "1" ]; then
@@ -157,7 +160,7 @@ if [ "$MOSESONLY" = "1" ]; then
 
     if [ "$MERT" = 1 ]; then
         echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini"
+        CMD="$MOSESDIR/scripts/training/mert-moses.pl --threads=$THREADS --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
@@ -168,7 +171,7 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly-mert.txt ]; then
             echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            CMD="moses -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt"
+            CMD="moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt"
             echo $CMD>&2
             $CMD
         else
@@ -186,7 +189,7 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly.txt ]; then
             echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            CMD="moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt"
+            CMD="moses -threads $THREADS -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt"
             echo $CMD>&2
             $CMD
         else
@@ -363,7 +366,7 @@ else
     if [ $? -ne 0 ]; then
         if [ "$IGNORECLASSIFIER" != 1 ]; then
             echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
-            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD
         fi
@@ -379,7 +382,7 @@ else
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nProcessing test data and invoking moses${NC}">&2
-            CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
@@ -395,7 +398,7 @@ else
     if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
         mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
         echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
-        CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+        CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
         if [ "$MERT" = "1" ]; then
             CMD="$CMD --skipdecoder"
         fi
@@ -416,7 +419,7 @@ else
             sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini
 
             #run decoder (skipped earlier)
-            CMD="moses -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
+            CMD="moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
@@ -428,7 +431,7 @@ else
     elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
         echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
         #copy back, paths are relative
-        CMD="moses -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
+        CMD="moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
