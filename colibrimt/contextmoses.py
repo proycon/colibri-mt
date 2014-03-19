@@ -75,6 +75,7 @@ def main():
     parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
     parser.add_argument('--mosesdir', type=str,help='Path to Moses directory (required for MERT)', default="")
     parser.add_argument('--mert', action="store_true",help="Do MERT parameter tuning", required=False)
+    parser.add_argument('--threads', type=int, default=1, help="Number of threads to use for Moses or Mert")
     parser.add_argument('--reordering', type=str,action="store",help="Reordering type (use with --reorderingtable)", required=False)
     parser.add_argument('--reorderingtable', type=str,action="store",help="Use reordering table (use with --reordering)", required=False)
     parser.add_argument('--ref', type=str,action="store",help="Reference corpus (target corpus, plain text)", required=False)
@@ -469,10 +470,10 @@ T 0
         if not args.skipdecoder:
             if args.mert:
                 #invoke moses
-                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini")
+                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads))
             else:
                 #invoke moses
-                r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
+                r = os.system(EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
 
 
 if __name__ == '__main__':
