@@ -160,13 +160,14 @@ if [ "$MOSESONLY" = "1" ]; then
 
     if [ "$MERT" = 1 ]; then
         echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-        CMD="$MOSESDIR/scripts/training/mert-moses.pl --decoder-flags '-threads $THREADS' --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini"
-        echo $CMD>&2
-        $CMD
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in Moses${NC}" >&2
-            sleep 3
-            exit 2
+        if [ ! -f mert-work/moses.ini ]; then
+            echo "$MOSESDIR/scripts/training/mert-moses.pl --decoder-flags=\"-threads $THREADS\" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini" >&2
+            $MOSESDIR/scripts/training/mert-moses.pl --decoder-flags="-threads $THREADS" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini
+            if [[ $? -ne 0 ]]; then
+                echo -e "${red}Error in Moses${NC}" >&2
+                sleep 3
+                exit 2
+            fi
         fi
 
         if [ ! -f output.mosesonly-mert.txt ]; then
