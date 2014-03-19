@@ -156,7 +156,9 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly-mert.txt ]; then
             echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            moses -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt
+            CMD="moses -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt"
+            echo $CMD>&2
+            $CMD
         else
             echo -e "${magenta}[$NAME (Moses only, mert)]\nMoses output already exists ${NC}">&2
         fi
@@ -172,7 +174,9 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly.txt ]; then
             echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
+            CMD="moses -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt"
+            echo $CMD>&2
+            $CMD
         else
             echo -e "${magenta}[$NAME (Moses only)]\nMoses output already exists ${NC}">&2
         fi
