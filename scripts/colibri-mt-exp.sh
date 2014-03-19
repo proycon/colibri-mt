@@ -379,7 +379,7 @@ else
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in colibri-contextmoses${NC}" >&2
+            echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in colibri-contextmoses${NC}" >&2
             exit 2
         fi
         if [ "$MERT" = "1" ]; then
@@ -391,7 +391,7 @@ else
             #run decoder (skipped earlier)
             moses -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
             if [[ $? -ne 0 ]]; then
-                echo -e "${red}Error in moses${NC}" >&2
+                echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
                 exit 2
             fi
         fi
@@ -400,7 +400,7 @@ else
         #copy back, paths are relative
         moses -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
         if [[ $? -ne 0 ]]; then
-            echo -e "${red}Error in moses${NC}" >&2
+            echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
             exit 2
         fi
     else
