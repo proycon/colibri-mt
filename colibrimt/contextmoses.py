@@ -469,7 +469,7 @@ T 0
         if not args.skipdecoder:
             if args.mert:
                 #invoke moses
-                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " " + EXEC_MOSES + ' ' + decodedir + "/moses.ini")
+                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini")
             else:
                 #invoke moses
                 r = os.system(EXEC_MOSES + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
