@@ -41,6 +41,7 @@ for tweight in ${TWEIGHTS[*]}; do
 done
 if [ -z $TWEIGHTS_COMMA ]; then
     echo "No tweights? tweights=$TWEIGHTS">&2
+    sleep 3
     exit 2
 fi
 CLASSIFIERDIR="classifierdata-${CLASSIFIERTYPE}I${INSTANCETHRESHOLD}l${LEFT}r${RIGHT}$EXTRANAME"
@@ -70,41 +71,50 @@ fi
 
 if [ "$MERT" = "1" ] && [ -z $MOSESDIR ]; then
     echo -e "${red}MOSESDIR must be set when MERT is used${NC}" >&2
+    sleep 3
     exit 2
 fi
 if [ ! -f "$EXPDIR/${TRAINSOURCE}.txt" ]; then
     echo -e "${red}TRAINSOURCE does not exist: $EXPDIR/${TRAINSOURCE}.txt ${NC}" >&2
+    sleep 3
     exit 2
 fi
 if [ ! -f "$EXPDIR/${TRAINTARGET}.txt" ]; then
     echo -e "${red}TRAINTARGET does not exist: $EXPDIR/${TRAINTARGET}.txt ${NC}" >&2
+    sleep 3
     exit 2
 fi
 
 if [ ! -f "$EXPDIR/${TESTSOURCE}.txt" ]; then
     echo -e "${red}TESTSOURCE does not exist: $EXPDIR/${TESTSOURCE}.txt ${NC}" >&2
+    sleep 3
     exit 2
 fi
 if [ ! -f "$EXPDIR/${TESTTARGET}.txt" ]; then
     echo -e "${red}TESTTARGET does not exist: $EXPDIR/${TESTTARGET}.txt ${NC}" >&2
+    sleep 3
     exit 2
 fi
 
 if [ "$MERT" = "1" ]; then
     if [ -z "$DEVSOURCE" ]; then
         echo -e "${red}MERT is enabled but no DEVSOURCE is specified!${NC}" >&2
+        sleep 3
         exit 2
     fi
     if [ -z "$DEVTARGET" ]; then
         echo -e "${red}MERT is enabled but no DEVTARGET is specified!${NC}" >&2
+        sleep 3
         exit 2
     fi
     if [ ! -f "$EXPDIR/${DEVSOURCE}.txt" ]; then
         echo -e "${red}DEVSOURCE does not exist: $EXPDIR/${DEVSOURCE}.txt ${NC}" >&2
+        sleep 3
         exit 2
     fi
     if [ ! -f "$EXPDIR/${DEVTARGET}.txt" ]; then
         echo -e "${red}DEVTARGET does not exist: $EXPDIR/${DEVTARGET}.txt ${NC}" >&2
+        sleep 3
         exit 2
     fi
 fi
@@ -136,6 +146,7 @@ if [ "$MOSESONLY" = "1" ]; then
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in Moses${NC}" >&2
+            sleep 3
             exit 2
         fi
         cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
@@ -151,6 +162,7 @@ if [ "$MOSESONLY" = "1" ]; then
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}Error in Moses${NC}" >&2
+            sleep 3
             exit 2
         fi
 
@@ -205,6 +217,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in Moses${NC}" >&2
+            sleep 3
             exit 2
         fi
         cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
@@ -225,6 +238,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in classencode${NC}" >&2
+            sleep 3
             exit 2
         fi
         CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
@@ -232,6 +246,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+            sleep 3
             exit 2
         fi
     else
@@ -247,6 +262,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in classencode${NC}" >&2
+            sleep 3
             exit 2
         fi
         CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
@@ -254,6 +270,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+            sleep 3
             exit 2
         fi
     else
@@ -267,6 +284,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in classencode${NC}" >&2
+            sleep 3
             exit 2
         fi
         CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
@@ -274,6 +292,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+            sleep 3
             exit 2
         fi
     fi
@@ -292,6 +311,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME]\nError in colibri-mosesphrasetable2alignmodel${NC}" >&2
+            sleep 3
             exit 2
         fi
     else
@@ -316,6 +336,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR]\nError in colibri-extractfeatures${NC}" >&2
+            sleep 3
             exit 2
         fi
     else
@@ -363,6 +384,7 @@ else
             $CMD
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}Error in colibri-contextmoses${NC}" >&2
+                sleep 3
                 exit 2
             fi
         else
@@ -384,6 +406,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in colibri-contextmoses${NC}" >&2
+            sleep 3
             exit 2
         fi
         if [ "$MERT" = "1" ]; then
@@ -398,6 +421,7 @@ else
             $CMD
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
+                sleep 3
                 exit 2
             fi
         fi
@@ -409,6 +433,7 @@ else
         $CMD
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
+            sleep 3
             exit 2
         fi
     else
@@ -440,5 +465,6 @@ if [ "$MOSESONLY" = "1" ]; then
 else
     echo -e "****************** FINISHED EXPERIMENT $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR *******************************" >&2
 fi
+sleep 3
 
 echo "All done..."
