@@ -120,6 +120,12 @@ if [ "$MERT" = "1" ]; then
         sleep 3
         exit 2
     fi
+    if [ ! -z "$TESTFACTOR" ]; then
+        if [ -z "$DEVFACTOR" ]; then
+            echo "No DEVFACTOR specified, whilst TESTFACTOR and MERT are set!" >&2
+            exit 2
+        fi
+    fi
 fi
 
 
@@ -357,8 +363,10 @@ else
 
     if [ ! -z "$TESTFACTOR" ]; then
         FACTOROPTIONS="-f ../$TESTFACTOR.txt"
+        DEVFACTOROPTIONS="-f ../$DEVFACTOR.txt"
     else
         FACTOROPTIONS=""
+        DEVFACTOROPTIONS=""
     fi
 
     ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
@@ -380,7 +388,7 @@ else
         #Run contextmoses, and subsequently mert, on development set
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR"
-            echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nProcessing test data and invoking moses${NC}">&2
+            echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nProcessing development data and invoking moses${NC}">&2
             CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD
