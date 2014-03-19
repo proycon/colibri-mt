@@ -29,6 +29,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
         #print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
         #print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
         sentencelength = factoredcorpus.sentencelength(sentence)
+        assert sentencelength > 0
         for i in range(token - leftcontext,token):
             if i < 0:
                 unigram = BEGINPATTERN
