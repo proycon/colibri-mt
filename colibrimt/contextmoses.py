@@ -77,7 +77,7 @@ def main():
     parser.add_argument('--mert', action="store_true",help="Do MERT parameter tuning", required=False)
     parser.add_argument('--reordering', type=str,action="store",help="Reordering type (use with --reorderingtable)", required=False)
     parser.add_argument('--reorderingtable', type=str,action="store",help="Use reordering table (use with --reordering)", required=False)
-    parser.add_argument('--ref', action="store_true",help="Reference corpus (target corpus, plain text)", required=False)
+    parser.add_argument('--ref', type=str,action="store",help="Reference corpus (target corpus, plain text)", required=False)
     parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
     parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
@@ -101,6 +101,9 @@ def main():
 
     if args.mert and not args.mosesdir:
         print("--mert requires --mosesdir to be set",file=sys.stderr)
+        sys.exit(2)
+    if args.mert and not args.ref:
+        print("--mert requires --ref to be set",file=sys.stderr)
         sys.exit(2)
 
     if args.decodedir:
