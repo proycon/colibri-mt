@@ -36,7 +36,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
-                raise Exception("Unigram has invalid length " + str(len(unigram)))
+                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
         if focus:
             focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
@@ -48,7 +48,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
-                raise Exception("Unigram has invalid length " + str(len(unigram)))
+                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
     return featurevector
 
