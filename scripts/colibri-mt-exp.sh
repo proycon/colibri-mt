@@ -385,7 +385,7 @@ else
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
-                echo -e "${red}Error in colibri-contextmoses${NC}" >&2
+                echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in colibri-contextmoses${NC}" >&2
                 sleep 3
                 exit 2
             fi
