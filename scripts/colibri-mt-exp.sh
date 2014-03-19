@@ -146,7 +146,7 @@ if [ "$MOSESONLY" = "1" ]; then
 
     if [ "$MERT" = 1 ]; then
         echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses -f model/moses.ini"
+        CMD="$MOSESDIR/scripts/training/mert-moses.pl --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt moses model/moses.ini"
         echo $CMD>&2
         $CMD
         if [[ $? -ne 0 ]]; then
