@@ -172,9 +172,8 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly-mert.txt ]; then
             echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            CMD="moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt"
-            echo $CMD>&2
-            $CMD
+            echo "moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt">&2
+            moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt
         else
             echo -e "${magenta}[$NAME (Moses only, mert)]\nMoses output already exists ${NC}">&2
         fi
@@ -190,9 +189,8 @@ if [ "$MOSESONLY" = "1" ]; then
 
         if [ ! -f output.mosesonly.txt ]; then
             echo -e "${blue}[$NAME (Moses only)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-            CMD="moses -threads $THREADS -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt"
-            echo $CMD>&2
-            $CMD
+            echo "moses -threads $THREADS -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt" >&2
+            moses -threads $THREADS -f model/moses.ini < ../$TESTSOURCE.txt > output.mosesonly.txt
         else
             echo -e "${magenta}[$NAME (Moses only)]\nMoses output already exists ${NC}">&2
         fi
@@ -420,9 +418,8 @@ else
             sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini
 
             #run decoder (skipped earlier)
-            CMD="moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
-            echo $CMD>&2
-            $CMD
+            echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
+            moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
                 sleep 3
@@ -432,9 +429,8 @@ else
     elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
         echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
         #copy back, paths are relative
-        CMD="moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
-        echo $CMD>&2
-        $CMD
+        echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
+        moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
         if [[ $? -ne 0 ]]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
             sleep 3
