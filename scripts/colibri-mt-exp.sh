@@ -170,7 +170,7 @@ if [ "$MOSESONLY" = "1" ]; then
             echo "$MOSESDIR/scripts/training/mert-moses.pl --decoder-flags=\"-threads $THREADS\" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini" >&2
             $MOSESDIR/scripts/training/mert-moses.pl --decoder-flags="-threads $THREADS" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini
             if [[ $? -ne 0 ]]; then
-                echo -e "${red}Error in Moses${NC}" >&2
+                echo -e "${red}Error in MERT${NC}" >&2
                 sleep 3
                 exit 2
             fi
