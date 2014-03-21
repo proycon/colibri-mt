@@ -85,10 +85,11 @@ def main():
     parser.add_argument('--ref', type=str,action="store",help="Reference corpus (target corpus, plain text)", required=False)
     parser.add_argument('--lm', type=str, help="Language Model", action="store", default="", required=False)
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
-    parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=1, required=False)
-    parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=1, required=False)
-    parser.add_argument('--wweight', type=float, help="Word penalty weight", action="store", default=0, required=False)
+    parser.add_argument('--lmweight', type=float, help="Language Model weight", action="store", default=0.5, required=False)
+    parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=0.3, required=False)
+    parser.add_argument('--wweight', type=float, help="Word penalty weight", action="store", default=-1, required=False)
     parser.add_argument('--tweight', type=float, help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
+    parser.add_argument('--pweight', type=float, help="Phrase penalty", default=0.2, action="append", required=False)
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--skipdecoder',action="store_true",default=False)
@@ -414,17 +415,25 @@ def main():
         ftable.close()
 
         if not args.tweight:
-            tweights = "1\n1\n1\n1\n1\n"
-            lentweights = 5
             if args.scorehandling == "append":
-                tweights += "1\n"
                 lentweights = 6
+            else:
+                lentweights = 5
+            tweights = " ".join([str(1/lentweights)]*lentweights)
         else:
-            tweights = "\n".join([ str(x) for x in args.tweight])
+            tweights = " ".join([ str(x) for x in args.tweight])
             lentweights = len(args.tweight)
 
 
         print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
+
+        if args.reordering:
+            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + args.reorderingtable
+            reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
+        else:
+            reorderingfeature = ""
+            reorderingweight = ""
+
         #write moses.ini
         f = open(decodedir + '/moses.ini','w',encoding='utf-8')
         f.write("""
@@ -433,52 +442,26 @@ def main():
 0
 
 [mapping]
-T 0
+0 T 0
 
-# translation tables: source-factors, target-factors, number of scores, file
-[ttable-file]
-0 0 0 {lentweights} {phrasetable}
+[feature]
+UnknownWordPenalty
+WordPenalty
+Distortion
+SRILM name=LM0 factor=0 path=/scratch/proycon/colibri-mt/iwslt12ted-nl-en//iwslt12ted-nl-en-mosesonly/en.lm order={lmorder}
+PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
+{reorderingfeature}
 
-[lmodel-file]
-0 0 {lmorder} {lm}
+[weight]
+UnknownWordPenalty0= 1
+WordPenalty0= {wweight}
+PhrasePenalty0= {pweight}
+LM0= {lmweight}
+TranslationModel0={tweights}
+Distortion0={dweight}
+{reorderingweight}
+""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
 
-[ttable-limit]
-20
-
-
-[weight-l]
-{lmweight}
-
-[weight-t]
-{tweights}
-
-[weight-w]
-{wweight}
-
-""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight))
-
-        if args.reordering:
-            f.write("""
-# distortion (reordering) files
-[distortion-file]
-0-0 {reordering} 6 {reorderingtable}
-
-# distortion (reordering) weight
-[weight-d]
-0.3
-0.3
-0.3
-0.3
-0.3
-0.3
-0.3
-
-""".format(reordering=args.reordering,reorderingtable=args.reorderingtable))
-        else:
-            f.write("""
-[weight-d]
-{dweight}
-""".format(dweight=args.dweight))
 
 
         f.close()
