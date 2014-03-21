@@ -473,6 +473,7 @@ T 0
         f.close()
 
         if not args.skipdecoder:
+            os.chdir(decodedir)
             if args.mert:
                 #invoke moses
                 cmd = args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
