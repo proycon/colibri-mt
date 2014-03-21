@@ -490,7 +490,7 @@ T 0
                 else:
                     ref = os.getcwd() + '/' + args.ref
 
-                #invoke moses
+                #invoke mert
                 cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
                 print("Contextmoses calling mert: " + cmd,file=sys.stderr)
                 r = subprocess.call(cmd, shell=True)
