@@ -386,7 +386,7 @@ else
 
     if [ "$MERT" = "1" ]; then
         #Run contextmoses, and subsequently mert, on development set
-        if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
+        if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nProcessing development data and invoking moses${NC}">&2
             CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
@@ -408,6 +408,7 @@ else
         CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
         if [ "$MERT" = "1" ]; then
             CMD="$CMD --skipdecoder"
+            echo "(Skipping decoder on first run, as mert is enabled)">&2
         fi
         if [ ! -z "$REORDERING" ]; then
             CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table*gz"
@@ -420,6 +421,7 @@ else
             exit 2
         fi
         if [ "$MERT" = "1" ]; then
+            echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nCopying MERT-optimised configuration and running decoder on test set${NC}">&2
             #copy moses ini from mert
             cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/
             #replace phrase-table reference 
