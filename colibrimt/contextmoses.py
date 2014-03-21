@@ -497,6 +497,7 @@ T 0
                 if r != 0:
                     print("Contextmoses called mert but failed!", file=sys.stderr)
                     sys.exit(1)
+                print("DONE: Contextmoses calling mert: " + cmd,file=sys.stderr)
             else:
                 #invoke moses
                 cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
@@ -505,6 +506,8 @@ T 0
                 if r != 0:
                     print("Contextmoses called moses but failed!", file=sys.stderr)
                     sys.exit(1)
+                print("DONE: Contextmoses calling moses: " + cmd,file=sys.stderr)
+
         else:
             print("Contextmoses skipping decoder",file=sys.stderr)
 
