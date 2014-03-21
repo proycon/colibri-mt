@@ -477,11 +477,15 @@ T 0
                 cmd = args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
                 print("Contextmoses calling mert: " + cmd,file=sys.stderr)
                 r = os.system(cmd)
+                if r != 0:
+                    print("Contextmoses called mert but failed!", file=sys.stderr)
             else:
                 #invoke moses
                 cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
                 print("Contextmoses calling moses: " + cmd,file=sys.stderr)
                 r = os.system(cmd)
+                if r != 0:
+                    print("Contextmoses called moses but failed!", file=sys.stderr)
         else:
             print("Contextmoses skipping decoder",file=sys.stderr)
 
