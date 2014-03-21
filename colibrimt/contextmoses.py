@@ -412,6 +412,7 @@ def main():
             lentweights = len(args.tweight)
 
 
+        print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
         #write moses.ini
         f = open(decodedir + '/moses.ini','w',encoding='utf-8')
         f.write("""
@@ -473,10 +474,16 @@ T 0
         if not args.skipdecoder:
             if args.mert:
                 #invoke moses
-                r = os.system(args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads))
+                cmd = args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
+                print("Contextmoses calling mert: " + cmd,file=sys.stderr)
+                r = os.system(cmd)
             else:
                 #invoke moses
-                r = os.system(EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt")
+                cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
+                print("Contextmoses calling moses: " + cmd,file=sys.stderr)
+                r = os.system(cmd)
+        else:
+            print("Contextmoses skipping decoder",file=sys.stderr)
 
 
 if __name__ == '__main__':
