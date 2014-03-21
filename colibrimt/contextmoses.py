@@ -457,8 +457,8 @@ UnknownWordPenalty0= 1
 WordPenalty0= {wweight}
 PhrasePenalty0= {pweight}
 LM0= {lmweight}
-TranslationModel0={tweights}
-Distortion0={dweight}
+TranslationModel0= {tweights}
+Distortion0= {dweight}
 {reorderingweight}
 """.format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
 
