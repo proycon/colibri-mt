@@ -104,6 +104,12 @@ def main():
     else:
         classifierdir = args.workdir
 
+    if not classifierdir:
+        classifierdir = os.getcwd()
+    elif classifierdir and classifierdir[0] != '/':
+        classifierdir = os.getcwd() + '/' + classifierdir
+
+
     if args.mert and not args.mosesdir:
         print("--mert requires --mosesdir to be set",file=sys.stderr)
         sys.exit(2)
@@ -473,10 +479,14 @@ T 0
         f.close()
 
         if not args.skipdecoder:
-            os.chdir(decodedir)
             if args.mert:
+                if args.ref[0] == '/':
+                    ref = args.ref
+                else:
+                    ref = os.getcwd() + '/' + args.ref
+
                 #invoke moses
-                cmd = args.mosesdir + "/scripts/training/mert-moses.pl --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + args.ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
+                cmd = args.mosesdir + "/scripts/training/mert-moses.pl --workdir=" + decodedir + "/mert-work --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
                 print("Contextmoses calling mert: " + cmd,file=sys.stderr)
                 r = subprocess.call(cmd, shell=True)
                 if r != 0:
