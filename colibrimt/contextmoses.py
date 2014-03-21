@@ -122,6 +122,11 @@ def main():
     else:
         decodedir = args.workdir
 
+    if not decodedir:
+        decodedir = os.getcwd()
+    elif decodedir and decodedir[0] != '/':
+        decodedir = os.getcwd() + '/' + decodedir
+
     f = open(args.workdir + '/classifier.conf','rb')
     classifierconf = pickle.load(f)
     f.close()
