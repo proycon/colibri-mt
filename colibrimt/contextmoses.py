@@ -29,12 +29,14 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
         #print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
         #print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
         sentencelength = factoredcorpus.sentencelength(sentence)
+        assert sentencelength > 0
         for i in range(token - leftcontext,token):
             if i < 0:
                 unigram = BEGINPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
-            assert len(unigram) == 1
+            if len(unigram) != 1:
+                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
         if focus:
             focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
@@ -45,7 +47,8 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcor
                 unigram = ENDPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
-            assert len(unigram) == 1
+            if len(unigram) != 1:
+                raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
     return featurevector
 
