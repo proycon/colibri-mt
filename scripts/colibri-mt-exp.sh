@@ -53,7 +53,7 @@ fi
 if [ "$MERT" = "1" ]; then
     DECODEDIR="decode-mert"
 else
-    DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}-P{$PWEIGHT}"
+    DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}-P${PWEIGHT}"
 fi
 DECODEMERTDIR="dev-mert"
 
