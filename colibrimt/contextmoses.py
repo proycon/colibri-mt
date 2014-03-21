@@ -416,10 +416,10 @@ def main():
 
         if not args.tweight:
             if args.scorehandling == "append":
-                lentweights = 6
-            else:
                 lentweights = 5
-            tweights = " ".join([str(1/lentweights)]*lentweights)
+            else:
+                lentweights = 4
+            tweights = " ".join([str(1/(lentweights+1))]*lentweights)
         else:
             tweights = " ".join([ str(x) for x in args.tweight])
             lentweights = len(args.tweight)
