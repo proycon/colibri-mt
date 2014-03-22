@@ -448,6 +448,7 @@ def main():
 UnknownWordPenalty
 WordPenalty
 Distortion
+PhrasePenalty
 SRILM name=LM0 factor=0 path=/scratch/proycon/colibri-mt/iwslt12ted-nl-en//iwslt12ted-nl-en-mosesonly/en.lm order={lmorder}
 PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
 {reorderingfeature}
