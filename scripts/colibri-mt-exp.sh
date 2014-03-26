@@ -246,8 +246,13 @@ if [ "$RUN" = "1" ]; then
             fi
             cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
             gunzip "$NAME.phrasetable.gz"
+            ln -s  model/reordering-table*.gz reordering-table.gz
         else
             echo -e "${magenta}[$NAME]\nPhrase-table already built${NC}">&2
+        fi
+
+        if [ ! -f "reordering-table.gz" ]; then
+            ln -s model/reordering-table*.gz reordering-table.gz
         fi
 
         if [ "$LASTSTAGE" = "buildphrasetable" ]; then
@@ -427,7 +432,7 @@ if [ "$RUN" = "1" ]; then
                 echo "(Skipping decoder on first run, as mert is enabled)">&2
             fi
             if [ ! -z "$REORDERING" ]; then
-                CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table*gz"
+                CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table.gz"
             fi
             echo $CMD>&2
             $CMD
