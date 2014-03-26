@@ -423,6 +423,14 @@ if [ "$RUN" = "1" ]; then
             fi
         fi
 
+        #empty output is no output, delete
+        if [ -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
+            FILESIZE=$(stat -c%s "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt")
+            if [ $FILESIZE -eq 0 ]; then
+                rm "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt"
+            fi 
+        fi
+
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
