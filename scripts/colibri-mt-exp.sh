@@ -60,6 +60,10 @@ DECODEMERTDIR="dev-mert"
 if [ -z "$THREADS" ]; then
     THREADS=1
 fi
+if [ ! -z "$SELECT" ]; then
+    echo -e "${yellow}****************** SELECTION $SELECT *******************************${NC}" >&2
+fi
+
 
 RUN=1
 if [ "$MOSESONLY" = "1" ]; then
