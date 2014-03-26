@@ -68,7 +68,7 @@ fi
 RUN=1
 if [ "$MOSESONLY" = "1" ]; then
     if [ ! -z "$SELECT" ]; then
-        if [ "$NAME" != "$SELECT"]; then
+        if [ "$NAME" != "$SELECT" ]; then
             RUN=0
         fi
     fi
