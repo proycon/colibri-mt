@@ -358,19 +358,18 @@ def main():
 
                         #process classifier result
                         for targetpattern_s, score in distribution.items():
-                            if args.scorehandling == 'replace':
-                                scorevector[2] = score
+                            targetpattern = targetencoder.buildpattern(targetpattern_s)
+                            if (sourcepattern, targetpattern) in alignmodel:
+                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
                             else:
-                                targetpattern = targetencoder.buildpattern(targetpattern_s)
-                                if (sourcepattern, targetpattern) in alignmodel:
-                                    scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
-                                else:
-                                    continue
+                                continue
 
-                                if args.scorehandling == 'append':
-                                    scorevector.append(score)
-                                elif args.scorehandling == 'weighed':
-                                    raise NotImplementedError #TODO: implemented weighed!
+                            if args.scorehandling == 'append':
+                                scorevector.append(score)
+                            elif args.scorehandling == 'replace':
+                                scorevector[2] = score
+                            elif args.scorehandling == 'weighed':
+                                raise NotImplementedError #TODO: implemented weighed!
 
                             translationcount += 1
 
