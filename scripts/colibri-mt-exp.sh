@@ -285,7 +285,7 @@ if [ "$RUN" = "1" ]; then
                 echo -e "(awk: Extracting source-side of phrasetable)">&2
                 cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $1); gsub(/[ \t]+$/, "", $1); print $1; }' | uniq  > $NAME.phrasetable.sourcedump
                 echo -e "(colibri-classencode: encoding)">&2
-                colibri-classencode -c $TRAINSOURCE.colibri.cls $NAME.phrasetable.sourcedump.colibri.dat
+                colibri-classencode -c $TRAINSOURCE.colibri.cls $NAME.phrasetable.sourcedump
                 echo -e "(colibri-patternmodeller: building intermediate model)">&2
                 colibri-patternmodeller -u -f $NAME.phrasetable.sourcedump.colibri.dat -o srctmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
@@ -327,7 +327,7 @@ if [ "$RUN" = "1" ]; then
                 echo -e "(awk: Extracting target-side of phrasetable)">&2
                 cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $4); gsub(/[ \t]+$/, "", $4); print $4; }' | uniq  > $NAME.phrasetable.targetdump
                 echo -e "(colibri-classencode: encoding)">&2
-                colibri-classencode -c $TRAINTARGET.colibri.cls $NAME.phrasetable.targetdump.colibri.dat
+                colibri-classencode -c $TRAINTARGET.colibri.cls $NAME.phrasetable.targetdump
                 echo -e "(colibri-patternmodeller: building intermediate model)">&2
                 colibri-patternmodeller -u -f $NAME.phrasetable.targetdump.colibri.dat -o tgttmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
