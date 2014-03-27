@@ -270,16 +270,27 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            echo -e "${blue}[$NAME]\nBuilding source patternmodel${NC}">&2
             if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                echo -e "${blue}[$NAME]\nBuilding source patternmodel (constrained, t=$OCCURRENCES, l=$MAXLENGTH)${NC}">&2
                 CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-                echo $CMD>&2
-                $CMD
+            else
+                echo -e "${blue}[$NAME]\nBuilding source patternmodel (unconstrained)${NC}">&2
+
+                cat $NAME.phrasetable | awk 'FS="|||" { gsub(/^[ \t]+/, "", $1); gsub(/[ \t]+$/, "", $1); print $1; }' | uniq  > $NAME.phrasetable.sourcedump
+                colibri-patternmodeller -u -f $NAME.phrasetable.sourcedump -o srctmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                    echo -e "${red}[$NAME]\nError building intermediate patternmodel for source side${NC}" >&2
                     sleep 3
                     exit 2
                 fi
+                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -j srctmp.colibri.unindexedpatternmodel -t 1"
+            fi
+            echo $CMD>&2
+            $CMD
+            if [[ $? -ne 0 ]]; then
+                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                sleep 3
+                exit 2
             fi
         else
             echo -e "${magenta}[$NAME]\nSource patternmodel already built${NC}">&2
@@ -297,16 +308,26 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            echo -e "${blue}[$NAME]\nBuilding target patternmodel${NC}">&2
             if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                echo -e "${blue}[$NAME]\nBuilding target patternmodel (constrained, t=$OCCURRENCES, l=$MAXLENGTH)${NC}">&2
                 CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-                echo $CMD>&2
-                $CMD
+            else
+                echo -e "${blue}[$NAME]\nBuilding target patternmodel (unconstrained)${NC}">&2
+                cat $NAME.phrasetable | awk 'FS="|||" { gsub(/^[ \t]+/, "", $2); gsub(/[ \t]+$/, "", $2); print $2; }' | sort | uniq  > $NAME.phrasetable.targetdump
+                colibri-patternmodeller -u -f $NAME.phrasetable.targetdump -o tgttmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                    echo -e "${red}[$NAME]\nError building intermediate patternmodel for target side${NC}" >&2
                     sleep 3
                     exit 2
                 fi
+                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -j tgttmp.colibri.unindexedpatternmodel -t 1"
+            fi
+            echo $CMD>&2
+            $CMD
+            if [[ $? -ne 0 ]]; then
+                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                sleep 3
+                exit 2
             fi
         else
             echo -e "${magenta}[$NAME]\nTarget patternmodel already built${NC}">&2
@@ -322,18 +343,8 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            echo -e "${blue}[$NAME]\nBuilding patternmodel for factor 1${NC}">&2
-            if [ "$PATTERNCONSTRAIN" == "1" ]; then
-                CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-                echo $CMD>&2
-                $CMD
-                if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
-                    sleep 3
-                    exit 2
-                fi
-            fi
         fi
+
 
 
 
@@ -344,11 +355,7 @@ if [ "$RUN" = "1" ]; then
 
         if [ ! -f "$NAME.colibri.alignmodel-featconf" ]; then
             echo -e "${blue}[$NAME]\nConverting phrasetable to alignment model${NC}">&2
-            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME"
-            if [ "$PATTERNCONSTRAIN" == "1" ]; then
-                CMD="$CMD -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel"
-            fi
-            CMD="$CMD -p $MIN_PTS -P $MIN_PST"
+            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
