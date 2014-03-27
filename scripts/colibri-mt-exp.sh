@@ -261,7 +261,7 @@ if [ "$RUN" = "1" ]; then
         fi
 
         if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding source patternmodel${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for source${NC}">&2
             CMD="colibri-classencode ../$TRAINSOURCE.txt"
             echo $CMD>&2
             $CMD
@@ -270,13 +270,16 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-            echo $CMD>&2
-            $CMD
-            if [[ $? -ne 0 ]]; then
-                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
-                sleep 3
-                exit 2
+            echo -e "${blue}[$NAME]\nBuilding source patternmodel${NC}">&2
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+                echo $CMD>&2
+                $CMD
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
             fi
         else
             echo -e "${magenta}[$NAME]\nSource patternmodel already built${NC}">&2
@@ -285,7 +288,7 @@ if [ "$RUN" = "1" ]; then
 
 
         if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding target patternmodel${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for target${NC}">&2
             CMD="colibri-classencode ../$TRAINTARGET.txt"
             echo $CMD>&2
             $CMD
@@ -294,20 +297,23 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-            echo $CMD>&2
-            $CMD
-            if [[ $? -ne 0 ]]; then
-                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
-                sleep 3
-                exit 2
+            echo -e "${blue}[$NAME]\nBuilding target patternmodel${NC}">&2
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+                echo $CMD>&2
+                $CMD
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
             fi
         else
             echo -e "${magenta}[$NAME]\nTarget patternmodel already built${NC}">&2
         fi
 
         if [ ! -z "$TRAINFACTOR" ] && [ ! -f "${TRAINFACTOR}.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding source patternmodel for factor 1${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for factor${NC}">&2
             CMD="colibri-classencode ../${TRAINFACTOR}.txt"
             echo $CMD>&2
             $CMD
@@ -316,13 +322,16 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-            echo $CMD>&2
-            $CMD
-            if [[ $? -ne 0 ]]; then
-                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
-                sleep 3
-                exit 2
+            echo -e "${blue}[$NAME]\nBuilding patternmodel for factor 1${NC}">&2
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+                echo $CMD>&2
+                $CMD
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
             fi
         fi
 
@@ -335,7 +344,11 @@ if [ "$RUN" = "1" ]; then
 
         if [ ! -f "$NAME.colibri.alignmodel-featconf" ]; then
             echo -e "${blue}[$NAME]\nConverting phrasetable to alignment model${NC}">&2
-            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
+            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME"
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                CMD="$CMD -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel"
+            fi
+            CMD="$CMD -p $MIN_PTS -P $MIN_PST"
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
