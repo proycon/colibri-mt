@@ -66,11 +66,11 @@ fi
 RUN=1
 if [ "$MOSESONLY" = "1" ]; then
     if [ ! -z "$SELECT" ]; then
-        if [ "$NAME" != "$SELECT" ]; then
-            RUN=0
-        elif [ "$NAME" = "ls" ]; then
+        if [ "$NAME" = "ls" ]; then
             RUN=0
             echo $NAME
+        elif [ "$NAME" != "$SELECT" ]; then
+            RUN=0
         fi
     fi
     if [ "$RUN" = "1" ]; then
@@ -78,11 +78,11 @@ if [ "$MOSESONLY" = "1" ]; then
     fi
 else
     if [ ! -z "$SELECT" ]; then
-        if [ "$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" != "$SELECT" ]; then
-            RUN=0
-        elif [ "$NAME" = "ls" ]; then
-            RUN=0
+        if [ "$NAME" = "ls" ]; then
+           RUN=0
             echo $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR
+        elif [ "$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" != "$SELECT" ]; then
+            RUN=0
         fi
     fi
     if [ "$RUN" = "1" ]; then
