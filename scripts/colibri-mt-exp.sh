@@ -14,6 +14,12 @@ if [ ! -d "$NAME" ]; then
 fi
 cd $NAME
 
+RUN=1
+if [ "$SELECT" = "ls" ];
+    echo $NAME
+    RUN=0
+fi
+
 EXTRAOPTIONS=""
 EXTRANAME=""
 if [ "$WEIGHBYOCCURRENCE" = "1" ]; then
@@ -62,7 +68,6 @@ if [ -z "$THREADS" ]; then
 fi
 
 
-RUN=1
 if [ "$MOSESONLY" = "1" ]; then
     if [ ! -z "$SELECT" ]; then
         if [ "$NAME" != "$SELECT" ]; then
