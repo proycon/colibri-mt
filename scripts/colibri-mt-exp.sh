@@ -14,11 +14,6 @@ if [ ! -d "$NAME" ]; then
 fi
 cd $NAME
 
-RUN=1
-if [ "$SELECT" = "ls" ]; then
-    echo $NAME
-    RUN=0
-fi
 
 EXTRAOPTIONS=""
 EXTRANAME=""
@@ -63,15 +58,19 @@ else
 fi
 DECODEMERTDIR="dev-mert"
 
+
 if [ -z "$THREADS" ]; then
     THREADS=1
 fi
 
-
+RUN=1
 if [ "$MOSESONLY" = "1" ]; then
     if [ ! -z "$SELECT" ]; then
         if [ "$NAME" != "$SELECT" ]; then
             RUN=0
+        elif [ "$NAME" = "ls" ]; then
+            RUN=0
+            echo $NAME
         fi
     fi
     if [ "$RUN" = "1" ]; then
@@ -81,6 +80,9 @@ else
     if [ ! -z "$SELECT" ]; then
         if [ "$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" != "$SELECT" ]; then
             RUN=0
+        elif [ "$NAME" = "ls" ]; then
+            RUN=0
+            echo $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR
         fi
     fi
     if [ "$RUN" = "1" ]; then
