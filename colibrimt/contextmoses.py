@@ -359,7 +359,7 @@ def main():
                         #process classifier result
                         for targetpattern_s, score in distribution.items():
                             if args.scorehandling == 'replace':
-                                scorevector = [score]
+                                scorevector[2] = score
                             else:
                                 targetpattern = targetencoder.buildpattern(targetpattern_s)
                                 if (sourcepattern, targetpattern) in alignmodel:
@@ -397,7 +397,7 @@ def main():
                         if args.scorehandling == 'append':
                             scorevector.append(scorevector[2])
                         elif args.scorehandling == 'replace':
-                            scorevector = [scorevector[2]]
+                            pass #nothing to do, scorevector is okay as it is
                         elif args.scorehandling == 'weighed':
                             raise NotImplementedError #TODO: implemented weighed!
 
