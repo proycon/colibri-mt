@@ -14,6 +14,7 @@ if [ ! -d "$NAME" ]; then
 fi
 cd $NAME
 
+
 EXTRAOPTIONS=""
 EXTRANAME=""
 if [ "$WEIGHBYOCCURRENCE" = "1" ]; then
@@ -57,15 +58,18 @@ else
 fi
 DECODEMERTDIR="dev-mert"
 
+
 if [ -z "$THREADS" ]; then
     THREADS=1
 fi
 
-
 RUN=1
 if [ "$MOSESONLY" = "1" ]; then
     if [ ! -z "$SELECT" ]; then
-        if [ "$NAME" != "$SELECT" ]; then
+        if [ "$SELECT" = "ls" ]; then
+            RUN=0
+            echo $NAME
+        elif [ "$NAME" != "$SELECT" ]; then
             RUN=0
         fi
     fi
@@ -74,7 +78,10 @@ if [ "$MOSESONLY" = "1" ]; then
     fi
 else
     if [ ! -z "$SELECT" ]; then
-        if [ "$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" != "$SELECT" ]; then
+        if [ "$SELECT" = "ls" ]; then
+           RUN=0
+            echo $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR
+        elif [ "$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" != "$SELECT" ]; then
             RUN=0
         fi
     fi
@@ -261,7 +268,7 @@ if [ "$RUN" = "1" ]; then
         fi
 
         if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding source patternmodel${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for source${NC}">&2
             CMD="colibri-classencode ../$TRAINSOURCE.txt"
             echo $CMD>&2
             $CMD
@@ -270,7 +277,25 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                echo -e "${blue}[$NAME]\nBuilding source patternmodel (constrained, t=$OCCURRENCES, l=$MAXLENGTH)${NC}">&2
+                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+            else
+                echo -e "${blue}[$NAME]\nBuilding source patternmodel (unconstrained)${NC}">&2
+                echo -e "(awk: Extracting source-side of phrasetable)">&2
+                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $1); gsub(/[ \t]+$/, "", $1); print $1; }' | uniq  > $NAME.phrasetable.sourcedump
+                echo -e "(colibri-classencode: encoding)">&2
+                colibri-classencode -c $TRAINSOURCE.colibri.cls $NAME.phrasetable.sourcedump
+                echo -e "(colibri-patternmodeller: building intermediate model)">&2
+                colibri-patternmodeller -u -f $NAME.phrasetable.sourcedump.colibri.dat -o srctmp.colibri.unindexedpatternmodel -L
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError building intermediate patternmodel for source side${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
+                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -j srctmp.colibri.unindexedpatternmodel -t 1"
+                echo -e "(building model)">&2
+            fi
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
@@ -285,7 +310,7 @@ if [ "$RUN" = "1" ]; then
 
 
         if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding target patternmodel${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for target${NC}">&2
             CMD="colibri-classencode ../$TRAINTARGET.txt"
             echo $CMD>&2
             $CMD
@@ -294,7 +319,25 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+            if [ "$PATTERNCONSTRAIN" == "1" ]; then
+                echo -e "${blue}[$NAME]\nBuilding target patternmodel (constrained, t=$OCCURRENCES, l=$MAXLENGTH)${NC}">&2
+                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
+            else
+                echo -e "${blue}[$NAME]\nBuilding target patternmodel (unconstrained)${NC}">&2
+                echo -e "(awk: Extracting target-side of phrasetable)">&2
+                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $4); gsub(/[ \t]+$/, "", $4); print $4; }' | uniq  > $NAME.phrasetable.targetdump
+                echo -e "(colibri-classencode: encoding)">&2
+                colibri-classencode -c $TRAINTARGET.colibri.cls $NAME.phrasetable.targetdump
+                echo -e "(colibri-patternmodeller: building intermediate model)">&2
+                colibri-patternmodeller -u -f $NAME.phrasetable.targetdump.colibri.dat -o tgttmp.colibri.unindexedpatternmodel -L
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError building intermediate patternmodel for target side${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
+                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -j tgttmp.colibri.unindexedpatternmodel -t 1"
+                echo -e "(building model)">&2
+            fi
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
@@ -307,7 +350,7 @@ if [ "$RUN" = "1" ]; then
         fi
 
         if [ ! -z "$TRAINFACTOR" ] && [ ! -f "${TRAINFACTOR}.colibri.indexedpatternmodel" ]; then
-            echo -e "${blue}[$NAME]\nBuilding source patternmodel for factor 1${NC}">&2
+            echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for factor${NC}">&2
             CMD="colibri-classencode ../${TRAINFACTOR}.txt"
             echo $CMD>&2
             $CMD
@@ -316,15 +359,8 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            CMD="colibri-patternmodeller -f ${TRAINFACTOR}.colibri.dat -o ${TRAINFACTOR}.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
-            echo $CMD>&2
-            $CMD
-            if [[ $? -ne 0 ]]; then
-                echo -e "${red}[$NAME]\nError in Patternmodeller${NC}" >&2
-                sleep 3
-                exit 2
-            fi
         fi
+
 
 
 
