@@ -15,7 +15,7 @@ fi
 cd $NAME
 
 RUN=1
-if [ "$SELECT" = "ls" ];
+if [ "$SELECT" = "ls" ]; then
     echo $NAME
     RUN=0
 fi
