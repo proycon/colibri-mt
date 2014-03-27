@@ -282,15 +282,19 @@ if [ "$RUN" = "1" ]; then
                 CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
             else
                 echo -e "${blue}[$NAME]\nBuilding source patternmodel (unconstrained)${NC}">&2
-
-                cat $NAME.phrasetable | awk 'FS="|||" { gsub(/^[ \t]+/, "", $1); gsub(/[ \t]+$/, "", $1); print $1; }' | uniq  > $NAME.phrasetable.sourcedump
-                colibri-patternmodeller -u -f $NAME.phrasetable.sourcedump -o srctmp.colibri.unindexedpatternmodel -L
+                echo -e "(awk: Extracting source-side of phrasetable)">&2
+                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $1); gsub(/[ \t]+$/, "", $1); print $1; }' | uniq  > $NAME.phrasetable.sourcedump
+                echo -e "(colibri-classencode: encoding)">&2
+                colibri-classencode -c $TRAINSOURCE.colibri.cls $NAME.phrasetable.sourcedump.colibri.dat
+                echo -e "(colibri-patternmodeller: building intermediate model)">&2
+                colibri-patternmodeller -u -f $NAME.phrasetable.sourcedump.colibri.dat -o srctmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
                     echo -e "${red}[$NAME]\nError building intermediate patternmodel for source side${NC}" >&2
                     sleep 3
                     exit 2
                 fi
                 CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -j srctmp.colibri.unindexedpatternmodel -t 1"
+                echo -e "(building model)">&2
             fi
             echo $CMD>&2
             $CMD
@@ -320,14 +324,19 @@ if [ "$RUN" = "1" ]; then
                 CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -l $MAXLENGTH -t $OCCURRENCES"
             else
                 echo -e "${blue}[$NAME]\nBuilding target patternmodel (unconstrained)${NC}">&2
-                cat $NAME.phrasetable | awk 'FS="|||" { gsub(/^[ \t]+/, "", $2); gsub(/[ \t]+$/, "", $2); print $2; }' | sort | uniq  > $NAME.phrasetable.targetdump
-                colibri-patternmodeller -u -f $NAME.phrasetable.targetdump -o tgttmp.colibri.unindexedpatternmodel -L
+                echo -e "(awk: Extracting target-side of phrasetable)">&2
+                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $4); gsub(/[ \t]+$/, "", $4); print $4; }' | uniq  > $NAME.phrasetable.targetdump
+                echo -e "(colibri-classencode: encoding)">&2
+                colibri-classencode -c $TRAINTARGET.colibri.cls $NAME.phrasetable.targetdump.colibri.dat
+                echo -e "(colibri-patternmodeller: building intermediate model)">&2
+                colibri-patternmodeller -u -f $NAME.phrasetable.targetdump.colibri.dat -o tgttmp.colibri.unindexedpatternmodel -L
                 if [[ $? -ne 0 ]]; then
                     echo -e "${red}[$NAME]\nError building intermediate patternmodel for target side${NC}" >&2
                     sleep 3
                     exit 2
                 fi
                 CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -j tgttmp.colibri.unindexedpatternmodel -t 1"
+                echo -e "(building model)">&2
             fi
             echo $CMD>&2
             $CMD
