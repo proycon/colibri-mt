@@ -198,20 +198,20 @@ def main():
         print("Loading alignment model (may take a while)",file=sys.stderr)
         alignmodel = FeaturedAlignmentModel()
         alignmodel.load(args.alignmodelfile)
-        print("\tAlignment model has " + len(alignmodel) + " source patterns",file=sys.stderr)
+        print("\tAlignment model has " + str(len(alignmodel)) + " source patterns",file=sys.stderr)
 
         print("Building constraint model of source patterns",file=sys.stderr)
         #constain model is needed to constrain the test model
         constraintmodel = UnindexedPatternModel()
         for pattern in alignmodel.sourcepatterns():
             constraintmodel.add(pattern)
-        print("\tConstraint model has " + len(constraintmodel) + " source patterns",file=sys.stderr)
+        print("\tConstraint model has " + str(len(constraintmodel)) + " source patterns",file=sys.stderr)
 
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
         testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
-        print("\Test model has " + len(testmodel) + " source patterns",file=sys.stderr)
+        print("\Test model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
