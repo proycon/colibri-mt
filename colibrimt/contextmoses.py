@@ -10,7 +10,6 @@ from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatter
 from colibrimt.alignmentmodel import FeaturedAlignmentModel
 import timbl
 import pickle
-import time
 import shutil
 import subprocess
 from urllib.parse import quote_plus, unquote_plus
@@ -272,7 +271,7 @@ def main():
                 if args.classifierdir:
                     #remove copy
                     os.unlink(trainfile)
-                if not os.path.exist(trainfile.replace(".train",".ibase")):
+                if not os.path.exists(trainfile.replace(".train",".ibase")):
                     raise Exception("Resulting instance base " + trainfile.replace(".train",".ibase") + " not found!")
     else:
         #TEST
