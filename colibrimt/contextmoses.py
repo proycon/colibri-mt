@@ -12,6 +12,7 @@ import timbl
 import pickle
 import shutil
 import subprocess
+import itertools
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
@@ -250,7 +251,7 @@ def main():
                 os.unlink(trainfile+".train")
         else:
             #experts
-            for trainfile in glob.glob(args.workdir + "/*.train"):
+            for trainfile in itertools.chain(glob.glob(args.workdir + "/*.train"), glob.glob(args.workdir + "/.*.train")): #explicitly add 'dotfiles', will be skipped by default
                 if args.inputfile:
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
                     sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
