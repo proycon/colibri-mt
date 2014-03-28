@@ -325,7 +325,7 @@ if [ "$RUN" = "1" ]; then
             else
                 echo -e "${blue}[$NAME]\nBuilding target patternmodel (unconstrained)${NC}">&2
                 echo -e "(awk: Extracting target-side of phrasetable)">&2
-                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $4); gsub(/[ \t]+$/, "", $4); if ($4 != "") print $4; }' | uniq  > $NAME.phrasetable.targetdump
+                cat $NAME.phrasetable | awk 'FS="|" { gsub(/^[ \t]+/, "", $4); gsub(/[ \t]+$/, "", $4); if ($4 != "") print $4; }' | sort | uniq  > $NAME.phrasetable.targetdump
                 echo -e "(colibri-classencode: encoding)">&2
                 colibri-classencode -c $TRAINTARGET.colibri.cls $NAME.phrasetable.targetdump
                 echo -e "(colibri-patternmodeller: building intermediate model)">&2

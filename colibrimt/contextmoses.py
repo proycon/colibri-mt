@@ -339,7 +339,7 @@ def main():
                 if not args.ignoreclassifier and not classifierconf['monolithic']:
 
                     #load classifier
-                    if not prevpattern or sourcepattern != prevpattern:
+                    if not prevpattern or sourcepattern_s != prevpattern:
                         classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
                         if os.path.exists(classifierprefix + ".ibase"):
                             print("Loading classifier " + classifierprefix,file=sys.stderr)
@@ -353,6 +353,7 @@ def main():
                         else:
                             #no classifier
                             classifier = None
+                        prevpattern = sourcepattern_s
 
 
                 if classifier:
