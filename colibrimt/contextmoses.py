@@ -198,17 +198,21 @@ def main():
         print("Loading alignment model (may take a while)",file=sys.stderr)
         alignmodel = FeaturedAlignmentModel()
         alignmodel.load(args.alignmodelfile)
+        print("\tAlignment model has " + len(alignmodel) + " source patterns",file=sys.stderr)
 
         print("Building constraint model of source patterns",file=sys.stderr)
         #constain model is needed to constrain the test model
         constraintmodel = UnindexedPatternModel()
         for pattern in alignmodel.sourcepatterns():
             constraintmodel.add(pattern)
+        print("\tConstraint model has " + len(constraintmodel) + " source patterns",file=sys.stderr)
 
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
         testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
+        print("\Test model has " + len(testmodel) + " source patterns",file=sys.stderr)
+
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
     elif args.train and args.inputfile:
@@ -268,6 +272,8 @@ def main():
                 if args.classifierdir:
                     #remove copy
                     os.unlink(trainfile)
+                if not os.path.exist(trainfile.replace(".train",".ibase")):
+                    raise Exception("Resulting instance base " + trainfile.replace(".train",".ibase") + " not found!")
     else:
         #TEST
         if not args.inputfile:
@@ -343,7 +349,7 @@ def main():
                             print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!",file=sys.stderr)
                             print("Classifier dir: ", classifierdir,file=sys.stderr)
                             print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
-                            time.sleep(1)
+                            raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
                         else:
                             #no classifier
                             classifier = None
