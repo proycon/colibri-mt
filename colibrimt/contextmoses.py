@@ -340,12 +340,15 @@ def main():
                     #load classifier
                     if not prevpattern or sourcepattern_s != prevpattern:
                         classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
-                        if os.path.exists(classifierprefix + ".ibase"):
+                        trainfile = args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"
+                        ibasefile = classifierprefix + ".ibase"
+                        print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Loading for " + sourcepattern_s, file=sys.stderr)
+                        if os.path.exists(ibasefile):
                             print("Loading classifier " + classifierprefix,file=sys.stderr)
                             timbloptions = gettimbloptions(args, classifierconf)
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
-                        elif os.path.exists(args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"):
-                            print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!",file=sys.stderr)
+                        elif os.path.exists(trainfile):
+                            print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!! " + trainfile + " exists but " + ibasefile + " misses",file=sys.stderr)
                             print("Classifier dir: ", classifierdir,file=sys.stderr)
                             print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
                             raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
