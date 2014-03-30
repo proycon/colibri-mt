@@ -398,9 +398,11 @@ if [ "$RUN" = "1" ]; then
             fi
             CMD="colibri-extractfeatures -i $NAME -s $TRAINSOURCE.colibri.indexedpatternmodel -t $TRAINTARGET.colibri.indexedpatternmodel -f $TRAINSOURCE.colibri.dat -l $LEFT -r $RIGHT -c $TRAINSOURCE.colibri.cls $FACTOROPTIONS -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -C -$CLASSIFIERTYPE -o $CLASSIFIERDIR -I $INSTANCETHRESHOLD $EXTRAOPTIONS"
             echo $CMD>&2
-            $CMD
+            $CMD 2> $CLASSIFIERDIR/extractfeatures.log
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR]\nError in colibri-extractfeatures${NC}" >&2
+                echo -e "See $CLASSIFIERDIR/extratfeatures , tail:" >&2
+                tail -n 25 $CLASSIFIERDIR/extractfeatures.log >&2
                 sleep 3
                 exit 2
             fi
@@ -432,7 +434,14 @@ if [ "$RUN" = "1" ]; then
                 echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
                 CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
                 echo $CMD>&2
-                $CMD
+                $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR]\nError in colibri-contextmoses${NC}" >&2
+                    echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log , tail:" >&2
+                    tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log >&2
+                    sleep 3
+                    exit 2
+                fi
             fi
         fi
 
@@ -451,9 +460,11 @@ if [ "$RUN" = "1" ]; then
                     CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table.gz"
                 fi
                 echo $CMD>&2
-                $CMD
+                $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERMERTDIR/contextmoses.log
                 if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in colibri-contextmoses${NC}" >&2
+                    echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nError in colibri-contextmoses${NC}" >&2
+                    echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/contextmoses.log , tail:" >&2
+                    tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/contextmoses.log >&2
                     sleep 3
                     exit 2
                 fi
@@ -482,9 +493,11 @@ if [ "$RUN" = "1" ]; then
                 CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table.gz"
             fi
             echo $CMD>&2
-            $CMD
+            $CMD 2> $NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/contextmoses.log
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in colibri-contextmoses${NC}" >&2
+                echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/contextmoses.log , tail:" >&2
+                tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/contextmoses.log >&2
                 sleep 3
                 exit 2
             fi
@@ -497,9 +510,12 @@ if [ "$RUN" = "1" ]; then
 
                 #run decoder (skipped earlier)
                 echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
-                moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
+                moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log
+
                 if [[ $? -ne 0 ]]; then
                     echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
+                    echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log , tail:" >&2
+                    tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log >&2
                     sleep 3
                     exit 2
                 fi
@@ -508,9 +524,11 @@ if [ "$RUN" = "1" ]; then
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
             #copy back, paths are relative
             echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
-            moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt
+            moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
+                echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log , tail:" >&2
+                tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log >&2
                 sleep 3
                 exit 2
             fi
