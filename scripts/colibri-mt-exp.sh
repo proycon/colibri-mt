@@ -430,18 +430,17 @@ if [ "$RUN" = "1" ]; then
 
         ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
         if [ $? -ne 0 ]; then
-            if [ "$IGNORECLASSIFIER" != 1 ]; then
-                echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
-                CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
-                echo $CMD>&2
-                $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log
-                if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR]\nError in colibri-contextmoses${NC}" >&2
-                    echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log , tail:" >&2
-                    tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log >&2
-                    sleep 3
-                    exit 2
-                fi
+            #classifiers are built even when ignored later
+            echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
+            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            echo $CMD>&2
+            $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log
+            if [[ $? -ne 0 ]]; then
+                echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR]\nError in colibri-contextmoses${NC}" >&2
+                echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log , tail:" >&2
+                tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log >&2
+                sleep 3
+                exit 2
             fi
         fi
 
