@@ -321,12 +321,11 @@ def main():
             classifier = None
 
         if args.reorderingtable:
-            print("Creating intermediate phrase-table",file=sys.stderr)
-            freordering = None
-        else:
             print("Creating intermediate phrase-table and reordering-table",file=sys.stderr)
             freordering = open(classifierdir + "/reordering-table", 'w',encoding='utf-8')
-
+        else:
+            print("Creating intermediate phrase-table",file=sys.stderr)
+            freordering = None
 
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
