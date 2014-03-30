@@ -409,7 +409,7 @@ def main():
                                     raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
 
                                 if reordering_scores:
-                                    freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(reordering_scores) + "\n")
+                                    freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                                 else:
                                     raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
@@ -452,7 +452,7 @@ def main():
                                 raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
 
                             if reordering_scores:
-                                freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(reordering_scores) + "\n")
+                                freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                             else:
                                 raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
