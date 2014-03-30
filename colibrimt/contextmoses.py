@@ -13,6 +13,7 @@ import pickle
 import shutil
 import subprocess
 import itertools
+from pynlpl.formats.moses import PhraseTable
 from urllib.parse import quote_plus, unquote_plus
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
@@ -215,6 +216,14 @@ def main():
 
         print("Unloading constraint model",file=sys.stderr)
         del constraintmodel
+
+        if args.reorderingtable:
+            print("Loading reordering model (may take a while)",file=sys.stderr)
+            rtable = PhraseTable(args.reorderingtable)
+
+
+
+
     elif args.train and args.inputfile:
         if not args.alignmodelfile:
             print("No alignment model specified (-a)",file=sys.stderr)
@@ -311,7 +320,13 @@ def main():
         else:
             classifier = None
 
-        print("Creating intermediate phrase-table",file=sys.stderr)
+        if args.reorderingtable:
+            print("Creating intermediate phrase-table",file=sys.stderr)
+            freordering = None
+        else:
+            print("Creating intermediate phrase-table and reordering-table",file=sys.stderr)
+            freordering = open(classifierdir + "/reordering-table", 'w',encoding='utf-8')
+
 
         #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
         ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
@@ -385,6 +400,19 @@ def main():
 
                             #write phrasetable entries
                             ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
+                            if freordering:
+                                reordering_scores = None
+                                try:
+                                    for t, sv in rtable[sourcepattern_s]:
+                                        if t == targetpattern_s:
+                                            reordering_scores = sv
+                                except KeyError:
+                                    raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+
+                                if reordering_scores:
+                                    freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(reordering_scores) + "\n")
+                                else:
+                                    raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
                         if translationcount == 0:
                             print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
@@ -413,7 +441,22 @@ def main():
                         translationcount += 1
 
                         #write phrasetable entries
-                        ftable.write(tokenspan + " ||| " + targetpattern.tostring(targetdecoder) + " ||| " + " ".join([ str(x) for x in scorevector]) + "\n")
+                        targetpattern_s = targetpattern.tostring(targetdecoder)
+                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([ str(x) for x in scorevector]) + "\n")
+                        if freordering:
+                            reordering_scores = None
+                            try:
+                                for t, sv in rtable[sourcepattern_s]:
+                                    if t == targetpattern_s:
+                                        reordering_scores = sv
+                            except KeyError:
+                                raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+
+                            if reordering_scores:
+                                freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join(reordering_scores) + "\n")
+                            else:
+                                raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
+
 
 
             prevpattern = None
@@ -437,7 +480,7 @@ def main():
         print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
 
         if args.reordering:
-            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + args.reorderingtable
+            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table",
             reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
         else:
             reorderingfeature = ""
