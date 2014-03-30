@@ -465,6 +465,8 @@ def main():
 
 
         ftable.close()
+        if freordering:
+            freordering.close()
 
         if not args.tweight:
             if args.scorehandling == "append":
