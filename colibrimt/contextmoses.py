@@ -481,7 +481,7 @@ def main():
         print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
 
         if args.reordering:
-            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table",
+            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
             reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
         else:
             reorderingfeature = ""
