@@ -373,7 +373,7 @@ def main():
                         prevpattern = sourcepattern_s
 
 
-                if classifier:
+                if classifier and not args.ignoreclassifier:
                     if not classifierconf['monolithic'] or (classifierconf['monolithic'] and sourcepattern_s in classifierindex):
                         print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
 
@@ -392,7 +392,7 @@ def main():
                                 scorevector.append(score)
                             elif args.scorehandling == 'replace':
                                 scorevector[2] = score
-                            elif args.scorehandling == 'weighed':
+                            else:
                                 raise NotImplementedError #TODO: implemented weighed!
 
                             translationcount += 1
