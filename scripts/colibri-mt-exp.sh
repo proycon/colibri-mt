@@ -459,7 +459,7 @@ if [ "$RUN" = "1" ]; then
                     CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table.gz"
                 fi
                 echo $CMD>&2
-                $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERMERTDIR/contextmoses.log
+                $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/contextmoses.log
                 if [[ $? -ne 0 ]]; then
                     echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nError in colibri-contextmoses${NC}" >&2
                     echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/contextmoses.log , tail:" >&2
