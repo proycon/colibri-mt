@@ -236,7 +236,7 @@ if [ "$RUN" = "1" ]; then
 
     else
 
-        if [ ! -f "$NAME.phrasetable" ]; then
+        if [ ! -f "$NAME.phrasetable" ] && [ ! -L  "$NAME.phrasetable" ]; then
             echo -e "${blue}[$NAME]\nBuilding phrasetable${NC}">&2
             ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
             ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
@@ -258,7 +258,7 @@ if [ "$RUN" = "1" ]; then
             echo -e "${magenta}[$NAME]\nPhrase-table already built${NC}">&2
         fi
 
-        if [ ! -f "reordering-table.gz" ]; then
+        if [ ! -f "reordering-table.gz" ] && [ ! -L "reordering-table.gz" ]; then
             ln -s model/reordering-table*.gz reordering-table.gz
         fi
 
@@ -267,7 +267,7 @@ if [ "$RUN" = "1" ]; then
             exit 0
         fi
 
-        if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
+        if [ ! -f "$TRAINSOURCE.colibri.indexedpatternmodel" ] && [ ! -L  "$TRAINSOURCE.colibri.indexedpatternmodel" ]; then
             echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for source${NC}">&2
             CMD="colibri-classencode ../$TRAINSOURCE.txt"
             echo $CMD>&2
@@ -309,7 +309,7 @@ if [ "$RUN" = "1" ]; then
 
 
 
-        if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
+        if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ] && [ ! -L "$TRAINTARGET.colibri.indexedpatternmodel"]; then
             echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for target${NC}">&2
             CMD="colibri-classencode ../$TRAINTARGET.txt"
             echo $CMD>&2
