@@ -504,7 +504,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
 
 
-    def extractcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora):
+    def extractcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora, crosslingual=False):
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
@@ -523,7 +523,13 @@ class FeaturedAlignmentModel(AlignmentModel):
         count = 0
 
         extracted = 0
-        for sourcepattern, targetpattern, sentence, token,_,_ in self.patternswithindexes(sourcemodel, targetmodel):
+        for data in self.patternswithindexes(sourcemodel, targetmodel):
+            if crosslingual:
+                #we're interested in the target-side sentence and token
+                sourcepattern, targetpattern, _,_,sentence,token  = data
+            else:
+                #normal behaviour
+                sourcepattern, targetpattern, sentence, token,_,_  = data
             count+=1
             n = len(sourcepattern)
 
@@ -585,8 +591,8 @@ class FeaturedAlignmentModel(AlignmentModel):
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
-    def addcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora):
-        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, factoredcorpora):
+    def addcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora, crosslingual = False):
+        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, factoredcorpora, crosslingual):
             self[(sourcepattern,targetpattern)] = newfeaturevectors
 
     def normalize(self, sumover='s'):
@@ -702,6 +708,7 @@ def main_extractfeatures():
     parser.add_argument('-I','--instancethreshold',type=int,help="Classifiers (-C) having less than the specified number of instances will be not be generated", action='store',default=2)
     parser.add_argument('-X','--experts', help="Classifier experts, one per source pattern", action="store_true", default=False)
     parser.add_argument('-M','--monolithic', help="Monolithic classifier", action="store_true", default=False)
+    parser.add_argument('--crosslingual', help="Extract target-language context features instead of source-language features (for use with Colibrita). In this case, the corpus in -f and in any additional factor must be the *target* corpus", action="store_true", default=False)
     args = parser.parse_args()
 
     if not (len(args.corpusfile) == len(args.classfile) == len(args.leftsize) == len(args.rightsize)):
@@ -775,7 +782,7 @@ def main_extractfeatures():
         fconf.close()
 
 
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora):
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora, args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
@@ -840,7 +847,7 @@ def main_extractfeatures():
 
     else:
         print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
-        model.addcontextfeatures(sourcemodel, targetmodel, corpora)
+        model.addcontextfeatures(sourcemodel, targetmodel, corpora, args.crosslingual)
 
         print("Saving alignment model", file=sys.stderr)
         model.save(args.outputfile)
