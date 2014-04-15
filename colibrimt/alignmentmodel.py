@@ -380,23 +380,6 @@ class FeaturedAlignmentModel(AlignmentModel):
         buffer = []
 
         while True:
-            if buffer and source and source != prevsource:
-                bestscore = 0
-                if divergencefrombestthreshold > 0:
-                    for item in buffer:
-                        source,target, scores = item
-                        if scores[divfrombestindex] > bestscore:
-                            bestscore = scores[divfrombestindex]
-
-                for item in buffer:
-                    source,target, scores = item
-                    if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
-                        added += 1
-                        self.add( ( source,target, scores) )
-                    else:
-                        skipped += 1
-
-                buffer = []
 
             if not quiet:
                 linenum += 1
@@ -453,6 +436,24 @@ class FeaturedAlignmentModel(AlignmentModel):
 
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
                 target = targetencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
+
+            if buffer and source != prevsource:
+                bestscore = 0
+                if divergencefrombestthreshold > 0:
+                    for item in buffer:
+                        source,target, scores = item
+                        if scores[divfrombestindex] > bestscore:
+                            bestscore = scores[divfrombestindex]
+
+                for item in buffer:
+                    source,target, scores = item
+                    if scores[divfrombestindex] >= bestscore * divergencefrombestthreshold:
+                        added += 1
+                        self.add( ( source,target, scores) )
+                    else:
+                        skipped += 1
+
+                buffer = []
 
             if constrainsourcemodel and source not in constrainsourcemodel:
                 skipped += 1
