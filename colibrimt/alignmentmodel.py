@@ -392,6 +392,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     added += 1
                     source,target, scores = item
                     if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
+                        added += 1
                         self.add( ( source,target, scores) )
 
                 buffer = []
@@ -403,6 +404,8 @@ class FeaturedAlignmentModel(AlignmentModel):
             line = f.readline()
             if not line:
                 break
+            if filename.split(".")[-1] == "bz2" or filename.split(".")[-1] == "gz":
+                line = str(line,'utf-8')
 
             #split into (trimmed) segments
             segments = [ segment.strip() for segment in line.split(delimiter) ]
@@ -478,6 +481,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                 source,target, scores = item
                 if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
                     self.add( ( source,target, scores) )
+                    added += 1
 
 
 
