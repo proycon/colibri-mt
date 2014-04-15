@@ -36,5 +36,5 @@ setup(
         ]
     },
     package_data = {},
-    install_requires=['colibricore']
+    install_requires=['colibricore >= 0.4.992']
 )
