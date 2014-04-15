@@ -389,11 +389,12 @@ class FeaturedAlignmentModel(AlignmentModel):
                             bestscore = scores[divfrombestindex]
 
                 for item in buffer:
-                    added += 1
                     source,target, scores = item
                     if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
                         added += 1
                         self.add( ( source,target, scores) )
+                    else:
+                        skipped += 1
 
                 buffer = []
 
@@ -482,6 +483,8 @@ class FeaturedAlignmentModel(AlignmentModel):
                 if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
                     self.add( ( source,target, scores) )
                     added += 1
+                else:
+                    skipped += 1
 
 
 
