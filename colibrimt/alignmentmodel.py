@@ -357,7 +357,8 @@ class FeaturedAlignmentModel(AlignmentModel):
                     f.write(str(feature))
                 f.write("\n")
 
-    def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True):
+    def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True, divergencefrombestthreshold=0.0, divfrombestindex=2):
+
         """Load a phrase table from file into memory (memory intensive!)"""
         self.phrasetable = {}
 
@@ -368,16 +369,33 @@ class FeaturedAlignmentModel(AlignmentModel):
         else:
             f = open(filename,'r',encoding='utf-8')
         linenum = 0
+        source = None
         prevsource = None
-        targets = []
-
 
         added = 0
         skipped = 0
 
         haswordalignments = False
 
+        buffer = []
+
         while True:
+            if buffer and source and source != prevsource:
+                bestscore = 0
+                if divergencefrombestthreshold > 0:
+                    for item in buffer:
+                        source,target, scores = item
+                        if scores[divfrombestindex] > bestscore:
+                            bestscore = scores[divfrombestindex]
+
+                for item in buffer:
+                    added += 1
+                    source,target, scores = item
+                    if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
+                        self.add( ( source,target, scores) )
+
+                buffer = []
+
             if not quiet:
                 linenum += 1
                 if (linenum % 100000) == 0:
@@ -439,10 +457,29 @@ class FeaturedAlignmentModel(AlignmentModel):
                 skipped += 1
                 continue
 
-            added += 1
-            self.add(source,target, scores)
+
+            buffer.append( ( source,target, scores) )
+            prevsource = source
+
 
         f.close()
+
+        #don't forget last item
+        if buffer and source != prevsource:
+            bestscore = 0
+            if divergencefrombestthreshold > 0:
+                for item in buffer:
+                    source,target, scores = item
+                    if scores[divfrombestindex] > bestscore:
+                        bestscore = scores[divfrombestindex]
+
+            for item in buffer:
+                added += 1
+                source,target, scores = item
+                if bestscore * divergencefrombestthreshold >= scores[divfrombestindex]:
+                    self.add( ( source,target, scores) )
+
+
 
         self.conf = FeatureConfiguration()
         l = len(scores)
@@ -642,7 +679,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     pass
 
 
-def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,pst=0.0, pts = 0.0,nonorm=False, quiet=False):
+def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,pst=0.0, pts = 0.0, joinedthreshold=0.0, divergencefrombestthreshold=0.0,nonorm=False, quiet=False):
     if not quiet: print("Reading source encoder " + sourceclassfile,file=sys.stderr)
     sourceencoder = colibricore.ClassEncoder(sourceclassfile)
     if not quiet: print("Reading target encoder " + targetclassfile,file=sys.stderr)
@@ -650,11 +687,8 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     if not quiet: print("Initialising featured alignment model",file=sys.stderr)
     model = FeaturedAlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
-    if pts or pst:
-        scorefilter = lambda scores: scores[2] > pts and scores[0] > pst
-    else:
-        scorefilter = None
-    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter)
+    scorefilter = lambda scores: scores[2] >= pts and scores[0] >= pst and scores[2] * scores[0] >= joinedthreshold
+    model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter, divergencefrombestthreshold)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not nonorm and (constrainsourcemodel or constraintargetmodel or pst or pts):
         if not quiet: print("Normalising",file=sys.stderr)
@@ -673,6 +707,8 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s)",default=0.0, action='store',required=False)
     parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t)", default=0.0,action='store',required=False)
+    parser.add_argument('-j','--joinedconditionalprobability',type=float,help="Constrain by product of conditional probabilities: p(s|t) * p(t|s)", default=0.0,action='store',required=False)
+    parser.add_argument('-d','--divergencefrombest',type=float,help="Prune translation options lower than set threshold times the strongest translation option (prunes weaker alternatives)", default=0.0,action='store',required=False)
     parser.add_argument('-N','--nonorm',help="Disable normalisation", default=False,action='store_true',required=False)
     args = parser.parse_args()
 
@@ -688,7 +724,7 @@ def main_mosesphrasetable2alignmodel():
     else:
         constraintargetmodel = None
 
-    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts,args.nonorm)
+    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts,args.nonorm, args.joinedconditionalprobability, args.divergencefrombestthreshold)
 
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and build classifier data (-C) or add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
