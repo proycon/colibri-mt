@@ -708,7 +708,7 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s)",default=0.0, action='store',required=False)
     parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t)", default=0.0,action='store',required=False)
     parser.add_argument('-j','--joinedconditionalprobability',type=float,help="Constrain by product of conditional probabilities: p(s|t) * p(t|s)", default=0.0,action='store',required=False)
-    parser.add_argument('-d','--divergencefrombest',type=float,help="Prune translation options lower than set threshold times the strongest translation option (prunes weaker alternatives)", default=0.0,action='store',required=False)
+    parser.add_argument('-d','--divergencefrombestthreshold',type=float,help="Prune translation options lower than set threshold times the strongest translation option (prunes weaker alternatives)", default=0.0,action='store',required=False)
     parser.add_argument('-N','--nonorm',help="Disable normalisation", default=False,action='store_true',required=False)
     args = parser.parse_args()
 
