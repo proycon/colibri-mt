@@ -449,7 +449,7 @@ class FeaturedAlignmentModel(AlignmentModel):
                     source,target, scores = item
                     if scores[divfrombestindex] >= bestscore * divergencefrombestthreshold:
                         added += 1
-                        self.add( ( source,target, scores) )
+                        self.add(source,target, scores)
                     else:
                         skipped += 1
 
