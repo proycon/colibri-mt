@@ -11,161 +11,8 @@ import argparse
 import pickle
 import os
 from collections import defaultdict
-from urllib.parse import quote_plus, unquote_plus
+from urllib.parse import quote_plus
 
-
-class AlignmentModel:
-    def __init__(self, multivalue=True, singleintvalue=False):
-        self.values = {}
-        self.newvalueid = 0
-        self.alignedpatterns = colibricore.AlignedPatternDict_int32()
-        self.multivalue = multivalue
-        self.singleintvalue = singleintvalue
-
-    def add(self, sourcepattern, targetpattern, value):
-        if not isinstance(sourcepattern, colibricore.Pattern):
-            raise ValueError("Source pattern must be instance of Pattern")
-        if not isinstance(targetpattern, colibricore.Pattern):
-            raise ValueError("Target pattern must be instance of Pattern")
-
-        if (sourcepattern, targetpattern) in self.alignedpatterns:
-            valueid = self.alignedpatterns[(sourcepattern, targetpattern)]
-            if self.singleintvalue:
-                self.alignedpatterns[(sourcepattern,targetpattern)] = value
-            elif self.multivalue:
-                self.values[valueid].append(value)
-            else:
-                self.values[valueid] = value
-        else:
-            self.newvalueid += 1
-            valueid = self.newvalueid
-            if self.singleintvalue:
-                self.alignedpatterns[(sourcepattern,targetpattern)] = value
-            elif self.multivalue:
-                self.alignedpatterns[(sourcepattern,targetpattern)] = valueid
-                self.values[valueid] = [value]
-            else:
-                self.alignedpatterns[(sourcepattern,targetpattern)] = valueid
-                self.values[valueid] = value
-
-    def __len__(self):
-        return len(self.alignedpatterns)
-
-    def __iter__(self):
-        if self.singleintvalue:
-            for sourcepattern, targetpattern, value in self.alignedpatterns.items():
-                yield sourcepattern, targetpattern, value
-        else:
-            for sourcepattern, targetpattern, valueid in self.alignedpatterns.items():
-                yield sourcepattern, targetpattern, self.values[valueid]
-
-    def sourcepatterns(self):
-        for sourcepattern in self.alignedpatterns:
-            yield sourcepattern
-
-
-    def targetpatterns(self, sourcepattern=None):
-        if sourcepattern is None:
-            s = colibricore.PatternSet() #//segfaults (after 130000+ entries)? can't figure out why yet
-            #s = set()
-            for sp in self.alignedpatterns:
-                for targetpattern in self.alignedpatterns.children(sp):
-                    s.add(targetpattern)
-
-            for targetpattern in s:
-                yield targetpattern
-        else:
-            for targetpattern in self.alignedpatterns.children(sourcepattern):
-                yield targetpattern
-
-    def items(self):
-        return iter(self)
-
-    def itemcount(self):
-        count = 0
-        for _ in self.items():
-            count += 1
-        return count
-
-    def __getitem__(self, item):
-        if self.singleintvalue:
-            return self.alignedpatterns[item]
-        else:
-            return self.values[self.alignedpatterns[item]]
-
-    def __setitem__(self, item, value):
-        if self.singleintvalue:
-            self.alignedpatterns[item] = value
-        else:
-            if not item in self.alignedpatterns:
-                self.newvalueid +=1
-                self.alignedpatterns[item] = self.newvalueid
-            self.values[self.alignedpatterns[item]] = value
-
-
-    def __contains__(self, item):
-        return item in self.alignedpatterns
-
-    def haspair(self, sourcepattern, targetpattern):
-        return self.alignedpatterns.haspair(sourcepattern, targetpattern)
-
-    def load(self, fileprefix):
-        if not os.path.exists(fileprefix + ".colibri.alignmodel-keys"):
-            raise IOError("File not found: " + fileprefix + ".colibri.alignmodel-keys")
-        self.alignedpatterns.read(fileprefix + ".colibri.alignmodel-keys")
-        print( "Loaded keys: alignments for " + str(len(self.alignedpatterns)) + " source patterns",file=sys.stderr)
-        if os.path.exists(fileprefix + ".colibri.alignmodel-values"):
-            self.singleintvalue= False
-            with open(fileprefix + ".colibri.alignmodel-values",'rb') as f:
-                self.values = pickle.load(f)
-            #check if we are multivalued
-            for key, value in self.values.items():
-                self.multivalue = (isinstance(value, tuple) or isinstance(value, list))
-                break
-            print( "Loaded values (" + str(len(self.values)) + ")",file=sys.stderr)
-        else:
-            self.singleintvalue= True
-
-    def save(self, fileprefix):
-        """Output"""
-        self.alignedpatterns.write(fileprefix + ".colibri.alignmodel-keys")
-        if not self.singleintvalue:
-            with open(fileprefix + ".colibri.alignmodel-values",'wb') as f:
-                pickle.dump(self.values, f)
-
-    def output(self, sourcedecoder, targetdecoder, scorefilter=None):
-        for sourcepattern, targetpattern, value in self.items():
-            if scorefilter and not scorefilter(value): continue
-            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
-            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
-            if not self.multivalue or self.singleintvalue:
-                print(str(value))
-            else:
-                for v in value:
-                    print(str(v) + "\t" ,end="")
-            print()
-
-
-
-    def sourcemodel(self):
-        model = colibricore.UnindexedPatternModel()
-        for sourcepattern in self.sourcepatterns():
-            model[sourcepattern] = model[sourcepattern] + 1
-        return model
-
-    def targetmodel(self):
-        model = colibricore.UnindexedPatternModel()
-        for targetpattern in self.targetpatterns():
-            model[targetpattern] = model[targetpattern] + 1
-        return model
-
-    def _normaux(self, sourcepattern, targetpattern, total_s, total_t, value, index, sumover):
-        if sumover == 's':
-            total_s[sourcepattern] += value[index]
-        elif sumover == 't':
-            total_t[targetpattern] += value[index]
-        else:
-            raise Exception("sumover can't be " + sumover)
 
 
 class FeatureConfiguration:
@@ -271,8 +118,67 @@ class FeatureConfiguration:
                         print("Loading decoder " + decoderfile,file=sys.stderr)
                         self.decoders[decoderfile] = colibricore.ClassDecoder(decoderfile)
 
+class AlignmentModel(colibricore.PatternAlignmentModel_float):
+    def sourcepatterns(self):
+        for sourcepattern in self:
+            yield sourcepattern
 
-class FeaturedAlignmentModel(AlignmentModel):
+
+    def targetpatterns(self, sourcepattern=None):
+        if sourcepattern is None:
+            s = colibricore.PatternSet() #//segfaults (after 130000+ entries)? can't figure out why yet
+            #s = set()
+            for sourcepattern in self:
+                for targetpattern in self[sourcepattern]:
+                    s.add(targetpattern)
+
+            for targetpattern in s:
+                yield targetpattern
+        else:
+            for targetpattern in self[sourcepattern]:
+                yield targetpattern
+
+    def itemcount(self):
+        count = 0
+        for _ in self.items():
+            count += 1
+        return count
+
+
+    #NOTE: triples() replaces what used to be items()
+
+    def output(self, sourcedecoder, targetdecoder, scorefilter=None):
+        for sourcepattern, targetpattern, features in self.triples():
+            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
+            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
+            for v in features:
+                print(str(v) + "\t" ,end="")
+            print()
+
+
+    def sourcemodel(self):
+        model = colibricore.UnindexedPatternModel()
+        for sourcepattern in self.sourcepatterns():
+            model[sourcepattern] = model[sourcepattern] + 1
+        return model
+
+    def targetmodel(self):
+        model = colibricore.UnindexedPatternModel()
+        for targetpattern in self.targetpatterns():
+            model[targetpattern] = model[targetpattern] + 1
+        return model
+
+    #TODO: probably need reimplementation
+    def _normaux(self, sourcepattern, targetpattern, total_s, total_t, value, index, sumover):
+        if sumover == 's':
+            total_s[sourcepattern] += value[index]
+        elif sumover == 't':
+            total_t[targetpattern] += value[index]
+        else:
+            raise Exception("sumover can't be " + sumover)
+
+
+
     def __init__(self, conf=FeatureConfiguration()):
         assert isinstance(conf, FeatureConfiguration)
         self.conf = conf
@@ -294,10 +200,6 @@ class FeaturedAlignmentModel(AlignmentModel):
             print("Saved configuration:",repr(self.conf.conf),file=sys.stderr)
         super().save(fileprefix)
 
-    def __iter__(self):
-        for sourcepattern, targetpattern, valueid in self.alignedpatterns.items():
-            for featurevector in self.values[valueid]: #multiple feature vectors per alignment possible
-                yield sourcepattern, targetpattern, featurevector
 
     def output(self, sourcedecoder, targetdecoder, scorefilter=None, *preloadeddecoders):
         if preloadeddecoders:
@@ -684,6 +586,11 @@ class FeaturedAlignmentModel(AlignmentModel):
                     features[i] = 0
                 elif sumover[i] == '-':
                     pass
+
+#################################################################################################################################################3
+#################################################################################################################################################3
+#################################################################################################################################################3
+#################################################################################################################################################3
 
 
 def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, outfileprefix, constrainsourcemodel=None, constraintargetmodel=None,pst=0.0, pts = 0.0, joinedthreshold=0.0, divergencefrombestthreshold=0.0,nonorm=False, quiet=False):
