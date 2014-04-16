@@ -358,7 +358,6 @@ class FeaturedAlignmentModel(AlignmentModel):
                 f.write("\n")
 
     def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True, divergencefrombestthreshold=0.0, divfrombestindex=2):
-
         """Load a phrase table from file into memory (memory intensive!)"""
         self.phrasetable = {}
 
@@ -441,15 +440,15 @@ class FeaturedAlignmentModel(AlignmentModel):
                 bestscore = 0
                 if divergencefrombestthreshold > 0:
                     for item in buffer:
-                        source,target, scores = item
-                        if scores[divfrombestindex] > bestscore:
-                            bestscore = scores[divfrombestindex]
+                        source_buffer,target_buffer, scores_buffer = item
+                        if scores_buffer[divfrombestindex] > bestscore:
+                            bestscore = scores_buffer[divfrombestindex]
 
                 for item in buffer:
-                    source,target, scores = item
-                    if scores[divfrombestindex] >= bestscore * divergencefrombestthreshold:
+                    source_buffer,target_buffer, scores_buffer = item
+                    if scores_buffer[divfrombestindex] >= bestscore * divergencefrombestthreshold:
                         added += 1
-                        self.add(source,target, scores)
+                        self.add(source_buffer,target_buffer, scores_buffer)
                     else:
                         skipped += 1
 
