@@ -14,109 +14,18 @@ from collections import defaultdict
 from urllib.parse import quote_plus
 
 
-
-class FeatureConfiguration:
-    def __init__(self):
-        self.conf = []
-        self.decoders = {}
-
-    def addcontextfeature(self, classdecoder, leftcontext=0, focus=True,rightcontext=0):
-        if isinstance(classdecoder, colibricore.ClassDecoder):
-            self.decoders[classdecoder.filename] = classdecoder
-            classdecoder = classdecoder.filename
-        elif not isinstance(classdecoder,str):
-            raise ValueError
-        self.conf.append( ( colibricore.Pattern, classdecoder, leftcontext, focus, rightcontext) )
-
-    def addfeature(self, type, score=False, classifier=False):
-        self.conf.append( ( type,score,classifier) )
-
-    def __getstate__(self):
-        result = self.__dict__.copy()
-        del result['decoders']
-        return result
-
-    def __setstate__(self,state):
-        self.__dict__ = state
-        #after unpickling
-        self.decoders = {}
-
-    def __len__(self):
-        count = 0
-        for x in self.conf:
-            if x[0] is colibricore.Pattern:
-                count += x[2] + x[4]
-                if x[3]:
-                    count += 1
-            else:
-                count += 1
-        return count
-
-    def __iter__(self):
-        for x in self.conf:
-            yield x
-
-    def items(self, forscore=True,forclassifier=True,forall=True,select=None):
-        if select:
-            if len(select) != len(self):
-                print("ERROR DEBUG: select=", str(repr(select)),file=sys.stderr)
-                print("ERROR DEBUG: FeatureConfiguration=", str(repr(self.conf)),file=sys.stderr)
-                raise Exception("Select arguments has length ",len(select), ", expected " , len(self))
-
-        i = 0
-        for x in self.conf:
-            if forall:
-                if select:
-                    yield x, select[i]
-                else:
-                    yield x
-            elif x[0] is colibricore.Pattern and forclassifier:
-                if select:
-                    count = x[2] + x[4]
-                    if x[3]: count += 1
-                    yield x, select[i:i+count]
-                    i = (i+count)-1
-                else:
-                    yield x
-            elif (x[1] and forscore) or (len(x) == 3 and x[2] and forclassifier): #length check necessary for backwards compatibility
-                if select:
-                    yield x, select[i]
-                else:
-                    yield x
-
-            i+=1
-
-    def scorefeatures(self, select=None):
-        for x in self.items(True,False,False,select):
-            yield x
-
-    def classifierfeatures(self, select=None):
-        for x in self.items(False,True,False,select):
-            yield x
+class Configuration:
+    def __init__(self, corpus, classdecoder, leftcontext, rightcontext, focus=True):
+        assert isinstance(corpus, colibricore.IndexedCorpus)
+        assert isinstance(leftcontext, int)
+        assert isinstance(rightcontext, int)
+        self.corpus = corpus
+        self.classdecoder = classdecoder
+        self.leftcontext = leftcontext
+        self.focus = focus
+        self.rightcontext = rightcontext
 
 
-    def __getitem__(self, index):
-        return self.conf[index]
-
-
-    def __setitem__(self, index, value):
-        self.conf[index] = value
-
-    def loaddecoders(self, *args):
-        for item in self:
-            if item[0] == colibricore.Pattern:
-                decoderfile = item[1]
-                if decoderfile not in self.decoders:
-                    foundinargs = False
-                    for x in args:
-                        if x.filename == decoderfile:
-                            print("Linking decoder " + x.filename,file=sys.stderr)
-                            self.decoders[x.filename] = x
-                            foundinargs = True
-                            break
-                    if not foundinargs:
-                        print("Loading decoder " + decoderfile,file=sys.stderr)
-                        self.decoders[decoderfile] = colibricore.ClassDecoder(decoderfile)
 
 class AlignmentModel(colibricore.PatternAlignmentModel_float):
     def sourcepatterns(self):
@@ -128,8 +37,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         if sourcepattern is None:
             s = colibricore.PatternSet() #//segfaults (after 130000+ entries)? can't figure out why yet
             #s = set()
-            for sourcepattern in self:
-                for targetpattern in self[sourcepattern]:
+            for sourcepattern, targetmap in self.items():
+                for targetpattern in targetmap:
                     s.add(targetpattern)
 
             for targetpattern in s:
@@ -179,82 +88,31 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
 
 
-    def __init__(self, conf=FeatureConfiguration()):
-        assert isinstance(conf, FeatureConfiguration)
-        self.conf = conf
-        super().__init__(True,False)
 
-
-    def load(self, fileprefix):
-        if os.path.exists(fileprefix + ".colibri.alignmodel-featconf"):
-            with open(fileprefix + ".colibri.alignmodel-featconf",'rb') as f:
-                self.conf.conf = pickle.load(f)
-            print("Loaded configuration:",repr(self.conf.conf),file=sys.stderr)
-            super().load(fileprefix)
+    def load(self, filename):
+        if os.path.exists(filename):
+            super().load(filename)
         else:
-            raise IOError("File not found: " + fileprefix + ".colibri.alignmodel-featconf")
+            raise IOError("File not found: " + filename)
 
-    def save(self, fileprefix):
-        with open(fileprefix + ".colibri.alignmodel-featconf",'wb') as f:
-            pickle.dump(self.conf.conf, f)
-            print("Saved configuration:",repr(self.conf.conf),file=sys.stderr)
-        super().save(fileprefix)
+    def save(self, filename):
+        super().save(filename)
 
 
-    def output(self, sourcedecoder, targetdecoder, scorefilter=None, *preloadeddecoders):
-        if preloadeddecoders:
-            preloadeddecoders = (sourcedecoder, targetdecoder) +  preloadeddecoders
-        else:
-            preloadeddecoders = (sourcedecoder, targetdecoder)
-        self.conf.loaddecoders(*preloadeddecoders)
-
+    def output(self, sourcedecoder, targetdecoder, scorefilter=None):
         print("Configuration:",len(self.conf),file=sys.stderr)
 
-        for sourcepattern, targetpattern, features in self.items():
+        for sourcepattern, targetpattern, features in self.triples():
             if scorefilter and not scorefilter(features): continue
-            print(self.itemtostring(sourcepattern, targetpattern, features,sourcedecoder, targetdecoder))
+            print(sourcepattern.tostring(sourcedecoder) + "\t" + targetpattern.tostring(targetdecoder) + "\t" + "\t".join([str(x) for x in features]))
 
-    def itemtostring(self, sourcepattern,targetpattern, features, sourcedecoder, targetdecoder, forscore=True,forclassifier=True,forall=True, conf=None):
-        if not conf: conf = self.conf
-        s = []
-        if not forclassifier:
-            s.append( sourcepattern.tostring(sourcedecoder) )
-            s.append( targetpattern.tostring(targetdecoder) )
-        if len(features) < len(conf):
-            print(repr(conf.conf),file=sys.stderr)
-            print(repr(features),file=sys.stderr)
-            raise Exception("Expected " + str(len(conf)) + " features, got " + str(len(features)))
-
-        for i, (currentconf, feature) in enumerate(conf.items(forscore,forclassifier,forall, features) ):
-            if currentconf[0] == colibricore.Pattern:
-                _, classdecoder, leftcontext, dofocus, rightcontext = currentconf
-                classdecoder = self.conf.decoders[classdecoder]
-                n = leftcontext + rightcontext
-                if dofocus: n += 1
-                for j in range(0,n):
-                    p = feature[j]
-                    if not isinstance(p,  colibricore.Pattern):
-                        raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
-                    feature_s = p.tostring(classdecoder)
-                    if not feature_s:
-                        print("Feature: " + str(repr(bytes(p))) ,file=sys.stderr)
-                        print("Feature vector thus far: " + str(repr(s)),file=sys.stderr)
-                        raise Exception("Empty feature! Not allowed!")
-                    s.append(feature_s)
-            else:
-                s.append(str(feature))
-
-
-        if forclassifier:
-            s.append( targetpattern.tostring(targetdecoder) )
-        return "\t".join(s)
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
         """Output for moses"""
         with open(filename,'w',encoding='utf-8') as f:
-            for sourcepattern, targetpattern, features in self:
+            for sourcepattern, targetpattern, features in self.triples():
                 f.write(sourcepattern.tostring(sourcedecoder) + " ||| " + targetpattern.tostring(targetdecoder) + " ||| ")
-                for i, feature, featureconf in enumerate(zip(features, self.conf.scorefeatures())):
+                for i, feature in enumerate(features):
                     if (i > 0): f.write(" ")
                     f.write(str(feature))
                 f.write("\n")
@@ -450,17 +308,13 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
 
 
-    def extractcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora, crosslingual=False):
+    def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, crosslingual=False):
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
+        assert isinstance(configurations, list) or isinstance(configurations, tuple)
+        assert all([ isinstance(x, Configuration) for x in configurations ])
 
-        factorconf = [x for x in self.conf if x[0] is colibricore.Pattern ]
-        if len(factoredcorpora) != len(factorconf):
-            raise ValueError("Expected " + str(len(factorconf)) + " instances in factoredcorpora, got " + str(len(factoredcorpora)))
-
-        if not all([ isinstance(x,colibricore.IndexedCorpus) for x in factoredcorpora]):
-            raise ValueError("factoredcorpora elements must be instances of IndexedCorpus")
 
         prev = None
         tmpdata = defaultdict(int) # featurevector => occurrencecount
@@ -496,8 +350,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
             featurevector = [] #local context features
 
-            for factoredcorpus, factor in zip(factoredcorpora, factorconf):
-                _,classdecoder, leftcontext, focus, rightcontext = factor
+            for configuration in configurations:
+                factoredcorpus,classdecoder, leftcontext, focus, rightcontext = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.rightcontext, configuration.focus)
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
                     if i < 0:
