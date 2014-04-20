@@ -58,12 +58,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
     def output(self, sourcedecoder, targetdecoder, scorefilter=None):
         for sourcepattern, targetpattern, features in self.triples():
-            print(sourcepattern.tostring(sourcedecoder) + "\t" ,end="")
-            print(targetpattern.tostring(targetdecoder) + "\t" ,end="")
-            for v in features:
-                print(str(v) + "\t" ,end="")
-            print()
-
+            if scorefilter and not scorefilter(features): continue
+            print(sourcepattern.tostring(sourcedecoder) + "\t" + targetpattern.tostring(targetdecoder) + "\t" + "\t".join([str(x) for x in features]))
 
     def sourcemodel(self):
         model = colibricore.UnindexedPatternModel()
@@ -99,12 +95,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         super().save(filename)
 
 
-    def output(self, sourcedecoder, targetdecoder, scorefilter=None):
-        print("Configuration:",len(self.conf),file=sys.stderr)
-
-        for sourcepattern, targetpattern, features in self.triples():
-            if scorefilter and not scorefilter(features): continue
-            print(sourcepattern.tostring(sourcedecoder) + "\t" + targetpattern.tostring(targetdecoder) + "\t" + "\t".join([str(x) for x in features]))
 
 
     def savemosesphrasetable(self, filename, sourcedecoder, targetdecoder):
@@ -248,15 +238,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
 
 
-        self.conf = FeatureConfiguration()
-        l = len(scores)
-        #if haswordalignments: #why did I do this?
-        #   l = l - 1
-        for x in range(0,l):
-            if isinstance(scores[x], float):
-                self.conf.addfeature(float,True,False) #score: True, classifier: False
-        if haswordalignments:
-            self.conf.addfeature(list)
 
     def patternswithindexes(self, sourcemodel, targetmodel, showprogress=True):
         """Finds occurrences (positions in the source and target models) for all patterns in the alignment model. """
@@ -391,17 +372,15 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
-    def addcontextfeatures(self, sourcemodel, targetmodel, factoredcorpora, crosslingual = False):
-        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, factoredcorpora, crosslingual):
+    def addcontextfeatures(self, sourcemodel, targetmodel, configurations, crosslingual = False):
+        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, configurations, crosslingual):
             self[(sourcepattern,targetpattern)] = newfeaturevectors
 
     def normalize(self, sumover='s'):
-        if self.singleintvalue:
-            raise Exception("Can't normalize AlignedPatternDict with singleintvalue set")
 
         total = {}
 
-        for sourcepattern, targetpattern, features in self:
+        for sourcepattern, targetpattern, features in self.triples():
             #if not isinstance(value, list) and not isinstance(value, tuple):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
@@ -453,7 +432,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     if not quiet: print("Reading target encoder " + targetclassfile,file=sys.stderr)
     targetencoder = colibricore.ClassEncoder(targetclassfile)
     if not quiet: print("Initialising featured alignment model",file=sys.stderr)
-    model = FeaturedAlignmentModel()
+    model = AlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     scorefilter = lambda scores: scores[2] >= pts and scores[0] >= pst and scores[2] * scores[0] >= joinedthreshold
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter, divergencefrombestthreshold)
@@ -496,8 +475,8 @@ def main_mosesphrasetable2alignmodel():
 
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and build classifier data (-C) or add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-i','--inputfile',type=str,help="Input alignment model (file prefix without .colibri.alignmodel-* extension)", action='store',required=True)
-    parser.add_argument('-o','--outputfile',type=str,help="Output alignment model (file prefix without .colibri.alignmodel-* extension, or directory when used with -C)", action='store',required=True)
+    parser.add_argument('-i','--inputfile',type=str,help="Input alignment model", action='store',required=True)
+    parser.add_argument('-o','--outputdir',type=str,help="Output directory, when used with -C", action='store',required=True)
     parser.add_argument('-s','--sourcemodel',type=str,help="Source model (indexed pattern model)", action='store',required=True)
     parser.add_argument('-t','--targetmodel',type=str,help="Target model (indexed pattern model)", action='store',required=True)
     parser.add_argument('-S','--sourceclassfile',type=str,help="Source class file", action='store',required=True)
@@ -521,7 +500,7 @@ def main_extractfeatures():
 
 
     print("Loading alignment model",file=sys.stderr)
-    model = FeaturedAlignmentModel()
+    model = AlignmentModel()
     model.load(args.inputfile)
 
 
@@ -561,11 +540,11 @@ def main_extractfeatures():
         if not args.monolithic and not args.experts:
             args.experts = True
 
-        if not os.path.isdir(args.outputfile):
+        if not os.path.isdir(args.outputdir):
             try:
-                os.mkdir(args.outputfile)
+                os.mkdir(args.outputdir)
             except:
-                print("Unable to build directory " + args.outputfile,file=sys.stderr)
+                print("Unable to build directory " + args.outputdir,file=sys.stderr)
                 sys.exit(2)
 
         model.conf.loaddecoders(sourcedecoder,targetdecoder)
@@ -576,10 +555,10 @@ def main_extractfeatures():
         prevtargetpattern = None
         trainfile = ""
         if args.monolithic:
-            f = open(args.outputfile + "/train.train",'w',encoding='utf-8')
-            f2 = open(args.outputfile + "/sourcepatterns.list",'w',encoding='utf-8')
+            f = open(args.outputdir + "/train.train",'w',encoding='utf-8')
+            f2 = open(args.outputdir + "/sourcepatterns.list",'w',encoding='utf-8')
 
-        fconf = open(args.outputfile + "/classifier.conf",'wb')
+        fconf = open(args.outputdir + "/classifier.conf",'wb')
 
         classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic, 'featureconf': model.conf}
         pickle.dump(classifierconf, fconf)
@@ -595,7 +574,7 @@ def main_extractfeatures():
                         print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
                     else:
                         sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
-                        trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                        trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
                         print("Writing " + trainfile,file=sys.stderr)
                         if args.experts:
                             f = open(trainfile,'w',encoding='utf-8')
@@ -630,7 +609,7 @@ def main_extractfeatures():
                 print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
             else:
                 sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
-                trainfile = args.outputfile + "/" + quote_plus(sourcepattern_s) + ".train"
+                trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
                 print("Writing " + trainfile,file=sys.stderr)
                 if args.experts:
                     f = open(trainfile,'w',encoding='utf-8')
@@ -649,12 +628,6 @@ def main_extractfeatures():
             f.close()
             f2.close()
 
-    else:
-        print("Extracting and adding context features from ", corpusfile, file=sys.stderr)
-        model.addcontextfeatures(sourcemodel, targetmodel, corpora, args.crosslingual)
-
-        print("Saving alignment model", file=sys.stderr)
-        model.save(args.outputfile)
 
 
 
@@ -674,10 +647,7 @@ def main_alignmodel():
     print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
     targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
     print("Loading alignment model",file=sys.stderr)
-    if os.path.exists(args.inputfile + ".colibri.alignmodel-featconf"):
-        model = FeaturedAlignmentModel()
-    else:
-        model = AlignmentModel()
+    model = AlignmentModel()
     model.load(args.inputfile)
     print("Outputting",file=sys.stderr)
     if args.pts or args.pst:
