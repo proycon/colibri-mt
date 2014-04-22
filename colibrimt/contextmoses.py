@@ -6,8 +6,8 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, Pattern, BEGINPATTERN, ENDPATTERN
-from colibrimt.alignmentmodel import FeaturedAlignmentModel
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, BEGINPATTERN, ENDPATTERN
+from colibrimt.alignmentmodel import AlignmentModel, Configuration
 import timbl
 import pickle
 import shutil
@@ -16,20 +16,11 @@ import itertools
 from pynlpl.formats.moses import PhraseTable
 from urllib.parse import quote_plus, unquote_plus
 
-def extractcontextfeatures(classifierconf, pattern, sentence, token, factoredcorpora ):
-    factorconf = classifierconf['featureconf']
+def extractcontextfeatures(classifierconf, pattern, sentence, token):
     featurevector = []
     n = len(pattern)
-    for factoredcorpus, factor in zip(factoredcorpora, factorconf.items(False,True,False)):
-        if factor[0] is Pattern:
-            _,classdecoder, leftcontext, focus, rightcontext = factor
-        else:
-            continue
-        #print("DEBUG: Available decoders: ", repr(factorconf.decoders.keys()) ,file=sys.stderr)
-        #print("DEBUG: Requested decoder: ", classdecoder ,file=sys.stderr)
-        classdecoder = factorconf.decoders[classdecoder]
-        #print("DEBUG: Classdecoder filename=", classdecoder.filename(),file=sys.stderr)
-        #print("DEBUG: Classdecoder size=", len(classdecoder),file=sys.stderr)
+    for configuration in classifierconf['featureconf']:
+        factoredcorpus,classdecoder, leftcontext, focus, rightcontext = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.focus, configuration.rightcontext)
         sentencelength = factoredcorpus.sentencelength(sentence)
         assert sentencelength > 0
         for i in range(token - leftcontext,token):
@@ -129,44 +120,29 @@ def main():
     elif decodedir and decodedir[0] != '/':
         decodedir = os.getcwd() + '/' + decodedir
 
+    print("Loading configuration (training corpora and class decoders)",file=sys.stderr)
     f = open(args.workdir + '/classifier.conf','rb')
     classifierconf = pickle.load(f)
     f.close()
 
     if args.inputfile:
-        #Updat classifier configuration:
-        #Replace original class file with extended class file (to be generated later)
-        index = 0
-        for i, feature in enumerate(classifierconf['featureconf']):
-            if feature[0] is Pattern:
-                if index >= len(args.inputfile):
-                    raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration, you need to specify all")
-
-
-                C, classdecoder, leftcontext, dofocus, rightcontext = feature
-                classdecoder = os.path.basename(args.inputfile[index]).replace('.txt','.colibri.cls')
-
-                feature = (C, classdecoder,leftcontext, dofocus, rightcontext)
-                classifierconf['featureconf'][i] = feature
-
-                index += 1
+        if len(classifierconf['featureconf']) >= len(args.inputfile):
+            raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration, you need to specify all")
 
 
     #one for each factor
-    corpusfiles = []
-    classfiles = []
     sourceencoders = []
-    sourcedecoders = []
-    testcorpus = []
 
 
 
     if args.inputfile:
-        for i, inputfile in enumerate(args.inputfile):
+        l = []
+        for i, (inputfile, conf) in enumerate(zip(args.inputfile, classifierconf['featureconf'])):
+            trainclassfile = conf['classdecoder']
             print("Processing factor #" + str(i),file=sys.stderr)
             #process inputfile
-            corpusfiles.append(  os.path.basename(inputfile).replace('.txt','') + '.colibri.dat' )
-            classfiles.append(  os.path.basename(inputfile).replace('.txt','') + '.colibri.cls' )
+            corpusfile =   os.path.basename(inputfile).replace('.txt','') + '.colibri.dat'
+            classfile = os.path.basename(inputfile).replace('.txt','') + '.colibri.cls'
 
             #if os.path.exists(corpusfiles[i]) and os.path.exists(classfiles[i]):
             #    print("Notice: Re-using previously generated corpusfile and classfile",file=sys.stderr)
@@ -175,19 +151,28 @@ def main():
             #    sourcedecoders.append( ClassDecoder(classfiles[i]) )
             #else:
             print("Loading and extending source class encoder",file=sys.stderr)
-            sourceencoders.append( ClassEncoder(args.sourceclassfile) )
+            sourceencoders.append( ClassEncoder(trainclassfile) )
             sourceencoders[i].build(inputfile)
-            sourceencoders[i].save(classfiles[i])
+            sourceencoders[i].save(classfile)
             print("Encoding test corpus",file=sys.stderr)
-            sourceencoders[i].encodefile(inputfile, corpusfiles[i])
+            sourceencoders[i].encodefile(inputfile, corpusfile)
             print("Loading source class decoder",file=sys.stderr)
-            sourcedecoders.append( ClassDecoder(classfiles[i]) )
+            sourcedecoder = ClassDecoder(classfile)
 
             print("Loading test corpus",file=sys.stderr)
-            testcorpus.append( IndexedCorpus(corpusfiles[i]) )
 
-    print("Loading decoders for feature configuration",file=sys.stderr)
-    classifierconf['featureconf'].loaddecoders(*sourcedecoders)
+            l.append( Configuration( IndexedCorpus(corpusfile), sourcedecoder, conf['leftcontext'], conf['rightcontext'], conf['focus'] ) )
+
+        classifierconf['featureconf'] = l
+
+    else:
+        print("Loading source class decoders",file=sys.stderr)
+        l = []
+        for conf in classifierconf['featureconf']:
+            sourcedecoder = ClassDecoder(conf['classdecoder'])
+            l.append( Configuration( IndexedCorpus(), sourcedecoder, conf['leftcontext'], conf['rightcontext'], conf['focus'] ) )
+
+
 
     if args.inputfile and args.alignmodelfile:
 
@@ -196,9 +181,8 @@ def main():
         print("Loading target decoder",file=sys.stderr)
         targetdecoder = ClassDecoder(args.targetclassfile)
 
-        print("Loading alignment model (may take a while)",file=sys.stderr)
-        alignmodel = FeaturedAlignmentModel()
-        alignmodel.load(args.alignmodelfile)
+        print("Loading alignment model",file=sys.stderr)
+        alignmodel = AlignmentModel(args.alignmodelfile)
         print("\tAlignment model has " + str(len(alignmodel)) + " source patterns",file=sys.stderr)
 
         print("Building constraint model of source patterns",file=sys.stderr)
@@ -211,7 +195,7 @@ def main():
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
-        testmodel.trainconstrainedbyunindexedmodel(corpusfiles[0], options, constraintmodel)
+        testmodel.trainconstrainedbyunindexedmodel( classifierconf['featureconf'][0].corpus.getfilename(), options, constraintmodel)
         print("\Test model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         print("Unloading constraint model",file=sys.stderr)
@@ -219,8 +203,7 @@ def main():
 
         if args.reorderingtable:
             print("Loading reordering model (may take a while)",file=sys.stderr)
-            rtable = PhraseTable(args.reorderingtable)
-
+            rtable = PhraseTable(args.reorderingtable) #TODO: convert to colibri alignmodel
 
 
 
@@ -293,14 +276,14 @@ def main():
         print("Writing intermediate test data",file=sys.stderr)
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
-        for sentencenum, line in enumerate(testcorpus[0].sentences()):
+        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.getfilename().sentences()):
             sentenceindex = sentencenum + 1
             print("@" + str(sentenceindex),file=sys.stderr)
             tokens = [] #actual string representations
             for tokenindex,pattern in enumerate(line):
                 #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
                 if not testmodel.covered( (sentenceindex, tokenindex) ):
-                    tokens.append(pattern.tostring(sourcedecoders[0]))
+                    tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
                 else:
                     tokens.append(str(sentenceindex) + "_" + str(tokenindex))
             f.write(" ".join(tokens) + "\n")
@@ -332,7 +315,7 @@ def main():
         prevpattern = None
         sourcepatterncount = len(testmodel)
         for i, sourcepattern in enumerate(testmodel):
-            sourcepattern_s = sourcepattern.tostring(sourcedecoders[0])
+            sourcepattern_s = sourcepattern.tostring(classifierconf['featureconf'][0].classdecoder)
             #iterate over all occurrences, each will be encoded separately
             for sentenceindex, tokenindex in testmodel[sourcepattern]:
                 #compute token span
@@ -342,7 +325,7 @@ def main():
                 tokenspan = " ".join(tokenspan)
 
                 #get context configuration
-                featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex, testcorpus)
+                featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex) #testcorpus is passed as part of classifierconf['featureconf']
                 if not featurevector:
                     raise Exception("No features returned")
                 if any( [ not x for x in featurevector ] ):
