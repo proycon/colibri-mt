@@ -166,11 +166,13 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if scorefilter:
                 if not scorefilter(scores): continue
 
-            if len(segments) >= 4:
-                scores.append( [ tuple([int(y) for y in x.split('-')]) for x in segments[3].split() ] )
-                haswordalignments = True
-            elif haswordalignments:
-                scores.append([])
+            #disable wordalignments
+
+            #if len(segments) >= 4:
+            #    scores.append( [ tuple([int(y) for y in x.split('-')]) for x in segments[3].split() ] )
+            #    haswordalignments = True
+            #elif haswordalignments:
+            #    scores.append([])
 
 
             if reverse:
@@ -195,7 +197,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                             bestscore = scores_buffer[divfrombestindex]
 
                 for item in buffer:
-                    print(item,file=sys.stderr)
                     source_buffer,target_buffer, scores_buffer = item
                     if scores_buffer[divfrombestindex] >= bestscore * divergencefrombestthreshold:
                         added += 1
