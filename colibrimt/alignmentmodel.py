@@ -92,7 +92,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             raise IOError("File not found: " + filename)
 
     def save(self, filename):
-        super().save(filename)
+        super().write(filename)
 
 
 
