@@ -198,7 +198,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
                 for item in buffer:
                     source_buffer,target_buffer, scores_buffer = item
-                    print(item,file=sys.stderr)
                     if scores_buffer[divfrombestindex] >= bestscore * divergencefrombestthreshold:
                         added += 1
                         self.add(source_buffer,target_buffer, tuple(scores_buffer))
