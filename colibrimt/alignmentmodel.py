@@ -322,14 +322,13 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if (sourcepattern, targetpattern) != prev:
                 if prev:
                     #process previous
-                    newfeaturevectors = []
-                    featurevectors = self[prev]
-                    assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
-                    scorevector = featurevectors[0] #traditional moses score vector
+                    allfeaturevectors = []
+                    scorevector = self[prev]
+
                     for featurevector, count in tmpdata.items():
-                        featurevector = list(featurevector)
-                        newfeaturevectors.append(scorevector + featurevector + [count])
-                    yield prev[0], prev[1], newfeaturevectors, scorevector
+                        allfeaturevectors.append( (featurevector, count) )
+
+                    yield prev[0], prev[1], allfeaturevectors, scorevector
 
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
@@ -420,6 +419,41 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     features[i] = 0
                 elif sumover[i] == '-':
                     pass
+
+def featurestostring(self, features, configurations):
+        s = []
+
+        #sanity check
+        n = 0
+        for i, conf in enumerate(configurations):
+            n += conf.leftcontext + conf.rightcontext
+            if conf.focus: n += 1
+
+        if len(features) < n:
+            print("Configurations: ", repr(configurations),file=sys.stderr)
+            print("Features: ", repr(features),file=sys.stderr)
+            raise Exception("Expected " + str(n) + " features, got " + str(len(features)))
+
+        featcursor = 0
+        for i, conf in enumerate(configurations):
+            n = conf.leftcontext + conf.rightcontext
+            if conf.focus: n += 1
+
+            for j in range(0,n):
+                p = features[featcursor+j]
+                if not isinstance(p, colibricore.Pattern):
+                    raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
+                feature_s = p.tostring(conf.classdecoder)
+                if not feature_s:
+                    print("Feature: " + str(repr(bytes(p))) ,file=sys.stderr)
+                    print("Feature vector thus far: " + str(repr(s)),file=sys.stderr)
+                    raise Exception("Empty feature! Not allowed!")
+                s.append(feature_s)
+
+            featcursor +=n
+
+
+        return "\t".join(s)
 
 #################################################################################################################################################3
 #################################################################################################################################################3
@@ -588,9 +622,9 @@ def main_extractfeatures():
                 prevsourcepattern = sourcepattern
                 firsttargetpattern = targetpattern
 
-            for featurevector in featurevectors:
-                #last feature holds occurrence count:
-                buffer.append( (model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), featurevector[-1],scorevector[2] )  )  #buffer holds (line, occurrences, pts)
+            for featurevector, count in featurevectors:
+                buffer.append( (featurestostring(featurevector, model.conf) + "\t" + targetpattern.tostring(targetdecoder) , count, scorevector[2] ) ) #buffer holds (ine, occurrences, pts)
+                #(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), count,scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
             prevtargetpattern = targetpattern
 
