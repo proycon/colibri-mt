@@ -558,7 +558,7 @@ def main_extractfeatures():
         fconf.close()
 
 
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, [x.corpus for x in model.conf], args.crosslingual):
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
