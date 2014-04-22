@@ -17,6 +17,7 @@ from urllib.parse import quote_plus
 class Configuration:
     def __init__(self, corpus, classdecoder, leftcontext, rightcontext, focus=True):
         assert isinstance(corpus, colibricore.IndexedCorpus)
+        assert isinstance(corpus, colibricore.ClassDecoder)
         assert isinstance(leftcontext, int)
         assert isinstance(rightcontext, int)
         self.corpus = corpus
@@ -127,7 +128,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         added = 0
         skipped = 0
 
-        haswordalignments = False
 
         buffer = []
 
@@ -337,7 +337,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             featurevector = [] #local context features
 
             for configuration in configurations:
-                factoredcorpus,classdecoder, leftcontext, focus, rightcontext = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.rightcontext, configuration.focus)
+                factoredcorpus,classdecoder, leftcontext, focus, rightcontext = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.focus, configuration.rightcontext)
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
                     if i < 0:
@@ -377,12 +377,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
 
-    def addcontextfeatures(self, sourcemodel, targetmodel, configurations, crosslingual = False):
-        for sourcepattern, targetpattern, newfeaturevectors,_ in self.extractcontextfeatures(sourcemodel, targetmodel, configurations, crosslingual):
-            self[(sourcepattern,targetpattern)] = newfeaturevectors
 
     def normalize(self, sumover='s'):
-
         total = {}
 
         for sourcepattern, targetpattern, features in self.triples():
@@ -519,27 +515,17 @@ def main_extractfeatures():
     print("Loading target model ", args.targetmodel, file=sys.stderr)
     targetmodel = colibricore.IndexedPatternModel(args.targetmodel)
 
-    corpora = []
-    for corpusfile in args.corpusfile:
+    model.conf = []
+    for corpusfile, classfile,left, right in zip(args.corpusfile, args.classfile, args.leftsize, args.rightsize):
         print("Loading corpus file ", corpusfile, file=sys.stderr)
-        corpora.append(colibricore.IndexedCorpus(corpusfile))
+        if classfile == args.sourceclassfile:
+            d = sourcedecoder
+        elif classfile == args.targetclassfile:
+            d = targetdecoder
+        else:
+            d = colibricore.ClassDecoder(classfile)
+        model.conf.append( Configuration(colibricore.IndexedCorpus(corpusfile), d ,left,True, right) )
 
-    #classdecoders = []
-    #for classfile in args.classfile:
-    #    print("Loading corpus file ", classfile, file=sys.stderr)
-    #    classdecoders.append(colibricore.ClassDecoder(classfile))
-
-
-    #add context configuration
-    print("Adding context features to feature configuration", file=sys.stderr)
-    for corpus, classfile,left, right in zip(corpora,args.classfile,args.leftsize, args.rightsize):
-        model.conf.addcontextfeature(classfile,left,True, right)
-
-    #store occurrence info in feature vector (appended to score features)
-    print("Adding occurrence count feature to feature configuration", file=sys.stderr)
-    model.conf.addfeature(int,False,False) #occurrence count for context configuration
-
-    print("Configuration:", model.conf.conf,file=sys.stderr)
 
     if args.buildclassifiers:
         if not args.monolithic and not args.experts:
@@ -552,7 +538,6 @@ def main_extractfeatures():
                 print("Unable to build directory " + args.outputdir,file=sys.stderr)
                 sys.exit(2)
 
-        model.conf.loaddecoders(sourcedecoder,targetdecoder)
 
         f = None
         prevsourcepattern = None
@@ -565,12 +550,15 @@ def main_extractfeatures():
 
         fconf = open(args.outputdir + "/classifier.conf",'wb')
 
-        classifierconf = { 'leftsize': args.leftsize, 'rightsize': args.rightsize, 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic, 'featureconf': model.conf}
+        confser = []
+        for conf in model.conf:
+            confser.append({'corpus': conf.corpus.filename(), 'classdecoder': conf.classdecoder.filename(), 'leftcontext': conf.leftcontext, 'focus': conf.focus,'rightcontext': conf.rightcontext})
+        classifierconf = { 'weighbyoccurrence': args.weighbyoccurrence, 'weighbyscore': args.weighbyscore, 'experts': args.experts, 'monolithic': args.monolithic, 'featureconf': confser}
         pickle.dump(classifierconf, fconf)
         fconf.close()
 
 
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, corpora, args.crosslingual):
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, [x.corpus for x in model.conf], args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
