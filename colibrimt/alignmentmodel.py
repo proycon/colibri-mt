@@ -83,6 +83,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             raise Exception("sumover can't be " + sumover)
 
 
+    def __init__(self, filename):
+        self.load(filename)
 
 
     def load(self, filename):
