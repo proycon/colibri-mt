@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name = "colibrimt",
-    version = "0.1.5",
+    version = "0.2",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = ("Colibri MT"),
@@ -36,5 +36,5 @@ setup(
         ]
     },
     package_data = {},
-    install_requires=['colibricore >= 0.4.993']
+    install_requires=['colibricore >= 0.5']
 )
