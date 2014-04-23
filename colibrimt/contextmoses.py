@@ -125,9 +125,12 @@ def main():
     classifierconf = pickle.load(f)
     f.close()
 
+    print("Configuration: ", classifierconf,file=sys.stderr)
+
+
     if args.inputfile:
         if len(classifierconf['featureconf']) >= len(args.inputfile):
-            raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration, you need to specify all")
+            raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration (" + str(len(classifierconf['featureconf'])) + ", you need to specify all")
 
 
     #one for each factor
