@@ -345,7 +345,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                         unigram = factoredcorpus[(sentence,i)]
                     assert len(unigram) == 1
                     featurevector.append(unigram)
-                if focus:
+                if focus and not crosslingual: #focus always excluded when doing cross-lingual, because it needs a different class decoder!
                     featurevector.append(sourcepattern)
                 for i in range(token + n , token + n + rightcontext):
                     if i >= sentencelength:
@@ -417,7 +417,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 elif sumover[i] == '-':
                     pass
 
-def featurestostring(features, configurations):
+def featurestostring(features, configurations, crosslingual=False, sourcedecoder=None):
+        if crosslingual and not sourcedecoder:
+            raise Exception("Source decoder must be specified when doing crosslingual")
         s = []
 
         #sanity check
@@ -440,7 +442,10 @@ def featurestostring(features, configurations):
                 p = features[featcursor+j]
                 if not isinstance(p, colibricore.Pattern):
                     raise Exception("Feature configuration ",(i,j), ": Expected Pattern, got ",str(type(p)))
-                feature_s = p.tostring(conf.classdecoder)
+                if crosslingual and conf.focus and j == conf.leftcontext:
+                    feature_s = p.tostring(sourcedecoder) #override with sourcedecoder
+                else:
+                    feature_s = p.tostring(conf.classdecoder)
                 if not feature_s:
                     print("Feature: " + str(repr(bytes(p))) ,file=sys.stderr)
                     print("Feature vector thus far: " + str(repr(s)),file=sys.stderr)
@@ -620,7 +625,7 @@ def main_extractfeatures():
                 firsttargetpattern = targetpattern
 
             for featurevector, count in featurevectors:
-                buffer.append( (featurestostring(featurevector, model.conf) + "\t" + targetpattern.tostring(targetdecoder) , count, scorevector[2] ) ) #buffer holds (ine, occurrences, pts)
+                buffer.append( (featurestostring(featurevector, model.conf, args.crosslingual, sourcedecoder) + "\t" + targetpattern.tostring(targetdecoder) , count, scorevector[2] ) ) #buffer holds (ine, occurrences, pts)
                 #(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), count,scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
             prevtargetpattern = targetpattern
