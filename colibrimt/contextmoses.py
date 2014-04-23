@@ -370,7 +370,7 @@ def main():
                         for targetpattern_s, score in distribution.items():
                             targetpattern = targetencoder.buildpattern(targetpattern_s)
                             if (sourcepattern, targetpattern) in alignmodel:
-                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
                             else:
                                 continue
 
@@ -414,7 +414,7 @@ def main():
                 if statistical:
                     #ignore classifier or no classifier present for this item
                     for targetpattern in alignmodel.targetpatterns(sourcepattern):
-                        scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)][0] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                        scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
 
                         if args.scorehandling == 'append':
                             scorevector.append(scorevector[2])
