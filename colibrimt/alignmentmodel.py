@@ -623,6 +623,7 @@ def main_extractfeatures():
                 firsttargetpattern = targetpattern
 
             for featurevector, count in featurevectors:
+                print("DEBUG scorevector: ", scorevector,file=sys.stderr)
                 buffer.append( (featurestostring(featurevector, model.conf) + "\t" + targetpattern.tostring(targetdecoder) , count, scorevector[2] ) ) #buffer holds (ine, occurrences, pts)
                 #(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), count,scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
