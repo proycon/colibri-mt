@@ -129,8 +129,8 @@ def main():
 
 
     if args.inputfile:
-        if len(classifierconf['featureconf']) >= len(args.inputfile):
-            raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration (" + str(len(classifierconf['featureconf'])) + ", you need to specify all")
+        if len(classifierconf['featureconf']) > len(args.inputfile):
+            raise Exception("Number of input files (" + str(len(args.inputfile)) + ") is less than the number of factor-features in configuration (" + str(len(classifierconf['featureconf'])) + "), you need to specify all")
 
 
     #one for each factor
