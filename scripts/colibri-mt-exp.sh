@@ -309,7 +309,7 @@ if [ "$RUN" = "1" ]; then
 
 
 
-        if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ] && [ ! -L "$TRAINTARGET.colibri.indexedpatternmodel"]; then
+        if [ ! -f "$TRAINTARGET.colibri.indexedpatternmodel" ] && [ ! -L "$TRAINTARGET.colibri.indexedpatternmodel" ]; then
             echo -e "${blue}[$NAME]\nBuilding class model and encoded corpus for target${NC}">&2
             CMD="colibri-classencode ../$TRAINTARGET.txt"
             echo $CMD>&2
