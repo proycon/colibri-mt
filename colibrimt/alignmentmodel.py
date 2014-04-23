@@ -312,7 +312,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         for data in self.patternswithindexes(sourcemodel, targetmodel):
             if crosslingual:
                 #we're interested in the target-side sentence and token
-                sourcepattern, targetpattern, _,_,sentence,token  = data
+                sourcepattern, targetpattern, _,_, sentence,token  = data
             else:
                 #normal behaviour
                 sourcepattern, targetpattern, sentence, token,_,_  = data
@@ -346,9 +346,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     assert len(unigram) == 1
                     featurevector.append(unigram)
                 if focus:
-                    focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
-                    assert len(focuspattern) >= 1
-                    featurevector.append(focuspattern)
+                    featurevector.append(sourcepattern)
                 for i in range(token + n , token + n + rightcontext):
                     if i >= sentencelength:
                         unigram = colibricore.ENDPATTERN
