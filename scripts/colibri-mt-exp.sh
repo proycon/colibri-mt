@@ -369,9 +369,9 @@ if [ "$RUN" = "1" ]; then
             exit 0
         fi
 
-        if [ ! -f "$NAME.colibri.alignmodel-featconf" ]; then
+        if [ ! -f "$NAME.colibri.alignmodel" ]; then
             echo -e "${blue}[$NAME]\nConverting phrasetable to alignment model${NC}">&2
-            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
+            CMD="colibri-mosesphrasetable2alignmodel -i $NAME.phrasetable -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -o $NAME.colibri.alignmodel -m $TRAINSOURCE.colibri.indexedpatternmodel -M $TRAINTARGET.colibri.indexedpatternmodel -p $MIN_PTS -P $MIN_PST"
             echo $CMD>&2
             $CMD
             if [[ $? -ne 0 ]]; then
@@ -396,7 +396,7 @@ if [ "$RUN" = "1" ]; then
             else
                 FACTOROPTIONS=""
             fi
-            CMD="colibri-extractfeatures -i $NAME -s $TRAINSOURCE.colibri.indexedpatternmodel -t $TRAINTARGET.colibri.indexedpatternmodel -f $TRAINSOURCE.colibri.dat -l $LEFT -r $RIGHT -c $TRAINSOURCE.colibri.cls $FACTOROPTIONS -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -C -$CLASSIFIERTYPE -o $CLASSIFIERDIR -I $INSTANCETHRESHOLD $EXTRAOPTIONS"
+            CMD="colibri-extractfeatures -i $NAME.colibri.alignmodel -s $TRAINSOURCE.colibri.indexedpatternmodel -t $TRAINTARGET.colibri.indexedpatternmodel -f $TRAINSOURCE.colibri.dat -l $LEFT -r $RIGHT -c $TRAINSOURCE.colibri.cls $FACTOROPTIONS -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -C -$CLASSIFIERTYPE -o $CLASSIFIERDIR -I $INSTANCETHRESHOLD $EXTRAOPTIONS"
             echo $CMD>&2
             $CMD 2> $CLASSIFIERDIR/extractfeatures.log
             if [[ $? -ne 0 ]]; then
@@ -432,7 +432,7 @@ if [ "$RUN" = "1" ]; then
         if [ $? -ne 0 ]; then
             #classifiers are built even when ignored later
             echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
-            CMD="colibri-contextmoses --train -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            CMD="colibri-contextmoses --train -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
             echo $CMD>&2
             $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log
             if [[ $? -ne 0 ]]; then

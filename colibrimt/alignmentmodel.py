@@ -362,14 +362,13 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         #process final pair:
         if prev:
             #process previous
-            newfeaturevectors = []
-            featurevectors = self[prev]
-            assert len(featurevectors) == 1 #assuming only one featurevectors exists (will be expanded into multiple, one per occurrence, by the algorithm here
-            scorevector = featurevectors[0] #traditional moses score vector
+            allfeaturevectors = []
+            scorevector = self[prev]
+
             for featurevector, count in tmpdata.items():
-                featurevector = list(featurevector)
-                newfeaturevectors.append(scorevector + featurevector + [count])
-            yield prev[0], prev[1], newfeaturevectors, scorevector
+                allfeaturevectors.append( (featurevector, count) )
+
+            yield prev[0], prev[1], allfeaturevectors, scorevector
 
 
         print("Extracted features for " + str(extracted) + " sentences",file=sys.stderr)
