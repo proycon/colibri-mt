@@ -345,7 +345,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                         unigram = factoredcorpus[(sentence,i)]
                     assert len(unigram) == 1
                     featurevector.append(unigram)
-                if focus and not crosslingual: #focus always excluded when doing cross-lingual, because it needs a different class decoder!
+                if focus: #focus needs a different class decoder if run with crosslingual! will be handled by featurestostring()
                     featurevector.append(sourcepattern)
                 for i in range(token + n , token + n + rightcontext):
                     if i >= sentencelength:
