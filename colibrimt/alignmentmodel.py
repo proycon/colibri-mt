@@ -420,7 +420,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 elif sumover[i] == '-':
                     pass
 
-def featurestostring(self, features, configurations):
+def featurestostring(features, configurations):
         s = []
 
         #sanity check
