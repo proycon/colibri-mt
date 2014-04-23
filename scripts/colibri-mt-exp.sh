@@ -454,7 +454,7 @@ if [ "$RUN" = "1" ]; then
             if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
                 mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR"
                 echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR]\nProcessing development data and invoking moses${NC}">&2
-                CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $DEVFACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+                CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$DEVSOURCE.txt $DEVFACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING --mert --ref ../$DEVTARGET.txt --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR --mosesdir $MOSESDIR --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
                 if [ ! -z "$REORDERING" ]; then
                     CMD="$CMD --reordering $REORDERING --reorderingtable reordering-table.gz"
                 fi
@@ -483,7 +483,7 @@ if [ "$RUN" = "1" ]; then
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
-            CMD="colibri-contextmoses -a $NAME -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
+            CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS}"
             if [ "$MERT" = "1" ]; then
                 CMD="$CMD --skipdecoder"
                 echo "(Skipping decoder on first run, as mert is enabled)">&2
