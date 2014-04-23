@@ -198,7 +198,7 @@ def main():
         print("Building patternmodel on test corpus",file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
-        testmodel.trainconstrainedbyunindexedmodel( classifierconf['featureconf'][0].corpus.getfilename(), options, constraintmodel)
+        testmodel.trainconstrainedbyunindexedmodel( classifierconf['featureconf'][0].corpus.filename(), options, constraintmodel)
         print("\Test model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         print("Unloading constraint model",file=sys.stderr)
@@ -279,7 +279,7 @@ def main():
         print("Writing intermediate test data",file=sys.stderr)
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
-        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.getfilename().sentences()):
+        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.filename().sentences()):
             sentenceindex = sentencenum + 1
             print("@" + str(sentenceindex),file=sys.stderr)
             tokens = [] #actual string representations
