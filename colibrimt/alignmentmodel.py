@@ -394,7 +394,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
 
 
-        for sourcepattern, targetpattern, features in self:
+        for sourcepattern, targetpattern, features in self.triples():
             #if not isinstance(value, list) and not isinstance(value, tuple):
             #    print("ERROR in normalize(): Expected iterable, got " + str(type(value)),file=sys.stderr)
             #    continue
