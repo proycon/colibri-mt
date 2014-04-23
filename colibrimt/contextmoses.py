@@ -279,7 +279,7 @@ def main():
         print("Writing intermediate test data",file=sys.stderr)
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
-        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.filename().sentences()):
+        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.sentences()):
             sentenceindex = sentencenum + 1
             print("@" + str(sentenceindex),file=sys.stderr)
             tokens = [] #actual string representations
