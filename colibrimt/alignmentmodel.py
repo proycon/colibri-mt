@@ -127,6 +127,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
         added = 0
         skipped = 0
+        constrained = 0
 
 
         buffer = []
@@ -136,7 +137,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if not quiet:
                 linenum += 1
                 if (linenum % 100000) == 0:
-                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ") total added: " + str(added) + ", skipped: " + str(skipped),file=sys.stderr)
+                    s = ""
+                    if constrainsourcemodel or constraintargetmodel:
+                        s = ", skipped because of constraint model: " + str(constrained)
+                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ") total added: " + str(added) + ", skipped because of treshold: " + str(skipped) + s,file=sys.stderr)
             line = f.readline()
             if not line:
                 break
@@ -210,10 +214,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 buffer = []
 
             if constrainsourcemodel and source not in constrainsourcemodel:
-                skipped += 1
+                constrained += 1
                 continue
-            if constraintargetmodel and target not in constraintargetmodel :
-                skipped += 1
+            if constraintargetmodel and target not in constraintargetmodel:
+                constrained += 1
                 continue
 
 
@@ -497,8 +501,9 @@ def main_mosesphrasetable2alignmodel():
     args = parser.parse_args()
 
     if args.constrainsourcemodel:
-        print("Loadin source model for constraints",file=sys.stderr)
+        print("Loading source model for constraints",file=sys.stderr)
         constrainsourcemodel = colibricore.PatternSetModel(args.constrainsourcemodel)
+        print("Patterns in constraint model: ", len(constrainsourcemodel), file=sys.stderr)
     else:
         constrainsourcemodel = None
 
