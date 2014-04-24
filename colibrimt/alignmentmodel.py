@@ -140,7 +140,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     s = ""
                     if constrainsourcemodel or constraintargetmodel:
                         s = ", skipped because of constraint model: " + str(constrained)
-                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ") total added: " + str(added) + ", skipped because of treshold: " + str(skipped) + s,file=sys.stderr)
+                    print("Loading phrase-table: @" + str(linenum) + "\t(" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ") total added: " + str(added) + ", skipped because of threshold: " + str(skipped) + s,file=sys.stderr)
             line = f.readline()
             if not line:
                 break
