@@ -541,20 +541,23 @@ def main_extractfeatures():
         sys.exit(2)
 
 
+    options = colibricore.PatternModelOptions(mintokens=1,doreverseindex=False)
+
     print("Loading alignment model",file=sys.stderr)
     model = AlignmentModel()
-    model.load(args.inputfile)
+    model.load(args.inputfile,options)
 
 
     print("Loading source decoder " + args.sourceclassfile,file=sys.stderr)
     sourcedecoder = colibricore.ClassDecoder(args.sourceclassfile)
     print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
     targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
+
     print("Loading source model " , args.sourcemodel, file=sys.stderr)
-    sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel)
+    sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel, options)
 
     print("Loading target model ", args.targetmodel, file=sys.stderr)
-    targetmodel = colibricore.IndexedPatternModel(args.targetmodel)
+    targetmodel = colibricore.IndexedPatternModel(args.targetmodel, options)
 
     model.conf = []
     for corpusfile, classfile,left, right in zip(args.corpusfile, args.classfile, args.leftsize, args.rightsize):
