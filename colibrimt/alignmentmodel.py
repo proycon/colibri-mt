@@ -569,6 +569,7 @@ def main_extractfeatures():
 
 
     if args.buildclassifiers:
+        print("Building classifiers",file=sys.stderr)
         if not args.monolithic and not args.experts:
             args.experts = True
 
