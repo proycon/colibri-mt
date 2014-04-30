@@ -115,7 +115,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
     def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True, divergencefrombestthreshold=0.0, divfrombestindex=2):
         """Load a phrase table from file into memory (memory intensive!)"""
-        self.phrasetable = {}
 
         if filename.split(".")[-1] == "bz2":
             f = bz2.BZ2File(filename,'r')
@@ -173,7 +172,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             #    null_alignments = 0
 
             if scorefilter:
-                if not scorefilter(scores): continue
+                if not scorefilter(scores):
+                    skipped += 1
+                    continue
+
 
             #disable wordalignments
 
@@ -495,6 +497,8 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-t','--occurrencethreshold',type=int,help="Only consider patterns from constraints model that occur at least this many times",default=1, action='store',required=False)
+    parser.add_argument('-l','--maxlength',type=int,help="Only consider patterns from constraints model that occur at least this many times",default=99, action='store',required=False)
     parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s)",default=0.0, action='store',required=False)
     parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t)", default=0.0,action='store',required=False)
     parser.add_argument('-j','--joinedconditionalprobability',type=float,help="Constrain by product of conditional probabilities: p(s|t) * p(t|s)", default=0.0,action='store',required=False)
@@ -502,16 +506,18 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-N','--nonorm',help="Disable normalisation", default=False,action='store_true',required=False)
     args = parser.parse_args()
 
+    options = colibricore.PatternModelOptions(mintokens=args.occurrencethreshold, maxlength = args.maxlength)
+
     if args.constrainsourcemodel:
         print("Loading source model for constraints",file=sys.stderr)
-        constrainsourcemodel = colibricore.PatternSetModel(args.constrainsourcemodel)
+        constrainsourcemodel = colibricore.PatternSetModel(args.constrainsourcemodel, options)
         print("Patterns in constraint model: ", len(constrainsourcemodel), file=sys.stderr)
     else:
         constrainsourcemodel = None
 
     if args.constraintargetmodel:
         print("Loading target model for constraints",file=sys.stderr)
-        constraintargetmodel = colibricore.PatternSetModel(args.constraintargetmodel)
+        constraintargetmodel = colibricore.PatternSetModel(args.constraintargetmodel, options)
     else:
         constraintargetmodel = None
 
