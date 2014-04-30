@@ -89,9 +89,11 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             self.load(filename)
 
 
-    def load(self, filename):
+    def load(self, filename, options=None):
+        if not options:
+            options = colibricore.PatternModelOptions()
         if os.path.exists(filename):
-            super().load(filename)
+            super().load(filename, options)
         else:
             raise IOError("File not found: " + filename)
 
