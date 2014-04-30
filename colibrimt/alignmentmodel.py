@@ -482,7 +482,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     model = AlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     scorefilter = lambda scores: scores[2] >= pts and scores[0] >= pst and scores[2] * scores[0] >= joinedthreshold
-    if not quiet: print("Thresholds: pts=",pts, " pst=",pst, " joined=", joinedthreshold, " divergencefrombest=", divergencefrombest,file=sys.stderr)
+    if not quiet: print("Thresholds: pts=",pts, " pst=",pst, " joined=", joinedthreshold, " divergencefrombest=", divergencefrombestthreshold,file=sys.stderr)
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter, divergencefrombestthreshold)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not nonorm and (constrainsourcemodel or constraintargetmodel or pst or pts):
