@@ -89,9 +89,11 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             self.load(filename)
 
 
-    def load(self, filename):
+    def load(self, filename, options=None):
+        if not options:
+            options = colibricore.PatternModelOptions()
         if os.path.exists(filename):
-            super().load(filename)
+            super().load(filename, options)
         else:
             raise IOError("File not found: " + filename)
 
@@ -113,7 +115,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
     def loadmosesphrasetable(self, filename, sourceencoder, targetencoder,constrainsourcemodel=None,constraintargetmodel=None, quiet=False, reverse=False, delimiter="|||", score_column = 3, max_sourcen = 0, scorefilter = lambda x:True, divergencefrombestthreshold=0.0, divfrombestindex=2):
         """Load a phrase table from file into memory (memory intensive!)"""
-        self.phrasetable = {}
 
         if filename.split(".")[-1] == "bz2":
             f = bz2.BZ2File(filename,'r')
@@ -170,8 +171,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             #else:
             #    null_alignments = 0
 
-            if scorefilter:
-                if not scorefilter(scores): continue
+            if scorefilter and not scorefilter(scores):
+                skipped += 1
+                continue
+
 
             #disable wordalignments
 
@@ -184,12 +187,14 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
             if reverse:
                 if max_sourcen > 0 and segments[1].count(' ') + 1 > max_sourcen:
+                    skipped += 1
                     continue
 
                 source = sourceencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
                 target = targetencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
             else:
                 if max_sourcen > 0 and segments[0].count(' ') + 1 > max_sourcen:
+                    skipped += 1
                     continue
 
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
@@ -476,6 +481,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     model = AlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     scorefilter = lambda scores: scores[2] >= pts and scores[0] >= pst and scores[2] * scores[0] >= joinedthreshold
+    if not quiet: print("Thresholds: pts=",pts, " pst=",pst, " joined=", joinedthreshold, " divergencefrombest=", divergencefrombestthreshold,file=sys.stderr)
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter, divergencefrombestthreshold)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not nonorm and (constrainsourcemodel or constraintargetmodel or pst or pts):
@@ -493,6 +499,8 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-m','--constrainsourcemodel',type=str,help="Source patternmodel, used to constrain possible patterns", action='store',required=False)
     parser.add_argument('-M','--constraintargetmodel',type=str,help="Target patternmodel, used to constrain possible patterns", action='store',required=False)
+    parser.add_argument('-t','--occurrencethreshold',type=int,help="Only consider patterns from constraints model that occur at least this many times",default=1, action='store',required=False)
+    parser.add_argument('-l','--maxlength',type=int,help="Only consider patterns from constraints model that occur at least this many times",default=99, action='store',required=False)
     parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s)",default=0.0, action='store',required=False)
     parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t)", default=0.0,action='store',required=False)
     parser.add_argument('-j','--joinedconditionalprobability',type=float,help="Constrain by product of conditional probabilities: p(s|t) * p(t|s)", default=0.0,action='store',required=False)
@@ -500,20 +508,22 @@ def main_mosesphrasetable2alignmodel():
     parser.add_argument('-N','--nonorm',help="Disable normalisation", default=False,action='store_true',required=False)
     args = parser.parse_args()
 
+    options = colibricore.PatternModelOptions(mintokens=args.occurrencethreshold, maxlength = args.maxlength)
+
     if args.constrainsourcemodel:
         print("Loading source model for constraints",file=sys.stderr)
-        constrainsourcemodel = colibricore.PatternSetModel(args.constrainsourcemodel)
+        constrainsourcemodel = colibricore.PatternSetModel(args.constrainsourcemodel, options)
         print("Patterns in constraint model: ", len(constrainsourcemodel), file=sys.stderr)
     else:
         constrainsourcemodel = None
 
     if args.constraintargetmodel:
         print("Loading target model for constraints",file=sys.stderr)
-        constraintargetmodel = colibricore.PatternSetModel(args.constraintargetmodel)
+        constraintargetmodel = colibricore.PatternSetModel(args.constraintargetmodel, options)
     else:
         constraintargetmodel = None
 
-    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts,args.nonorm, args.joinedconditionalprobability, args.divergencefrombestthreshold)
+    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts, args.joinedconditionalprobability, args.divergencefrombestthreshold, args.nonorm,False)
 
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and build classifier data (-C) or add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -541,20 +551,23 @@ def main_extractfeatures():
         sys.exit(2)
 
 
+    options = colibricore.PatternModelOptions(mintokens=1,doreverseindex=False)
+
     print("Loading alignment model",file=sys.stderr)
     model = AlignmentModel()
-    model.load(args.inputfile)
+    model.load(args.inputfile,options)
 
 
     print("Loading source decoder " + args.sourceclassfile,file=sys.stderr)
     sourcedecoder = colibricore.ClassDecoder(args.sourceclassfile)
     print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
     targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
+
     print("Loading source model " , args.sourcemodel, file=sys.stderr)
-    sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel)
+    sourcemodel = colibricore.IndexedPatternModel(args.sourcemodel, options)
 
     print("Loading target model ", args.targetmodel, file=sys.stderr)
-    targetmodel = colibricore.IndexedPatternModel(args.targetmodel)
+    targetmodel = colibricore.IndexedPatternModel(args.targetmodel, options)
 
     model.conf = []
     for corpusfile, classfile,left, right in zip(args.corpusfile, args.classfile, args.leftsize, args.rightsize):
