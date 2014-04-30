@@ -171,10 +171,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             #else:
             #    null_alignments = 0
 
-            if scorefilter:
-                if not scorefilter(scores):
-                    skipped += 1
-                    continue
+            if scorefilter and not scorefilter(scores):
+                print("SKIPPED: ", scores,file=sys.stderr)
+                skipped += 1
+                continue
 
 
             #disable wordalignments
@@ -188,12 +188,14 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
             if reverse:
                 if max_sourcen > 0 and segments[1].count(' ') + 1 > max_sourcen:
+                    skipped += 1
                     continue
 
                 source = sourceencoder.buildpattern(segments[1]) #tuple(segments[1].split(" "))
                 target = targetencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
             else:
                 if max_sourcen > 0 and segments[0].count(' ') + 1 > max_sourcen:
+                    skipped += 1
                     continue
 
                 source = sourceencoder.buildpattern(segments[0]) #tuple(segments[0].split(" "))
@@ -480,6 +482,7 @@ def mosesphrasetable2alignmodel(inputfilename,sourceclassfile, targetclassfile, 
     model = AlignmentModel()
     if not quiet: print("Loading moses phrasetable",file=sys.stderr)
     scorefilter = lambda scores: scores[2] >= pts and scores[0] >= pst and scores[2] * scores[0] >= joinedthreshold
+    if not quiet: print("Thresholds: pts=",pts, " pst=",pst, " joined=", joinedthreshold, " divergencefrombest=", divergencefrombest,file=sys.stderr)
     model.loadmosesphrasetable(inputfilename, sourceencoder, targetencoder, constrainsourcemodel, constraintargetmodel, False,False, "|||", 3, 0, scorefilter, divergencefrombestthreshold)
     if not quiet: print("Loaded " + str(len(model)) + " source patterns")
     if not nonorm and (constrainsourcemodel or constraintargetmodel or pst or pts):
