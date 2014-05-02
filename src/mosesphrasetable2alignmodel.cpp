@@ -25,12 +25,22 @@ class BufferItem {
     }
 };
 
-void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternModelInterface * constrainsourcemodel = NULL, PatternModelInterface * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
+void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternSetModel * constrainsourcemodel = NULL, PatternSetModel * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
   {
     unsigned int added = 0;
     unsigned int skipped = 0;
     unsigned int constrained = 0;
     unsigned int count = 0;
+
+    PatternSetModel firstwords;
+    if (constrainsourcemodel != NULL) {
+        cerr << "(Inferring extra contraints from source model, for faster discarding of patterns)" << endl;
+        for (PatternSetModel::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
+            const Pattern pattern = *iter;
+            const Pattern firstword = pattern[0];
+            if (constrainsourcemodel->has(firstword)) firstwords.insert(firstword);
+        }
+    }
 
     //load from moses-style phrasetable file
     istream * f = NULL;
@@ -47,8 +57,11 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
 
     vector<BufferItem> buffer;
 
+    string firstword;
+ 
     bool skipsamesource = false;
     string prevsource;
+    string skipfirstword;
     while (!f->eof()) {
         string line;
         getline(*f, line);
@@ -69,6 +82,16 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             if (line.substr(i,5) == " ||| ") {
                 if (mode == 0) {
                     source = line.substr(begin, i - begin);
+                    firstword = "";
+                    int j = 0;
+                    for (auto c : source) {
+                        if (c == ' ') {
+                            break;
+                        } else {
+                            firstword = source.substr(0,j);
+                        }
+                        j++;
+                    }
                 } else if (mode == 1) {
                     target = line.substr(begin, i - begin);
                 } else if (mode == 2) {
@@ -79,11 +102,12 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             }
         }
 
-        if ((source == prevsource) && (skipsamesource)) {
+        if ((skipsamesource) && ((source == prevsource) || (firstword == skipfirstword))) {
             constrained++;
             continue;
         } else {
             skipsamesource = false;
+            skipfirstword = "";
         }
 
         vector<double> scores;
@@ -100,7 +124,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         }
 
         if (((!buffer.empty()) && (source != prevsource))) {
-            if (buffer.size() >= 1000) {
+            if (buffer.size() >= 100) {
                 cerr << "!";
             }
             if (divergencefrombestthreshold > 0) {
@@ -140,6 +164,12 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             Pattern sourcepattern = sourceencoder.buildpattern(source);
 
             if ((constrainsourcemodel != NULL) && (!constrainsourcemodel->has(sourcepattern))) {
+                if (sourcepattern.n() == 1) {
+                    skipfirstword = firstword;
+                } else if (!firstwords.has(sourcepattern[0])) {
+                    skipfirstword = firstword;
+                }
+
                 constrained++;
                 skipsamesource = true;
                 continue;
@@ -292,7 +322,7 @@ int main( int argc, char *argv[] ) {
     PatternAlignmentModel<double> model = PatternAlignmentModel<double>();
     
     cerr << "Loading moses phrasetable " << mosesfile << endl;
-    loadmosesphrasetable(model, mosesfile,  sourceencoder,  targetencoder, (PatternModelInterface *) sourceconstrainmodel, (PatternModelInterface *) targetconstrainmodel , constrainoptions.MAXLENGTH, pts, pst,joinedthreshold,  divergencefrombestthreshold);
+    loadmosesphrasetable(model, mosesfile,  sourceencoder,  targetencoder,  sourceconstrainmodel,  targetconstrainmodel , constrainoptions.MAXLENGTH, pts, pst,joinedthreshold,  divergencefrombestthreshold);
 
     cerr << "Writing output file" << endl;
     model.write(outputfile);
