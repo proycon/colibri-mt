@@ -260,14 +260,14 @@ int main( int argc, char *argv[] ) {
 
     PatternSetModel * sourceconstrainmodel = NULL;
     if (!sourceconstrainfile.empty()) {
-        cerr << "Loading source constrain model" << sourceconstrainfile << endl;
+        cerr << "Loading source constraint model " << sourceconstrainfile << endl;
         sourceconstrainmodel = new PatternSetModel(sourceconstrainfile, constrainoptions);
         cerr << "(Loaded " << sourceconstrainmodel->size() << " patterns)" << endl;
     }
 
     PatternSetModel * targetconstrainmodel = NULL;
     if (!targetconstrainfile.empty()) {
-        cerr << "Loading target constrain model " << targetconstrainfile << endl;
+        cerr << "Loading target constraint model " << targetconstrainfile << endl;
         targetconstrainmodel = new PatternSetModel(targetconstrainfile, constrainoptions);
         cerr << "(Loaded " << targetconstrainmodel->size() << " patterns)" << endl;
     }
