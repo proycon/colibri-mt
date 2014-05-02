@@ -47,7 +47,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
 
     vector<BufferItem> buffer;
 
-
+    bool skipsamesource = false;
     string prevsource;
     while (!f->eof()) {
         string line;
