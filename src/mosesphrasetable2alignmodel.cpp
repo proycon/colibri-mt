@@ -101,9 +101,11 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             }
         }
 
-        cerr << "DEBUG: " << firstword << " vs " << skipfirstword << endl;
 
-        if ((skipsamesource) && ((source == prevsource) || (firstword == skipfirstword))) {
+        if (firstword == skipfirstword) {
+            constrained++;
+            continue;
+        } else if ((skipsamesource) && (source == prevsource)) {
             constrained++;
             continue;
         } else {
