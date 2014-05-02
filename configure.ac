@@ -19,6 +19,7 @@ else
   cxx_flags_were_set=false
 fi
 
+
 # Checks for programs.
 #AC_PROG_CXX( [g++] )
 AC_LANG([C++])
@@ -58,8 +59,13 @@ AC_ARG_WITH(colibricore,
        [PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$prefix/lib/pkgconfig"])
   AC_MSG_NOTICE( [pkg-config search path: $PKG_CONFIG_PATH] )
 PKG_CHECK_MODULES([colibricore], [colibri-core >= 0.5.3] )
+
+
+AC_CHECK_LIB(zlib, zlib)
+
+
 CXXFLAGS="$CXXFLAGS $colibricore_CFLAGS"
-LIBS="$LIBS $colibricore_LIBS"
+LIBS="$LIBS $colibricore_LIBS -lz"
 
 
 
@@ -68,5 +74,6 @@ LIBS="$LIBS $colibricore_LIBS"
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  include/Makefile
 ])
 AC_OUTPUT

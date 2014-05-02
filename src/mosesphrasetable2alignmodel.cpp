@@ -8,6 +8,7 @@
 #include <pattern.h>
 #include <patternmodel.h>
 #include <alignmodel.h>
+#include <gzstream.h>
 
 using namespace std;
 
