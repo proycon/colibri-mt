@@ -38,8 +38,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         for (PatternSetModel::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
             const Pattern pattern = *iter;
             const Pattern firstword = pattern[0];
-            if (constrainsourcemodel->has(firstword)) firstwords.insert(firstword);
+            firstwords.insert(firstword);
         }
+        cerr << "(added " << firstwords.size() << " unigrams)" << endl;
     }
 
     //load from moses-style phrasetable file
