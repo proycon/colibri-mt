@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name = "colibrimt",
-    version = "0.2",
+    version = "0.2.1",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = ("Colibri MT"),
@@ -27,7 +27,6 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            #'colibri-mosesphrasetable2alignmodel = colibrimt.alignmentmodel:main_mosesphrasetable2alignmodel',
             'colibri-extractskipgrams = colibrimt.extractskipgrams:main',
             'colibri-alignmodel = colibrimt.alignmentmodel:main_alignmodel',
             'colibri-extractfeatures = colibrimt.alignmentmodel:main_extractfeatures',
