@@ -172,6 +172,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             #    null_alignments = 0
 
             if scorefilter and not scorefilter(scores):
+                print("SKIPPED: ", scores,file=sys.stderr)
                 skipped += 1
                 continue
 
@@ -523,7 +524,7 @@ def main_mosesphrasetable2alignmodel():
     else:
         constraintargetmodel = None
 
-    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts, args.joinedconditionalprobability, args.divergencefrombestthreshold, args.nonorm,False)
+    mosesphrasetable2alignmodel(args.inputfile, args.sourceclassfile, args.targetclassfile, args.outputfile, constrainsourcemodel, constraintargetmodel, args.pst, args.pts,args.nonorm, args.joinedconditionalprobability, args.divergencefrombestthreshold)
 
 def main_extractfeatures():
     parser = argparse.ArgumentParser(description="Extract context features and build classifier data (-C) or add to alignment model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
