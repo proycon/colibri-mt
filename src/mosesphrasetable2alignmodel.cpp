@@ -54,7 +54,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         getline(*f, line);
         count++;
         if (count % 100000 == 0) {
-            cerr <<  "Loading phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained << endl;
+            cerr <<  "Loading and encoding phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained << endl;
         }
         int mode = 0;
         string source = "";
