@@ -54,7 +54,11 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         getline(*f, line);
         count++;
         if (count % 100000 == 0) {
-            cerr <<  "Loading and encoding phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained << endl;
+            cerr << endl;
+            cerr <<  "Loading and encoding phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained;            
+        }
+        if (count % 1000 == 0) {
+            cerr << ".";
         }
         int mode = 0;
         string source = "";
@@ -96,6 +100,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         }
 
         if (((!buffer.empty()) && (source != prevsource))) {
+            if (buffer.size() >= 1000) {
+                cerr << "!";
+            }
             if (divergencefrombestthreshold > 0) {
                 double bestscore = 0;
                 for (auto bufferitem : buffer) {
