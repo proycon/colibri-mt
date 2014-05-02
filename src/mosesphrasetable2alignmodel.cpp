@@ -33,20 +33,24 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     unsigned int count = 0;
 
     //load from moses-style phrasetable file
-    ifstream f;
-    f.open(filename.c_str(), ios::in | ios::binary);
-    if ((!f) || (!f.good())) {
+    istream * f = NULL;
+    if (filename.substr(filename.size()-3) == ".gz") {
+        cerr << "(Reading from gzip)" << endl;
+        f = new igzstream(filename.c_str(), ios::in | ios::binary);
+    } else {
+        f = new ifstream(filename.c_str(), ios::in | ios::binary);
+    }
+    if ((f == NULL) || (!f->good())) {
        cerr << "File does not exist: " << filename << endl;
        exit(2);
     }
 
-
     vector<BufferItem> buffer;
 
     string prevsource;
-    while (!f.eof()) {
+    while (!f->eof()) {
         string line;
-        getline(f, line);
+        getline(*f, line);
         count++;
         if (count % 100000 == 0) {
             cerr <<  "Loading phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained << endl;
