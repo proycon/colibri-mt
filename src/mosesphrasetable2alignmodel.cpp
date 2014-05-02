@@ -25,7 +25,7 @@ class BufferItem {
     }
 };
 
-void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternSetModel * constrainsourcemodel = NULL, PatternSetModel * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
+void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternModel<uint32_t> * constrainsourcemodel = NULL, PatternModel<uint32_t> * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
   {
     unsigned int added = 0;
     unsigned int skipped = 0;
@@ -35,8 +35,8 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     PatternSetModel firstwords;
     if (constrainsourcemodel != NULL) {
         cerr << "(Inferring extra contraints from source model, for faster discarding of patterns)" << endl;
-        for (PatternSetModel::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
-            const Pattern pattern = *iter;
+        for (PatternModel<uint32_t>::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
+            const Pattern pattern = iter->first;
             const Pattern firstword = pattern[0];
             firstwords.insert(firstword);
         }
@@ -309,17 +309,17 @@ int main( int argc, char *argv[] ) {
     cerr << "Loading target encoder " << targetclassfile << endl;
     ClassEncoder targetencoder = ClassEncoder(targetclassfile);
 
-    PatternSetModel * sourceconstrainmodel = NULL;
+    PatternModel<uint32_t> * sourceconstrainmodel = NULL;
     if (!sourceconstrainfile.empty()) {
         cerr << "Loading source constraint model " << sourceconstrainfile << endl;
-        sourceconstrainmodel = new PatternSetModel(sourceconstrainfile, constrainoptions);
+        sourceconstrainmodel = new PatternModel<uint32_t>(sourceconstrainfile, constrainoptions);
         cerr << "(Loaded " << sourceconstrainmodel->size() << " patterns)" << endl;
     }
 
-    PatternSetModel * targetconstrainmodel = NULL;
+    PatternModel<uint32_t> * targetconstrainmodel = NULL;
     if (!targetconstrainfile.empty()) {
         cerr << "Loading target constraint model " << targetconstrainfile << endl;
-        targetconstrainmodel = new PatternSetModel(targetconstrainfile, constrainoptions);
+        targetconstrainmodel = new PatternModel<uint32_t>(targetconstrainfile, constrainoptions);
         cerr << "(Loaded " << targetconstrainmodel->size() << " patterns)" << endl;
     }
 

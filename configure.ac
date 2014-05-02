@@ -65,7 +65,7 @@ AC_CHECK_LIB(zlib, zlib)
 
 
 CXXFLAGS="$CXXFLAGS $colibricore_CFLAGS"
-LIBS="$LIBS $colibricore_LIBS -lz"
+LIBS="$LIBS $colibricore_LIBS -lz -lbz2"
 
 
 
