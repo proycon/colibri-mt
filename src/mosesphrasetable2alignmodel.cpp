@@ -29,6 +29,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     unsigned int added = 0;
     unsigned int skipped = 0;
     unsigned int constrained = 0;
+    unsigned int count = 0;
 
     //load from moses-style phrasetable file
     ifstream f;
@@ -38,7 +39,6 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
        exit(2);
     }
 
-    const bool doscorecheck = ((pts > 0) || (pst > 0) || (joinedthreshold > 0));
 
     vector<BufferItem> buffer;
 
@@ -46,6 +46,10 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     while (!f.eof()) {
         string line;
         getline(f, line);
+        count++;
+        if (count % 100000 == 0) {
+            cerr <<  "Loading phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained << endl;
+        }
         int mode = 0;
         string source = "";
         string target = "";
