@@ -47,6 +47,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
 
     vector<BufferItem> buffer;
 
+
     string prevsource;
     while (!f->eof()) {
         string line;
@@ -59,7 +60,6 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         string source = "";
         string target = "";
         string scores_s;
-        vector<double> scores;
         int begin = 0;
         for (unsigned int i = 0; i < line.size(); i++) {
             if (line.substr(i,5) == " ||| ") {
@@ -74,6 +74,15 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 mode++;
             }
         }
+
+        if ((source == prevsource) && (skipsamesource)) {
+            constrained++;
+            continue;
+        } else {
+            skipsamesource = false;
+        }
+
+        vector<double> scores;
         scores_s = scores_s + " ";
         begin = 0;
         //cerr << "DEBUG: scores_s=" << scores_s << endl;
@@ -125,6 +134,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
 
             if ((constrainsourcemodel != NULL) && (!constrainsourcemodel->has(sourcepattern))) {
                 constrained++;
+                skipsamesource = true;
                 continue;
             }
 
