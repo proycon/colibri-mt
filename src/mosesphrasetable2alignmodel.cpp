@@ -86,9 +86,8 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                     int j = 0;
                     for (auto c : source) {
                         if (c == ' ') {
-                            break;
-                        } else {
                             firstword = source.substr(0,j);
+                            break;
                         }
                         j++;
                     }
