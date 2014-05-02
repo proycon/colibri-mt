@@ -25,7 +25,7 @@ class BufferItem {
     }
 };
 
-void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternModel<uint32_t> * constrainsourcemodel = NULL, PatternModel<uint32_t> * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
+void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternSetModel * constrainsourcemodel = NULL, PatternSetModel * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
   {
     unsigned int added = 0;
     unsigned int skipped = 0;
@@ -35,8 +35,8 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     PatternSetModel firstwords;
     if (constrainsourcemodel != NULL) {
         cerr << "(Inferring extra contraints from source model, for faster discarding of patterns)" << endl;
-        for (PatternModel<uint32_t>::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
-            const Pattern pattern = iter->first;
+        for (PatternSetModel::iterator iter = constrainsourcemodel->begin(); iter != constrainsourcemodel->end(); iter++) {
+            const Pattern pattern = *iter;
             const Pattern firstword = pattern[0];
             firstwords.insert(firstword);
         }
@@ -63,8 +63,16 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     bool skipsamesource = false;
     string prevsource;
     string skipfirstword;
+
+    string source = "";
+    string target = "";
+    string scores_s;
+    bool abort = false;
+    int mode = 0;
+    int begin = 0;
+    string line;
+
     while (!f->eof()) {
-        string line;
         getline(*f, line);
         count++;
         if (count % 100000 == 0) {
@@ -74,23 +82,26 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         if (count % 1000 == 0) {
             cerr << ".";
         }
-        int mode = 0;
-        string source = "";
-        string target = "";
-        string scores_s;
-        int begin = 0;
-        for (unsigned int i = 0; i < line.size(); i++) {
+        mode = 0;
+        abort = false;
+        begin = 0;
+        const int linesize = line.size();
+        for (unsigned int i = 0; i < linesize; i++) {
             if (line.substr(i,5) == " ||| ") {
                 if (mode == 0) {
                     source = line.substr(begin, i - begin);
-                    firstword = "";
                     int j = 0;
+                    firstword = source;
                     for (auto c : source) {
                         if (c == ' ') {
                             firstword = source.substr(0,j);
                             break;
                         }
                         j++;
+                    }
+                    if (firstword == skipfirstword) {
+                        abort = true;
+                        break;
                     }
                 } else if (mode == 1) {
                     target = line.substr(begin, i - begin);
@@ -102,8 +113,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             }
         }
 
-
-        if (firstword == skipfirstword) {
+        if ((abort) || (firstword == skipfirstword)) {
             constrained++;
             continue;
         } else if ((skipsamesource) && (source == prevsource)) {
@@ -309,17 +319,17 @@ int main( int argc, char *argv[] ) {
     cerr << "Loading target encoder " << targetclassfile << endl;
     ClassEncoder targetencoder = ClassEncoder(targetclassfile);
 
-    PatternModel<uint32_t> * sourceconstrainmodel = NULL;
+    PatternSetModel * sourceconstrainmodel = NULL;
     if (!sourceconstrainfile.empty()) {
         cerr << "Loading source constraint model " << sourceconstrainfile << endl;
-        sourceconstrainmodel = new PatternModel<uint32_t>(sourceconstrainfile, constrainoptions);
+        sourceconstrainmodel = new PatternSetModel(sourceconstrainfile, constrainoptions);
         cerr << "(Loaded " << sourceconstrainmodel->size() << " patterns)" << endl;
     }
 
-    PatternModel<uint32_t> * targetconstrainmodel = NULL;
+    PatternSetModel * targetconstrainmodel = NULL;
     if (!targetconstrainfile.empty()) {
         cerr << "Loading target constraint model " << targetconstrainfile << endl;
-        targetconstrainmodel = new PatternModel<uint32_t>(targetconstrainfile, constrainoptions);
+        targetconstrainmodel = new PatternSetModel(targetconstrainfile, constrainoptions);
         cerr << "(Loaded " << targetconstrainmodel->size() << " patterns)" << endl;
     }
 
