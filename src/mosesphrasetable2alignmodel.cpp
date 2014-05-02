@@ -164,6 +164,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         buffer.clear();
     }
     cerr << "Added: " << added << " -- skipped due to threshold: " << skipped << " -- skipped by constraint: " << constrained << endl;
+    cerr << "Source patterns: " << model.size() <<  endl;
 }
 
 void usage() {
