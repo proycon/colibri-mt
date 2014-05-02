@@ -25,7 +25,7 @@ class BufferItem {
     }
 };
 
-void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternSetModel * constrainsourcemodel = NULL, PatternSetModel * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2)
+void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::string & filename, ClassEncoder & sourceencoder, ClassEncoder & targetencoder, PatternSetModel * constrainsourcemodel = NULL, PatternSetModel * constraintargetmodel = NULL, int max_sourcen =0, const double pts=0, const double pst=0, const double joinedthreshold=0, const double divergencefrombestthreshold=0.0, const std::string delimiter = "|||", const int score_column=3, const int pstfield = 0, const int ptsfield=2, const int maxscores = 10)
   {
     unsigned int added = 0;
     unsigned int skipped = 0;
@@ -70,6 +70,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     bool abort = false;
     int mode = 0;
     int begin = 0;
+    bool updated = false;
     string line;
 
     while (!f->eof()) {
@@ -80,7 +81,12 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             cerr <<  "Loading and encoding phrase-table: @" << count << " total added: " << added  << ", skipped because of threshold: " << skipped << ", skipped because of constraints: " << constrained;            
         }
         if (count % 1000 == 0) {
-            cerr << ".";
+            if (updated) {
+                cerr << ":";
+            } else {
+                cerr << ".";
+            }
+            updated = false;
         }
         mode = 0;
         abort = false;
@@ -152,6 +158,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                     if (bufferitem.scores[ptsfield] >= p) {
                         model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores );
                         added++;
+                        updated = true;
                     } else {
                         skipped++;
                     }
@@ -160,6 +167,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 for (auto bufferitem : buffer) {
                     model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores );
                     added++;
+                    updated = true;
                 }
             }
             buffer.clear();
@@ -178,13 +186,20 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             Pattern sourcepattern = sourceencoder.buildpattern(source);
 
             if ((constrainsourcemodel != NULL) && (!constrainsourcemodel->has(sourcepattern))) {
-                if (sourcepattern.n() == 1) {
+                const int _n = sourcepattern.n();
+                if (_n == 1) {
                     skipfirstword = firstword;
                 } else if (!firstwords.has(sourcepattern[0])) {
                     skipfirstword = firstword;
                 }
 
                 constrained++;
+                skipsamesource = true;
+                continue;
+            }
+
+            if ((max_sourcen > 0) && (sourcepattern.n() > max_sourcen)) {
+                skipped++;
                 skipsamesource = true;
                 continue;
             }
@@ -196,6 +211,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 continue;
             }
 
+            if (scores.size() > maxscores) {
+                cerr << endl << "*** WARNING: Unexpectedly large number of scores in line " << count << ", something wrong? ***" << endl;
+            }
             buffer.push_back( BufferItem(sourcepattern, targetpattern, scores) );
         }
 
