@@ -72,8 +72,10 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
     int begin = 0;
     bool updated = false;
     string line;
+    vector<double> scores;
 
     while (!f->eof()) {
+        line.clear();
         getline(*f, line);
         count++;
         if (count % 100000 == 0) {
@@ -91,6 +93,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         mode = 0;
         abort = false;
         begin = 0;
+        source.clear();
+        target.clear();
+        scores_s.clear();
         const int linesize = line.size();
         for (unsigned int i = 0; i < linesize; i++) {
             if (line.substr(i,5) == " ||| ") {
@@ -118,6 +123,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 mode++;
             }
         }
+        if (mode != 3) {
+            cerr << "Error in input format, line " << count << endl;
+        }
         cerr << "DEBUG: read " << source << " -- " << target << endl;
 
         if ((abort) || (firstword == skipfirstword)) {
@@ -131,7 +139,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             skipfirstword = "";
         }
 
-        vector<double> scores;
+        scores.clear();
         scores_s = scores_s + " ";
         begin = 0;
         //cerr << "DEBUG: scores_s=" << scores_s << endl;
