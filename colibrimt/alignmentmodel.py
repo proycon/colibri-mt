@@ -636,6 +636,7 @@ def main_alignmodel():
     parser.add_argument('-T','--targetclassfile',type=str,help="Target class file", action='store',required=True)
     parser.add_argument('-p','--pts',type=float,help="Constrain by minimum probability p(t|s), assumes a moses-style score vector",default=0.0, action='store',required=False)
     parser.add_argument('-P','--pst',type=float,help="Constrain by minimum probability p(s|t), assumes a moses-style score vector", default=0.0,action='store',required=False)
+    parser.add_argument('--debug',help="Enabled debug", action='store_true',required=False)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
@@ -646,7 +647,10 @@ def main_alignmodel():
     targetdecoder = colibricore.ClassDecoder(args.targetclassfile)
     print("Loading alignment model",file=sys.stderr)
     model = AlignmentModel()
-    model.load(args.inputfile)
+    options = colibricore.PatternModelOptions(debug=args.debug)
+    if options.DEBUG: print("Debug enabled",file=sys.stderr)
+    sys.stderr.flush()
+    model.load(args.inputfile, options)
     print("Outputting",file=sys.stderr)
     if args.pts or args.pst:
         scorefilter = lambda scores: scores[2] > args.pts and scores[0] > args.pst

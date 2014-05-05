@@ -257,6 +257,7 @@ void usage() {
      cerr << "-M [patternmodel]      Constrain target patterns by this pattern model" << endl;
      cerr << "-t [int]               Only consider patterns from constraint model that occur at least this many times (default: 1)" << endl;
      cerr << "-l [int]               Only consider patterns from constraint model that are not longer than the specified length" << endl;
+     cerr << "-w                     Output model to stdout" << endl;
 }
 
 int main( int argc, char *argv[] ) {
@@ -271,6 +272,8 @@ int main( int argc, char *argv[] ) {
     double joinedthreshold = 0.0;
     double pts = 0.0;
     double pst = 0.0;
+
+    bool writestdout = false;
 
     PatternModelOptions constrainoptions;
     constrainoptions.MINTOKENS = 1;
@@ -318,6 +321,9 @@ int main( int argc, char *argv[] ) {
             case 'l':
                 constrainoptions.MAXLENGTH = atoi(optarg);
                 break;
+            case 'w':
+                writestdout = true;
+                break;
             case '?':
             default:
                 cerr << "ERROR: Unknown option, usage:" << endl;
@@ -325,7 +331,7 @@ int main( int argc, char *argv[] ) {
                 exit(2);
         }
     
-    if (mosesfile.empty() || outputfile.empty() || sourceclassfile.empty() || targetclassfile.empty()) {
+    if (mosesfile.empty() || (outputfile.empty() && !writestdout) || sourceclassfile.empty() || targetclassfile.empty()) {
             cerr << "ERROR: Missing required options, usage:" << endl;
             usage();
             exit(2);
@@ -356,8 +362,19 @@ int main( int argc, char *argv[] ) {
     cerr << "Loading moses phrasetable " << mosesfile << endl;
     loadmosesphrasetable(model, mosesfile,  sourceencoder,  targetencoder,  sourceconstrainmodel,  targetconstrainmodel , constrainoptions.MAXLENGTH, pts, pst,joinedthreshold,  divergencefrombestthreshold);
 
-    cerr << "Writing output file" << endl;
-    model.write(outputfile);
+    if (!outputfile.empty()) {
+        cerr << "Writing output file" << endl;
+        model.write(outputfile);
+    } 
+
+    if (writestdout) {
+        cerr << "Loading source decoder " << sourceclassfile << endl;
+        ClassDecoder sourcedecoder = ClassDecoder(sourceclassfile);
+        cerr << "Loading target decoder " << targetclassfile << endl;
+        ClassDecoder targetdecoder = ClassDecoder(targetclassfile);
+
+        model.print((ostream*) &cout, sourcedecoder, targetdecoder);
+    }
 
     cerr << "Done" << endl;
     exit(0);
