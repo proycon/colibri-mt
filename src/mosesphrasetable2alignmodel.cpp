@@ -118,6 +118,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 mode++;
             }
         }
+        cerr << "DEBUG: read " << source << " -- " << target << endl;
 
         if ((abort) || (firstword == skipfirstword)) {
             constrained++;
@@ -214,6 +215,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             if (scores.size() > maxscores) {
                 cerr << endl << "*** WARNING: Unexpectedly large number of scores in line " << count << ", something wrong? ***" << endl;
             }
+
             buffer.push_back( BufferItem(sourcepattern, targetpattern, scores) );
         }
 
