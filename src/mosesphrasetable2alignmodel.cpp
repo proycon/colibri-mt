@@ -124,9 +124,9 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             }
         }
         if (mode < 2) {
-            cerr << "Error in input format, line " << count << ": " << endl;
+            cerr << endl; "WARNING: Error in input format, line " << count << ": " << endl;
             cerr << line << endl;
-            exit(2);
+            cerr << "SKIPPING..." << endl;
         }
 
         if ((abort) || (firstword == skipfirstword)) {
