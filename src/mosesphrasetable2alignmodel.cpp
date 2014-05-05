@@ -280,7 +280,7 @@ int main( int argc, char *argv[] ) {
     constrainoptions.MAXLENGTH = 99;
 
     char c;
-    while ((c = getopt(argc, argv, "i:o:S:T:hp:P:j:d:m:M:t:l:")) != -1)
+    while ((c = getopt(argc, argv, "i:o:S:T:hp:P:j:d:m:M:t:l:w")) != -1)
          switch (c) {
             case 'h':
                 usage();
