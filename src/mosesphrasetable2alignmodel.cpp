@@ -242,7 +242,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             double p = bestscore * divergencefrombestthreshold;
             for (auto bufferitem : buffer) {
                 if (bufferitem.scores[ptsfield] >= p) {
-                    model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores );
+                    model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores, false );
                     added++;
                 } else {
                     skipped++;
@@ -250,7 +250,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             }
         } else {
             for (auto bufferitem : buffer) {
-                model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores );
+                model.add( bufferitem.sourcepattern, bufferitem.targetpattern, bufferitem.scores,false );
                 added++;
             }
         }
