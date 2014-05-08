@@ -254,12 +254,13 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
 
 
-    def patternswithindexes(self, sourcemodel, targetmodel, showprogress=True):
+    def patternswithindexes(self, sourcemodel, targetmodel, sourcedecoder,showprogress=True):
         """Finds occurrences (positions in the source and target models) for all patterns in the alignment model. """
         l = len(self)
         for i, sourcepattern in enumerate(self.sourcepatterns()):
             if showprogress:
                 print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'%', file=sys.stderr)
+
             occurrences = 0
             if not sourcepattern in sourcemodel:
                 continue
@@ -296,12 +297,12 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
             #make sure only the strongest targetpattern for a given occurrence is chosen, in case multiple options exist
             for (sentence,token, targettoken),targets  in tmpdata.items():
-                ptsscore,sourcepattern, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
+                ptsscore,sourcepattern2, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
                 occurrences += 1
-                yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
+                yield sourcepattern2, targetpattern, sentence, token, sentence, targettoken
 
             if showprogress:
-                print("\tFound " + str(occurrences) + " occurrences", file=sys.stderr)
+                print("\tFound " + str(occurrences) + " occurrences for " + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
 
     def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, crosslingual=False):
@@ -316,10 +317,11 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
 
+        sourcedecoder = configurations[0][1]
         count = 0
 
         extracted = 0
-        for data in self.patternswithindexes(sourcemodel, targetmodel):
+        for data in self.patternswithindexes(sourcemodel, targetmodel, sourcedecoder):
             if crosslingual:
                 #we're interested in the target-side sentence and token
                 sourcepattern, targetpattern, _,_, sentence,token  = data
