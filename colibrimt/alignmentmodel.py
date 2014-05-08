@@ -261,15 +261,17 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if showprogress:
                 print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'% -- Processing ' + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
-            occurrences = 0
             if not sourcepattern in sourcemodel:
+                print("\tPattern not in model.. skipping")
                 continue
 
             tmpdata = defaultdict(list)
 
             sourceindexes = None #loading deferred until really needed
+            targetl = 0
             for targetpattern in self.targetpatterns(sourcepattern):
                 #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
+                targetl += 1
                 if not targetpattern in targetmodel:
                     continue
 
@@ -287,22 +289,20 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
                 #for every occurrence of this pattern in the source
                 for sentence in targetindexes:
-                    #print("DEBUG sourceindex=", (sentence,token),file=sys.stderr)
                     #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
                     for token in sourceindexes[sentence]:
                         for targettoken in targetindexes[sentence]:
                             tmpdata[(sentence,token,targettoken)].append( (ptsscore, sourcepattern, targetpattern) )
-                            #yield sourcepattern, targetpattern, sentence, token, sentence, targettoken
                             break #multiple possible matches in same sentence? just pick first one... no word alignments here to resolve this
+
+            if showprogress:
+                print("\tFound " + str(len(tmpdata)) + " occurrences for " + sourcepattern.tostring(sourcedecoder) + ", with " + str(targetl) + " different translation options", file=sys.stderr)
 
             #make sure only the strongest targetpattern for a given occurrence is chosen, in case multiple options exist
             for (sentence,token, targettoken),targets  in tmpdata.items():
                 ptsscore,sourcepattern2, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
-                occurrences += 1
                 yield sourcepattern2, targetpattern, sentence, token, sentence, targettoken
 
-            if showprogress:
-                print("\tFound " + str(occurrences) + " occurrences for " + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
 
     def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, sourcedecoder, crosslingual=False):
