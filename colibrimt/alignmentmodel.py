@@ -262,7 +262,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'% -- Processing ' + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
             if not (sourcepattern in sourcemodel):
-                print("\tPattern not in model.. skipping")
+                print("\tPattern not in model.. skipping", file=sys.stderr)
                 continue
 
             tmpdata = defaultdict(list)
