@@ -261,7 +261,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if showprogress:
                 print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'% -- Processing ' + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
-            if not sourcepattern in sourcemodel:
+            if not (sourcepattern in sourcemodel):
                 print("\tPattern not in model.. skipping")
                 continue
 
@@ -613,7 +613,7 @@ def main_extractfeatures():
             else:
                 sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
                 trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
-                print("Writing " + trainfile,file=sys.stderr)
+                print("Writing " + trainfile + " (" + str(len(buffer)) + " instances)",file=sys.stderr)
                 if args.experts:
                     f = open(trainfile,'w',encoding='utf-8')
                 for line, occurrences,pts in buffer:
