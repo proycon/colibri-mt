@@ -566,28 +566,31 @@ def main_extractfeatures():
         for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
-                if prevsourcepattern and firsttargetpattern and prevtargetpattern and firsttargetpattern != prevtargetpattern:
-                    #only bother if there are at least two distinct target options
-                    if len(buffer) < args.instancethreshold:
-                        print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
+                if prevsourcepattern and firsttargetpattern:
+                    sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
+                    if prevtargetpattern and firsttargetpattern != prevtargetpattern:
+                        #only bother if there are at least two distinct target options
+                        if len(buffer) < args.instancethreshold:
+                            print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
+                        else:
+                            trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
+                            print("Writing " + trainfile + " (" + str(len(buffer)) + " instances)",file=sys.stderr)
+                            if args.experts:
+                                f = open(trainfile,'w',encoding='utf-8')
+                            elif args.monolithic:
+                                f2.write(sourcepattern_s+"\n")
+                            for line, occurrences,pts in buffer:
+                                if args.weighbyscore:
+                                    f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                                elif args.weighbyoccurrence:
+                                    f.write(line + "\t" + str(occurrences) +  "\n")
+                                else:
+                                    for i in range(0,occurrences):
+                                        f.write(line + "\n")
+                            if args.experts:
+                                f.close()
                     else:
-                        sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
-                        trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
-                        print("Writing " + trainfile,file=sys.stderr)
-                        if args.experts:
-                            f = open(trainfile,'w',encoding='utf-8')
-                        elif args.monolithic:
-                            f2.write(sourcepattern_s+"\n")
-                        for line, occurrences,pts in buffer:
-                            if args.weighbyscore:
-                                f.write(line + "\t" + str(occurrences*pts) +  "\n")
-                            elif args.weighbyoccurrence:
-                                f.write(line + "\t" + str(occurrences) +  "\n")
-                            else:
-                                for i in range(0,occurrences):
-                                    f.write(line + "\n")
-                        if args.experts:
-                            f.close()
+                        print("Only one target option for " + sourcepattern_s + " (" + str(len(buffer)) + " instances), no classifier needed",file=sys.stderr)
 
                 buffer = []
                 prevsourcepattern = sourcepattern
@@ -597,6 +600,7 @@ def main_extractfeatures():
                 buffer.append( (featurestostring(featurevector, model.conf, args.crosslingual, sourcedecoder) + "\t" + targetpattern.tostring(targetdecoder) , count, scorevector[2] ) ) #buffer holds (ine, occurrences, pts)
                 #(model.itemtostring(sourcepattern, targetpattern, featurevector,sourcedecoder, targetdecoder,False,True,False), count,scorevector[2] )  )  #buffer holds (line, occurrences, pts)
 
+            prevsourcepattern = sourcepattern
             prevtargetpattern = targetpattern
 
 
