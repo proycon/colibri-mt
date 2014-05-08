@@ -317,7 +317,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
 
-        sourcedecoder = configurations[0][1]
+        for configuration in configurations:
+            sourcedecoder = configuration.classdecoder
+            break
         count = 0
 
         extracted = 0
