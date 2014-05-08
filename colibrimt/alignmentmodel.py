@@ -259,7 +259,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         l = len(self)
         for i, sourcepattern in enumerate(self.sourcepatterns()):
             if showprogress:
-                print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'%', file=sys.stderr)
+                print("@" + str(i+1) + "/" + str(l), " " , round(((i+1)/l)*100,2),'% -- Processing ' + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
             occurrences = 0
             if not sourcepattern in sourcemodel:
@@ -305,7 +305,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 print("\tFound " + str(occurrences) + " occurrences for " + sourcepattern.tostring(sourcedecoder), file=sys.stderr)
 
 
-    def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, crosslingual=False):
+    def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, sourcedecoder, crosslingual=False):
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
@@ -317,9 +317,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
 
-        for configuration in configurations:
-            sourcedecoder = configuration.classdecoder
-            break
         count = 0
 
         extracted = 0
@@ -567,7 +564,7 @@ def main_extractfeatures():
         fconf.close()
 
 
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, args.crosslingual):
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, sourcedecoder, args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern:
