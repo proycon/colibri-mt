@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel, UnindexedPatternModel, PatternModelOptions, BEGINPATTERN, ENDPATTERN
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BEGINPATTERN, ENDPATTERN
 from colibrimt.alignmentmodel import AlignmentModel, Configuration
 import timbl
 import pickle
@@ -179,30 +179,22 @@ def main():
 
     if args.inputfile and args.alignmodelfile:
 
-        print("Loading target encoder",file=sys.stderr)
+        print("Loading target encoder " + args.targetclassfile,file=sys.stderr)
         targetencoder = ClassEncoder(args.targetclassfile)
-        print("Loading target decoder",file=sys.stderr)
+        print("Loading target decoder " + args.targetclassfile,file=sys.stderr)
         targetdecoder = ClassDecoder(args.targetclassfile)
 
-        print("Loading alignment model",file=sys.stderr)
+        print("Loading alignment model " + args.alignmodelfile ,file=sys.stderr)
         alignmodel = AlignmentModel(args.alignmodelfile)
         print("\tAlignment model has " + str(len(alignmodel)) + " source patterns",file=sys.stderr)
 
-        print("Building constraint model of source patterns",file=sys.stderr)
-        #constain model is needed to constrain the test model
-        constraintmodel = UnindexedPatternModel()
-        for pattern in alignmodel.sourcepatterns():
-            constraintmodel.add(pattern)
-        print("\tConstraint model has " + str(len(constraintmodel)) + " source patterns",file=sys.stderr)
 
-        print("Building patternmodel on test corpus",file=sys.stderr)
+        print("Building patternmodel on test corpus " + classifierconf['featureconf'][0].corpus.filename() ,file=sys.stderr)
         options = PatternModelOptions(mintokens=1)
         testmodel = IndexedPatternModel()
-        testmodel.trainconstrainedbyunindexedmodel( classifierconf['featureconf'][0].corpus.filename(), options, constraintmodel)
-        print("\Test model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
+        testmodel.train( classifierconf['featureconf'][0].corpus.filename(), options, alignmodel)
+        print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
-        print("Unloading constraint model",file=sys.stderr)
-        del constraintmodel
 
         if args.reorderingtable:
             print("Loading reordering model (may take a while)",file=sys.stderr)
@@ -276,7 +268,7 @@ def main():
             sys.exit(2)
 
 
-        print("Writing intermediate test data",file=sys.stderr)
+        print("Writing intermediate test data to " + classifierdir + "/test.txt",file=sys.stderr)
         #write intermediate test data (consisting only of indices AND unknown words) and
         f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
         for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.sentences()):
@@ -300,7 +292,7 @@ def main():
                 for line in f:
                     classifierindex.add(line.strip())
 
-            print("Loading monolithic classifier",file=sys.stderr)
+            print("Loading monolithic classifier " + classifierdir + "/train.train",file=sys.stderr)
             timbloptions = gettimbloptions(args, classifierconf)
             classifier = timbl.TimblClassifier(classifierdir + "/train", timbloptions)
         else:
@@ -343,9 +335,8 @@ def main():
                         classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
                         trainfile = args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"
                         ibasefile = classifierprefix + ".ibase"
-                        print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Loading for " + sourcepattern_s, file=sys.stderr)
                         if os.path.exists(ibasefile):
-                            print("Loading classifier " + classifierprefix,file=sys.stderr)
+                            print("Loading classifier " + classifierprefix + " for " + sourcepattern_s,file=sys.stderr)
                             timbloptions = gettimbloptions(args, classifierconf)
                             classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
                         elif os.path.exists(trainfile):
@@ -359,9 +350,11 @@ def main():
                         prevpattern = sourcepattern_s
 
 
+                print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Processing " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+
                 if classifier and not args.ignoreclassifier:
                     if not classifierconf['monolithic'] or (classifierconf['monolithic'] and sourcepattern_s in classifierindex):
-                        print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Classifying " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+                        print("\tClassifying",file=sys.stderr)
 
                         #call classifier
                         classlabel, distribution, distance = classifier.classify(featurevector)
@@ -400,18 +393,20 @@ def main():
                                     raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
                         if translationcount == 0:
-                            print("No overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
+                            print("\tNo overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
                             statistical = True
                         else:
+                            print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
                             statistical = False
                     else:
-                        print("Not in classifier. Falling back to statistical baseline.",file=sys.stderr)
+                        print("\tNot in classifier. Falling back to statistical baseline.",file=sys.stderr)
                         statistical = True
 
                 else:
                     statistical = True
 
                 if statistical:
+                    print("\tPhrasetable lookup",file=sys.stderr)
                     #ignore classifier or no classifier present for this item
                     for targetpattern in alignmodel.targetpatterns(sourcepattern):
                         scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
@@ -435,13 +430,14 @@ def main():
                                     if t == targetpattern_s:
                                         reordering_scores = sv
                             except KeyError:
-                                raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+                                raise Exception("Source pattern not found in reordering table: " + sourcepattern_s)
 
                             if reordering_scores:
                                 freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                             else:
                                 raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
+                    print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
 
 
             prevpattern = None
