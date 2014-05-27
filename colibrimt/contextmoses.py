@@ -195,6 +195,9 @@ def main():
         testmodel.train( classifierconf['featureconf'][0].corpus.filename(), options, alignmodel)
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
+        #saving just so we can inspect it for debug purposes:
+        testmodel.save(  classifierdir + '/test.colibri.indexedpatternmodel'  )
+
 
         if args.reorderingtable:
             print("Loading reordering model (may take a while)",file=sys.stderr)
