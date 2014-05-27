@@ -153,16 +153,16 @@ def main():
             #    sourceencoders.append( ClassEncoder(classfiles[i]) )
             #    sourcedecoders.append( ClassDecoder(classfiles[i]) )
             #else:
-            print("Loading and extending source class encoder",file=sys.stderr)
+            print("Loading and extending source class encoder, from " + trainclassfile + " to " + classfile,file=sys.stderr)
             sourceencoders.append( ClassEncoder(trainclassfile) )
             sourceencoders[i].build(inputfile)
             sourceencoders[i].save(classfile)
-            print("Encoding test corpus",file=sys.stderr)
+            print("Encoding test corpus, from " + inputfile + " to " + corpusfile,file=sys.stderr)
             sourceencoders[i].encodefile(inputfile, corpusfile)
-            print("Loading source class decoder",file=sys.stderr)
+            print("Loading source class decoder " + classfile,file=sys.stderr)
             sourcedecoder = ClassDecoder(classfile)
 
-            print("Loading test corpus",file=sys.stderr)
+            print("Loading test corpus " + corpusfile,file=sys.stderr)
 
             l.append( Configuration( IndexedCorpus(corpusfile), sourcedecoder, conf['leftcontext'], conf['rightcontext'], conf['focus'] ) )
 
