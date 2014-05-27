@@ -281,6 +281,7 @@ def main():
             for tokenindex,pattern in enumerate(line):
                 #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
                 if not testmodel.covered( (sentenceindex, tokenindex) ):
+                    print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
                     tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
                 else:
                     tokens.append(str(sentenceindex) + "_" + str(tokenindex))
