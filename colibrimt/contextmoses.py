@@ -196,7 +196,7 @@ def main():
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         #saving just so we can inspect it for debug purposes:
-        testmodel.save(  classifierdir + '/test.colibri.indexedpatternmodel'  )
+        testmodel.write(  classifierdir + '/test.colibri.indexedpatternmodel'  )
 
 
         if args.reorderingtable:
