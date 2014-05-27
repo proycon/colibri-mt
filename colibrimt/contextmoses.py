@@ -278,9 +278,9 @@ def main():
             sentenceindex = sentencenum + 1
             print("@" + str(sentenceindex),file=sys.stderr)
             tokens = [] #actual string representations
-            for tokenindex,pattern in enumerate(line):
-                #is this an uncovered word? check using testmodel (which is constrained by alignment model source patterns)
-                if not testmodel.covered( (sentenceindex, tokenindex) ):
+            for tokenindex,pattern in enumerate(line): #will yield only unigrams
+                #is this an uncovered word that does not appear in the phrasetable? check using alignment model and keep the word untranslated if so
+                if not pattern in alignmodel:
                     print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
                     tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
                 else:
