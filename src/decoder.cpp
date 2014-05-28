@@ -36,8 +36,15 @@ StackDecoder::StackDecoder(const Pattern & input, PatternAlignmentModel<double> 
                 
         
         //Collect source fragments and translation options straight from translation table
+        //
+
+
         if (DEBUG >= 1) cerr << "Gathering source fragments from translation table:" << endl;
         vector<pair<const Pattern*, IndexReference> > tmpsourcefragments;  
+
+
+
+
         tmpsourcefragments = translationtable->getpatterns(input.data,input.size(), true, 0,1,maxn);
         if (DEBUG >= 1) cerr << "  " << tmpsourcefragments.size() << " source-fragments found in translation table" << endl;
         for (vector<pair<const Pattern*, IndexReference> >::iterator iter = tmpsourcefragments.begin(); iter != tmpsourcefragments.end(); iter++) {
