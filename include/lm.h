@@ -15,7 +15,7 @@ class LanguageModel {
         ClassDecoder * classdecoder;
     public:
         PatternMap<double> ngrams;
-        PatternMap<double> backoff; //MAYBE TODO: merge with ngrams? <EncNGram, pair<double,double> > ?
+        PatternMap<double> backoff;  
         std::map<int,unsigned int> total;
         
         LanguageModel(const std::string & filename,  ClassEncoder & encoder, ClassDecoder * classdecoder, bool debug = false);
