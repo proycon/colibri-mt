@@ -35,40 +35,22 @@ StackDecoder::StackDecoder(const Pattern & input, PatternAlignmentModel<double> 
         
                 
         
-        if (classifier != NULL) {
-            //Use classifier
-            if (DEBUG >= 1) cerr << "Gathering source fragments from classifier:" << endl;
-            if (DEBUG >= 1) cerr << "  Calling classifier" << endl;
-            bool exemplarweights = true; //irrelevant
-            int changedcount = 0;
-            classifier->classifyfragments(input, translationtable, sourcefragments, scorehandling, changedcount);
-            if (DEBUG >= 1) cerr << "  Changed fragments: " << endl;
-        } else {            
-            //Collect source fragments and translation options straight from translation table
-            if (DEBUG >= 1) cerr << "Gathering source fragments from translation table:" << endl;
-            vector<pair<const Pattern*, IndexReference> > tmpsourcefragments;  
-            tmpsourcefragments = translationtable->getpatterns(input.data,input.size(), true, 0,1,maxn);
-            if (DEBUG >= 1) cerr << "  " << tmpsourcefragments.size() << " source-fragments found in translation table" << endl;
-            for (vector<pair<const Pattern*, IndexReference> >::iterator iter = tmpsourcefragments.begin(); iter != tmpsourcefragments.end(); iter++) {
-                const Pattern * sourcekey = iter->first;
-                if (translationtable->leftsourcecontext || translationtable->rightsourcecontext) {
-                    //translation table context information, aggregate scores  
-                    //if (DEBUG >=3) cerr << "Computing sum for translation options: " << sourcekey->decode(*sourceclassdecoder) << endl;
-                    t_aligntargets translationoptions = translationtable->sumtranslationoptions(sourcekey);
-                    if (DEBUG >=3) cerr << "\tAdding sourcefragment after removing context: " << sourcekey->decode(*sourceclassdecoder) << endl; 
-                    sourcefragments.push_back(SourceFragmentData(iter->first, iter->second, translationoptions));
-                } else {
-                    //no context information, do simply copy:
-                    t_aligntargets translationoptions;
-                    for (t_aligntargets::iterator iter2 = translationtable->alignmatrix[sourcekey].begin(); iter2 != translationtable->alignmatrix[sourcekey].end(); iter2++) {
-                            const Pattern * targetgram = iter2->first;
-                            translationoptions[targetgram] = iter2->second;
-                    }
-                    if (DEBUG >=3 ) cerr << "\tAdding sourcefragment from translation table: " << sourcekey->decode(*sourceclassdecoder) << endl;
-                    sourcefragments.push_back(SourceFragmentData(sourcekey, iter->second, translationoptions)); 
-                }
-            }            
-        }
+        //Collect source fragments and translation options straight from translation table
+        if (DEBUG >= 1) cerr << "Gathering source fragments from translation table:" << endl;
+        vector<pair<const Pattern*, IndexReference> > tmpsourcefragments;  
+        tmpsourcefragments = translationtable->getpatterns(input.data,input.size(), true, 0,1,maxn);
+        if (DEBUG >= 1) cerr << "  " << tmpsourcefragments.size() << " source-fragments found in translation table" << endl;
+        for (vector<pair<const Pattern*, IndexReference> >::iterator iter = tmpsourcefragments.begin(); iter != tmpsourcefragments.end(); iter++) {
+            const Pattern * sourcekey = iter->first;
+            //do simply copy:
+            t_aligntargets translationoptions;
+            for (t_aligntargets::iterator iter2 = translationtable->alignmatrix[sourcekey].begin(); iter2 != translationtable->alignmatrix[sourcekey].end(); iter2++) {
+                    const Pattern * targetgram = iter2->first;
+                    translationoptions[targetgram] = iter2->second;
+            }
+            if (DEBUG >=3 ) cerr << "\tAdding sourcefragment from translation table: " << sourcekey->tostring(*sourceclassdecoder) << endl;
+            sourcefragments.push_back(SourceFragmentData(sourcekey, iter->second, translationoptions)); 
+        }            
         if (DEBUG >= 1) cerr << "  " << sourcefragments.size() << " source-fragments registered" << endl;
         
         

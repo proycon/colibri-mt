@@ -161,8 +161,7 @@ class Stack {
 
 
 
-//t_sourcefragments is defined in alignmodel.h
-
+typedef std::unordered_map<Patter,PatternFeatureVectorMap*> t_sourcefragments;
 
 class StackDecoder {
     private:
