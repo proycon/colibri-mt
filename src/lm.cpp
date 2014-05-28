@@ -76,7 +76,7 @@ LanguageModel::LanguageModel(const std::string & filename, ClassEncoder & encode
                         }
                     } else {
                         Pattern ngram = encoder.buildpattern(ngramcontent);
-                        if (!ngram.unknown()) {
+                        if (ngram != UNKPATTERN) {
                             ngrams[ngram] = atof(logprob_s.c_str()) * log(10); //* log(10) does log10 to log_e conversion
                             if (!backofflogprob_s.empty()) {
                                 backoff[ngram] = atof(backofflogprob_s.c_str()) * log(10); //* log(10) does log10 to log_e conversion
