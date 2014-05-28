@@ -23,9 +23,6 @@ class LanguageModel {
         double score(const Pattern * ngram, const Pattern * history = NULL); //returns logprob (base e)        
         double scoreword(const Pattern * word, const Pattern * history = NULL); //returns logprob (base e)
                  
-        //double score(EncNGram ngram); //returns logprob (base 10)
-        //double score(EncData & data, bool fullsentence = false); //returns logprob (base 10)
-        
         int getorder() { return order; }
         size_t size() { return ngrams.size(); }
 };
