@@ -293,7 +293,7 @@ if [ "$RUN" = "1" ]; then
                     sleep 3
                     exit 2
                 fi
-                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -j srctmp.colibri.unindexedpatternmodel -t 1"
+                CMD="colibri-patternmodeller -f $TRAINSOURCE.colibri.dat -o $TRAINSOURCE.colibri.indexedpatternmodel -j srctmp.colibri.unindexedpatternmodel -t 1 -l $MAXLENGTH"
                 echo -e "(building model)">&2
             fi
             echo $CMD>&2
@@ -335,7 +335,7 @@ if [ "$RUN" = "1" ]; then
                     sleep 3
                     exit 2
                 fi
-                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -j tgttmp.colibri.unindexedpatternmodel -t 1"
+                CMD="colibri-patternmodeller -f $TRAINTARGET.colibri.dat -o $TRAINTARGET.colibri.indexedpatternmodel -j tgttmp.colibri.unindexedpatternmodel -t 1 -l $MAXLENGTH"
                 echo -e "(building model)">&2
             fi
             echo $CMD>&2
