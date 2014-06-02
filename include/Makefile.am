@@ -1,1 +1,1 @@
-pkginclude_HEADERS = gzstream.h
+pkginclude_HEADERS = lm.h gzstream.h

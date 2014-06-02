@@ -1,0 +1,215 @@
+#ifndef DECODER_H
+#define DECODER_H
+
+
+#include <pattern.h>
+#include <alignmodel.h>
+#include <lm.h>
+#include <math.h>
+#include <deque>
+//#include <classifiers.h> 
+
+
+class StackDecoder;
+class Stack;
+
+
+class TranslationHypothesis {
+    private:        
+        
+        bool deleted; //for debug only
+    public:
+        bool keep; //if true, prevents this hypothesis from being automatically deleted by its last dying child
+        std::vector<double> tscores;
+        double tscore;
+        double lmscore;
+        double dscore;
+        double futurecost;
+        StackDecoder * decoder;
+        
+        TranslationHypothesis * parent;
+        std::vector<TranslationHypothesis *> children; //reference counting
+         
+        std::vector<bool> inputcoveragemask; 
+    
+        const Pattern * sourcegram;
+        const Pattern * targetgram;
+        unsigned char sourceoffset;
+        unsigned char targetoffset;
+        
+        const Pattern * history; //order-1 n-gram in targetlanguage, used for computation of LM score 
+                
+        std::vector<std::pair<unsigned char, unsigned char> > sourcegaps; //offsets are relative to sourcegram
+        std::vector<std::pair<unsigned char, unsigned char> > targetgaps; //filling gaps will take priority upon expansion, offsets are relative to the entire hypothesis  
+        
+        TranslationHypothesis(TranslationHypothesis * parent, StackDecoder * decoder,  const Pattern * sourcegram , unsigned char sourceoffset,  const Pattern * targetgram, unsigned char targetoffset, const std::vector<double> & tscores);
+        ~TranslationHypothesis();
+        void cleanup();
+        
+        unsigned int expand(); //expands directly in the appropriate stack of the decoder. If finalonly is set, new hypotheses are expected to be final/complete, without gaps
+        
+        double basescore() const;    
+        double score() const;        
+        void report();  
+        bool initial() const { return (parent == NULL); }
+        
+        bool conflicts(const Pattern * sourcecandidate, const IndexReference & ref, bool skipduplicatecheck = false); //checks if a source pattern's coverage conflicts with this hypothesis, if not, it is a candidate to be added upon hypothesis expansion. Latter parameter is for internal usage
+        bool final();     
+        bool hasgaps() const;   
+        
+        void stats();
+        
+        bool fertile();
+                
+        int fitsgap(const Pattern *, const int offset = 0); //returns -1 if no fit, index of gap begin otherwise
+                
+        //void computeinputcoverage(vector<bool> & container); //compute source coverage        
+        int inputcoverage(); //return input coverage (absolute number of tokens covered)
+        
+        bool deletable(); 
+        
+        Pattern * getoutputtoken(int index); //get output token (unigram, will return unknown class if in gap)                    
+        Pattern getoutput(std::deque<TranslationHypothesis*> * path = NULL); //get output
+                        
+        size_t recombinationhash(); //hash value, different hypotheses can be recombined iff they have equal hashes
+};
+
+
+struct HypCompare : public std::binary_function<const TranslationHypothesis*, const TranslationHypothesis*, bool>
+{
+    bool operator()(const TranslationHypothesis* x, TranslationHypothesis* y) const
+    {   
+        return x->score() >= y->score();
+    }
+};
+
+class DecodeStats {
+  public:
+    //statistics
+    unsigned int discarded;
+    unsigned int expanded; 
+    unsigned int pruned;
+    unsigned int gapresolutions;
+    
+    std::map<int,int> stacksizes;
+    std::map<int,int> gappystacksizes;
+
+
+    std::map<int,int> sourcengramusage;
+    std::map<int,int> sourceskipgramusage;
+    std::map<int,int> targetngramusage;
+    std::map<int,int> targetskipgramusage;
+    std::vector<int> steps;
+     
+    DecodeStats() { reset(); } 
+    void reset() {
+
+        discarded = 0;
+        expanded = 0; 
+        pruned = 0;
+        gapresolutions = 0;
+    
+        sourcengramusage.clear();
+        sourceskipgramusage.clear();
+        targetngramusage.clear();
+        targetskipgramusage.clear();
+        stacksizes.clear();
+        gappystacksizes.clear();
+        steps.clear();
+    }
+
+    void output();
+    
+    void add(DecodeStats& other) {
+        for (std::map<int,int>::iterator iter = other.sourcengramusage.begin(); iter != other.sourcengramusage.end(); iter++) sourcengramusage[iter->first] += iter->second; 
+        for (std::map<int,int>::iterator iter = other.sourceskipgramusage.begin(); iter != other.sourceskipgramusage.end(); iter++) sourceskipgramusage[iter->first] += iter->second;
+        for (std::map<int,int>::iterator iter = other.targetngramusage.begin(); iter != other.targetngramusage.end(); iter++) targetngramusage[iter->first] += iter->second; 
+        for (std::map<int,int>::iterator iter = other.targetskipgramusage.begin(); iter != other.targetskipgramusage.end(); iter++) targetskipgramusage[iter->first] += iter->second; 
+         
+        discarded += other.discarded;
+        expanded += other.expanded;
+        pruned += other.pruned;
+        gapresolutions += other.gapresolutions;
+    } 
+
+};
+
+class StackDecoder;
+
+class Stack {
+   private:
+    int stacksize;
+    double prunethreshold;
+    StackDecoder * decoder;
+   public:
+   int index;
+    Stack(StackDecoder * decoder, int index, int stacksize, double prunethreshold);
+    ~Stack();
+    Stack(const Stack& ref); //limited copy constructor
+    std::list<TranslationHypothesis *> contents;
+    bool add(TranslationHypothesis *); 
+    double bestscore();
+    double worstscore();
+    size_t size() { return contents.size(); }
+    bool empty() { return contents.empty(); }
+    void clear();   
+    int prune();
+    int recombine();
+    TranslationHypothesis * pop();
+};
+
+
+
+
+typedef std::unordered_map<Patter,PatternFeatureVectorMap*> t_sourcefragments;
+
+class StackDecoder {
+    private:
+        int stacksize;
+        double prunethreshold;
+        int highesttargetclass;
+        std::vector<const Pattern *> unknownsources;
+        std::vector<const Pattern *> unknowntargets;
+    public:
+        int DEBUG;
+        std::map<std::pair<int, int>, double> futurecost; //(start, end) => cost    
+        Pattern input;
+        unsigned int inputlength;
+        PatternAlignmentModel<double> * translationtable;
+        ClassDecoder * sourceclassdecoder;
+        ClassDecoder * targetclassdecoder;
+        LanguageModel * lm;    
+        bool globalstats;
+        
+        
+        
+        std::vector<double> tweights; //translation model weights
+        double dweight; //distortion model weight
+        double lweight; //language model weight
+        int dlimit; //distortion limit
+        
+                
+        t_sourcefragments sourcefragments;        
+        
+        std::vector<Stack> stacks;
+        std::vector<Stack> gappystacks;
+                
+        StackDecoder(const Pattern & input, PatternAlignmentModel<double> * translationtable, LanguageModel * lm, int stacksize, double prunethreshold, std::vector<double> tweights, double dweight, double lweight, int dlimit, int maxn, int debug, ClassDecoder *, ClassDecoder *, ScoreHandling scorehandling = SCOREHANDLING_WEIGHED, bool globalstats = false);
+        ~StackDecoder();
+        
+        TranslationHypothesis * decodestack(Stack & stack); //returns fallback hypothesis if dead, NULL otherwise
+        TranslationHypothesis * decode(); //returns solution
+                
+        unsigned int getsourcefragments(int maxn);
+        
+        unsigned int prune(int stackindex);    
+        
+        void computefuturecost();      
+
+        DecodeStats stats;
+
+
+};
+
+
+#endif
