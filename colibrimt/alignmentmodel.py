@@ -575,21 +575,24 @@ def main_extractfeatures():
                             print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
                         else:
                             trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"
-                            print("Writing " + trainfile + " (" + str(len(buffer)) + " instances)",file=sys.stderr)
-                            if args.experts:
-                                f = open(trainfile,'w',encoding='utf-8')
-                            elif args.monolithic:
-                                f2.write(sourcepattern_s+"\n")
-                            for line, occurrences,pts in buffer:
-                                if args.weighbyscore:
-                                    f.write(line + "\t" + str(occurrences*pts) +  "\n")
-                                elif args.weighbyoccurrence:
-                                    f.write(line + "\t" + str(occurrences) +  "\n")
-                                else:
-                                    for i in range(0,occurrences):
-                                        f.write(line + "\n")
-                            if args.experts:
-                                f.close()
+                            if len(quote_plus(sourcepattern_s) + ".train") > 100:
+                                print("ERROR: Filename too long, skipping: " + trainfile,file=sys.stderr)
+                            else:
+                                print("Writing " + trainfile + " (" + str(len(buffer)) + " instances)",file=sys.stderr)
+                                if args.experts:
+                                    f = open(trainfile,'w',encoding='utf-8')
+                                elif args.monolithic:
+                                    f2.write(sourcepattern_s+"\n")
+                                for line, occurrences,pts in buffer:
+                                    if args.weighbyscore:
+                                        f.write(line + "\t" + str(occurrences*pts) +  "\n")
+                                    elif args.weighbyoccurrence:
+                                        f.write(line + "\t" + str(occurrences) +  "\n")
+                                    else:
+                                        for i in range(0,occurrences):
+                                            f.write(line + "\n")
+                                if args.experts:
+                                    f.close()
                     else:
                         print("Only one target option for " + sourcepattern_s + " (" + str(len(buffer)) + " instances), no classifier needed",file=sys.stderr)
 
