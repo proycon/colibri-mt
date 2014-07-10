@@ -69,6 +69,7 @@ def main():
     parser.add_argument('--td', type=str, help="Timbl distance metric", action="store", default="Z")
     parser.add_argument('-I','--ignoreclassifier', help="Ignore classifier (for testing bypass method)", action="store_true", default=False)
     parser.add_argument('-H','--scorehandling', type=str, help="Score handling, can be 'append' (default), 'replace', or 'weighed'", action="store", default="append")
+    parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Classifier output competes with normal translation table.", action='store_true',default=False)
     parser.add_argument('--mosesdir', type=str,help='Path to Moses directory (required for MERT)', default="")
     parser.add_argument('--mert', action="store_true",help="Do MERT parameter tuning", required=False)
     parser.add_argument('--threads', type=int, default=1, help="Number of threads to use for Moses or Mert")
@@ -85,6 +86,7 @@ def main():
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--skipdecoder',action="store_true",default=False)
+    parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -Z is enabled",action='store',default=8080)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
 
