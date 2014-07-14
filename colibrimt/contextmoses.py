@@ -295,6 +295,8 @@ def main():
                 f.write(" ".join(tokens) + "\n")
             f.close()
 
+
+
         classifierindex = set()
         if classifierconf['monolithic']:
             print("Loading classifier index for monolithic classifier",file=sys.stderr)
@@ -368,6 +370,7 @@ TranslationModel0= {tweights}
 Distortion0= {dweight}
 {reorderingweight}
 """.format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
+            f.close()
 
             print("Starting Moses Server",file=sys.stderr)
             if args.mosesdir:
