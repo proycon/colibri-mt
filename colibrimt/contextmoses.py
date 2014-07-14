@@ -15,6 +15,7 @@ import subprocess
 import itertools
 from pynlpl.formats.moses import PhraseTable
 from urllib.parse import quote_plus, unquote_plus
+import xmlrpc.client
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token):
     featurevector = []
@@ -274,22 +275,23 @@ def main():
             sys.exit(2)
 
 
-        print("Writing intermediate test data to " + classifierdir + "/test.txt",file=sys.stderr)
-        #write intermediate test data (consisting only of indices AND unknown words) and
-        f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
-        for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.sentences()):
-            sentenceindex = sentencenum + 1
-            print("@" + str(sentenceindex),file=sys.stderr)
-            tokens = [] #actual string representations
-            for tokenindex,pattern in enumerate(line): #will yield only unigrams
-                #is this an uncovered word that does not appear in the phrasetable? check using alignment model and keep the word untranslated if so
-                if not pattern in alignmodel:
-                    print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
-                    tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
-                else:
-                    tokens.append(str(sentenceindex) + "_" + str(tokenindex))
-            f.write(" ".join(tokens) + "\n")
-        f.close()
+        if not args.mosesinclusive and not args.mosesexclusive:
+            print("Writing intermediate test data to " + classifierdir + "/test.txt",file=sys.stderr)
+            #write intermediate test data (consisting only of indices AND unknown words) and
+            f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
+            for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.sentences()):
+                sentenceindex = sentencenum + 1
+                print("@" + str(sentenceindex),file=sys.stderr)
+                tokens = [] #actual string representations
+                for tokenindex,pattern in enumerate(line): #will yield only unigrams
+                    #is this an uncovered word that does not appear in the phrasetable? check using alignment model and keep the word untranslated if so
+                    if not pattern in alignmodel:
+                        print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
+                        tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
+                    else:
+                        tokens.append(str(sentenceindex) + "_" + str(tokenindex))
+                f.write(" ".join(tokens) + "\n")
+            f.close()
 
         classifierindex = set()
         if classifierconf['monolithic']:
@@ -312,79 +314,207 @@ def main():
             print("Creating intermediate phrase-table",file=sys.stderr)
             freordering = None
 
-        #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
-        ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
-        prevpattern = None
-        sourcepatterncount = len(testmodel)
-        for i, sourcepattern in enumerate(testmodel):
-            sourcepattern_s = sourcepattern.tostring(classifierconf['featureconf'][0].classdecoder)
-            #iterate over all occurrences, each will be encoded separately
-            for sentenceindex, tokenindex in testmodel[sourcepattern]:
-                #compute token span
-                tokenspan = []
-                for t in range(tokenindex, tokenindex + len(sourcepattern)):
-                    tokenspan.append(str(sentenceindex) + "_" + str(t))
-                tokenspan = " ".join(tokenspan)
+        if args.mosesinclusive or args.mosesexclusive:
+            #Use mosesserver with XML input method
 
-                #get context configuration
-                featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex) #testcorpus is passed as part of classifierconf['featureconf']
-                if not featurevector:
-                    raise Exception("No features returned")
-                if any( [ not x for x in featurevector ] ):
-                    print("ERROR: Empty feature in  " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
-                    raise Exception("Empty feature found in featurevector")
-
-                translationcount = 0
-                if not args.ignoreclassifier and not classifierconf['monolithic']:
-
-                    #load classifier
-                    if not prevpattern or sourcepattern_s != prevpattern:
-                        classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
-                        trainfile = args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"
-                        ibasefile = classifierprefix + ".ibase"
-                        if os.path.exists(ibasefile):
-                            print("Loading classifier " + classifierprefix + " for " + sourcepattern_s,file=sys.stderr)
-                            timbloptions = gettimbloptions(args, classifierconf)
-                            classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
-                        elif os.path.exists(trainfile):
-                            print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!! " + trainfile + " exists but " + ibasefile + " misses",file=sys.stderr)
-                            print("Classifier dir: ", classifierdir,file=sys.stderr)
-                            print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
-                            raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
-                        else:
-                            #no classifier
-                            classifier = None
-                        prevpattern = sourcepattern_s
+            #write mos
+            if not args.tweight:
+                    lentweights = 5
+                tweights = " ".join([str(1/(lentweights+1))]*lentweights)
+            else:
+                tweights = " ".join([ str(x) for x in args.tweight])
+                lentweights = len(args.tweight)
 
 
-                print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Processing " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+            print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
 
-                if classifier and not args.ignoreclassifier:
-                    if not classifierconf['monolithic'] or (classifierconf['monolithic'] and sourcepattern_s in classifierindex):
-                        print("\tClassifying",file=sys.stderr)
+            if args.reordering:
+                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
+                reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
+            else:
+                reorderingfeature = ""
+                reorderingweight = ""
 
-                        #call classifier
-                        classlabel, distribution, distance = classifier.classify(featurevector)
+            #write moses.ini
+            f = open(decodedir + '/moses.ini','w',encoding='utf-8')
+            f.write("""
+#Moses INI, produced by contextmoses.py
+[input-factors]
+0
 
-                        #process classifier result
-                        for targetpattern_s, score in distribution.items():
-                            targetpattern = targetencoder.buildpattern(targetpattern_s)
-                            if (sourcepattern, targetpattern) in alignmodel:
-                                scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+[mapping]
+0 T 0
+
+[distortion-limit]
+6
+
+[feature]
+UnknownWordPenalty
+WordPenalty
+PhrasePenalty
+PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
+{reorderingfeature}
+Distortion
+SRILM name=LM0 factor=0 path={lm} order={lmorder}
+
+[weight]
+UnknownWordPenalty0= 1
+WordPenalty0= {wweight}
+PhrasePenalty0= {pweight}
+LM0= {lmweight}
+TranslationModel0= {tweights}
+Distortion0= {dweight}
+{reorderingweight}
+""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
+
+            print("Starting Moses Server",file=sys.stderr)
+            if args.mosesdir:
+                cmd = args.mosesdir + '/bin/mosesserver'
+            else:
+                cmd = 'mosesserver'
+            if args.moses:
+                if args.mosesinclusive:
+                    cmd += " -xml-input inclusive" #compete with phrase-table
+                elif args.mosesexclusive:
+                    cmd += " -xml-input exclusive" #only used for passing verbatim L2 (tested whether it makes a difference with inclusive baseline on en-es data, it doesn't)
+            cmd += ' -f ' + decodedir + '/moses.ini"
+            print("Calling mosesserver: " + cmd,file=sys.stderr)
+
+            p = subprocess.Popen(cmd,shell=True)
+            mosesserverpid = p.pid
+
+            while True:
+                time.sleep(5)
+                try:
+                    s = socket.socket()
+                    s.connect( ("localhost", args.mosesport) )
+                    break
+                except Exception as e:
+                    print("Waiting for Moses server....", e, file=sys.stderr)
+
+            print("Connecting to Moses Server",file=sys.stderr)
+            mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
+
+        else: #No XML method
+
+            #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
+            ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
+            prevpattern = None
+            sourcepatterncount = len(testmodel)
+            for i, sourcepattern in enumerate(testmodel):
+                sourcepattern_s = sourcepattern.tostring(classifierconf['featureconf'][0].classdecoder)
+                #iterate over all occurrences, each will be encoded separately
+                for sentenceindex, tokenindex in testmodel[sourcepattern]:
+                    #compute token span
+                    tokenspan = []
+                    for t in range(tokenindex, tokenindex + len(sourcepattern)):
+                        tokenspan.append(str(sentenceindex) + "_" + str(t))
+                    tokenspan = " ".join(tokenspan)
+
+                    #get context configuration
+                    featurevector = extractcontextfeatures(classifierconf, sourcepattern, sentenceindex, tokenindex) #testcorpus is passed as part of classifierconf['featureconf']
+                    if not featurevector:
+                        raise Exception("No features returned")
+                    if any( [ not x for x in featurevector ] ):
+                        print("ERROR: Empty feature in  " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+                        raise Exception("Empty feature found in featurevector")
+
+                    translationcount = 0
+                    if not args.ignoreclassifier and not classifierconf['monolithic']:
+
+                        #load classifier
+                        if not prevpattern or sourcepattern_s != prevpattern:
+                            classifierprefix = classifierdir + "/" + quote_plus(sourcepattern_s)
+                            trainfile = args.workdir + "/" + quote_plus(sourcepattern_s) + ".train"
+                            ibasefile = classifierprefix + ".ibase"
+                            if os.path.exists(ibasefile):
+                                print("Loading classifier " + classifierprefix + " for " + sourcepattern_s,file=sys.stderr)
+                                timbloptions = gettimbloptions(args, classifierconf)
+                                classifier = timbl.TimblClassifier(classifierprefix, timbloptions)
+                            elif os.path.exists(trainfile):
+                                print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!! " + trainfile + " exists but " + ibasefile + " misses",file=sys.stderr)
+                                print("Classifier dir: ", classifierdir,file=sys.stderr)
+                                print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
+                                raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
                             else:
-                                continue
+                                #no classifier
+                                classifier = None
+                            prevpattern = sourcepattern_s
+
+
+                    print("@" + str(i+1) + "/" + str(sourcepatterncount)  + " -- Processing " + str(sentenceindex) + ":" + str(tokenindex) + " " + sourcepattern_s + " -- Features: " + str(repr(featurevector)),file=sys.stderr)
+
+                    if classifier and not args.ignoreclassifier:
+                        if not classifierconf['monolithic'] or (classifierconf['monolithic'] and sourcepattern_s in classifierindex):
+                            print("\tClassifying",file=sys.stderr)
+
+                            #call classifier
+                            classlabel, distribution, distance = classifier.classify(featurevector)
+
+                            #process classifier result
+                            for targetpattern_s, score in distribution.items():
+                                targetpattern = targetencoder.buildpattern(targetpattern_s)
+                                if (sourcepattern, targetpattern) in alignmodel:
+                                    scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
+                                else:
+                                    continue
+
+                                if args.scorehandling == 'append':
+                                    scorevector.append(score)
+                                elif args.scorehandling == 'replace':
+                                    scorevector[2] = score
+                                else:
+                                    raise NotImplementedError #TODO: implemented weighed!
+
+                                translationcount += 1
+
+                                #write phrasetable entries
+                                ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
+                                if freordering:
+                                    reordering_scores = None
+                                    try:
+                                        for t, sv in rtable[sourcepattern_s]:
+                                            if t == targetpattern_s:
+                                                reordering_scores = sv
+                                    except KeyError:
+                                        raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+
+                                    if reordering_scores:
+                                        freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
+                                    else:
+                                        raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
+
+                            if translationcount == 0:
+                                print("\tNo overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
+                                statistical = True
+                            else:
+                                print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
+                                statistical = False
+                        else:
+                            print("\tNot in classifier. Falling back to statistical baseline.",file=sys.stderr)
+                            statistical = True
+
+                    else:
+                        statistical = True
+
+                    if statistical:
+                        print("\tPhrasetable lookup",file=sys.stderr)
+                        #ignore classifier or no classifier present for this item
+                        for targetpattern in alignmodel.targetpatterns(sourcepattern):
+                            scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
 
                             if args.scorehandling == 'append':
-                                scorevector.append(score)
+                                scorevector.append(scorevector[2])
                             elif args.scorehandling == 'replace':
-                                scorevector[2] = score
-                            else:
+                                pass #nothing to do, scorevector is okay as it is
+                            elif args.scorehandling == 'weighed':
                                 raise NotImplementedError #TODO: implemented weighed!
 
                             translationcount += 1
 
                             #write phrasetable entries
-                            ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in scorevector]) + "\n")
+                            targetpattern_s = targetpattern.tostring(targetdecoder)
+                            ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([ str(x) for x in scorevector]) + "\n")
                             if freordering:
                                 reordering_scores = None
                                 try:
@@ -392,93 +522,48 @@ def main():
                                         if t == targetpattern_s:
                                             reordering_scores = sv
                                 except KeyError:
-                                    raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+                                    raise Exception("Source pattern not found in reordering table: " + sourcepattern_s)
 
                                 if reordering_scores:
                                     freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                                 else:
                                     raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
-                        if translationcount == 0:
-                            print("\tNo overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
-                            statistical = True
-                        else:
-                            print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
-                            statistical = False
-                    else:
-                        print("\tNot in classifier. Falling back to statistical baseline.",file=sys.stderr)
-                        statistical = True
+                        print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
 
+
+                prevpattern = None
+
+
+
+
+            ftable.close()
+            if freordering:
+                freordering.close()
+
+            if not args.tweight:
+                if args.scorehandling == "append":
+                    lentweights = 5
                 else:
-                    statistical = True
-
-                if statistical:
-                    print("\tPhrasetable lookup",file=sys.stderr)
-                    #ignore classifier or no classifier present for this item
-                    for targetpattern in alignmodel.targetpatterns(sourcepattern):
-                        scorevector = [ x for x in alignmodel[(sourcepattern,targetpattern)] if isinstance(x,int) or isinstance(x,float) ] #make a copy
-
-                        if args.scorehandling == 'append':
-                            scorevector.append(scorevector[2])
-                        elif args.scorehandling == 'replace':
-                            pass #nothing to do, scorevector is okay as it is
-                        elif args.scorehandling == 'weighed':
-                            raise NotImplementedError #TODO: implemented weighed!
-
-                        translationcount += 1
-
-                        #write phrasetable entries
-                        targetpattern_s = targetpattern.tostring(targetdecoder)
-                        ftable.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([ str(x) for x in scorevector]) + "\n")
-                        if freordering:
-                            reordering_scores = None
-                            try:
-                                for t, sv in rtable[sourcepattern_s]:
-                                    if t == targetpattern_s:
-                                        reordering_scores = sv
-                            except KeyError:
-                                raise Exception("Source pattern not found in reordering table: " + sourcepattern_s)
-
-                            if reordering_scores:
-                                freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
-                            else:
-                                raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
-
-                    print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
-
-
-            prevpattern = None
-
-
-
-
-        ftable.close()
-        if freordering:
-            freordering.close()
-
-        if not args.tweight:
-            if args.scorehandling == "append":
-                lentweights = 5
+                    lentweights = 4
+                tweights = " ".join([str(1/(lentweights+1))]*lentweights)
             else:
-                lentweights = 4
-            tweights = " ".join([str(1/(lentweights+1))]*lentweights)
-        else:
-            tweights = " ".join([ str(x) for x in args.tweight])
-            lentweights = len(args.tweight)
+                tweights = " ".join([ str(x) for x in args.tweight])
+                lentweights = len(args.tweight)
 
 
-        print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
+            print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
 
-        if args.reordering:
-            reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
-            reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
-        else:
-            reorderingfeature = ""
-            reorderingweight = ""
+            if args.reordering:
+                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
+                reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
+            else:
+                reorderingfeature = ""
+                reorderingweight = ""
 
-        #write moses.ini
-        f = open(decodedir + '/moses.ini','w',encoding='utf-8')
-        f.write("""
+            #write moses.ini
+            f = open(decodedir + '/moses.ini','w',encoding='utf-8')
+            f.write("""
 #Moses INI, produced by contextmoses.py
 [input-factors]
 0
@@ -510,35 +595,35 @@ Distortion0= {dweight}
 
 
 
-        f.close()
+            f.close()
 
-        if not args.skipdecoder:
-            if args.mert:
-                if args.ref[0] == '/':
-                    ref = args.ref
+            if not args.skipdecoder:
+                if args.mert:
+                    if args.ref[0] == '/':
+                        ref = args.ref
+                    else:
+                        ref = os.getcwd() + '/' + args.ref
+
+                    #invoke mert
+                    cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
+                    print("Contextmoses calling mert: " + cmd,file=sys.stderr)
+                    r = subprocess.call(cmd, shell=True)
+                    if r != 0:
+                        print("Contextmoses called mert but failed!", file=sys.stderr)
+                        sys.exit(1)
+                    print("DONE: Contextmoses calling mert: " + cmd,file=sys.stderr)
                 else:
-                    ref = os.getcwd() + '/' + args.ref
+                    #invoke moses
+                    cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
+                    print("Contextmoses calling moses: " + cmd,file=sys.stderr)
+                    r = subprocess.call(cmd, shell=True)
+                    if r != 0:
+                        print("Contextmoses called moses but failed!", file=sys.stderr)
+                        sys.exit(1)
+                    print("DONE: Contextmoses calling moses: " + cmd,file=sys.stderr)
 
-                #invoke mert
-                cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
-                print("Contextmoses calling mert: " + cmd,file=sys.stderr)
-                r = subprocess.call(cmd, shell=True)
-                if r != 0:
-                    print("Contextmoses called mert but failed!", file=sys.stderr)
-                    sys.exit(1)
-                print("DONE: Contextmoses calling mert: " + cmd,file=sys.stderr)
             else:
-                #invoke moses
-                cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
-                print("Contextmoses calling moses: " + cmd,file=sys.stderr)
-                r = subprocess.call(cmd, shell=True)
-                if r != 0:
-                    print("Contextmoses called moses but failed!", file=sys.stderr)
-                    sys.exit(1)
-                print("DONE: Contextmoses calling moses: " + cmd,file=sys.stderr)
-
-        else:
-            print("Contextmoses skipping decoder",file=sys.stderr)
+                print("Contextmoses skipping decoder",file=sys.stderr)
 
 
 if __name__ == '__main__':
