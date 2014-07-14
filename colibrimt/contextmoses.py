@@ -16,6 +16,8 @@ import itertools
 from pynlpl.formats.moses import PhraseTable
 from urllib.parse import quote_plus, unquote_plus
 import xmlrpc.client
+import time
+import socket
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token):
     featurevector = []
