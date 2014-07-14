@@ -377,7 +377,7 @@ Distortion0= {dweight}
                     cmd += " -xml-input inclusive" #compete with phrase-table
                 elif args.mosesexclusive:
                     cmd += " -xml-input exclusive" #only used for passing verbatim L2 (tested whether it makes a difference with inclusive baseline on en-es data, it doesn't)
-            cmd += ' -f ' + decodedir + '/moses.ini"
+            cmd += ' -f ' + decodedir + '/moses.ini'
             print("Calling mosesserver: " + cmd,file=sys.stderr)
 
             p = subprocess.Popen(cmd,shell=True)
