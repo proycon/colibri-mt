@@ -428,7 +428,6 @@ if [ "$RUN" = "1" ]; then
             DEVFACTOROPTIONS=""
         fi
 
-        ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
         TRAINFILES=`find -type f -name "$CLASSIFIERDIR/*.train" | wc -l`
         IBASEFILES=`find -type f -name "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase" | wc -l`
         echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases" >&2
