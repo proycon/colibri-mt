@@ -429,7 +429,10 @@ if [ "$RUN" = "1" ]; then
         fi
 
         ls $CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase > /dev/null
-        if [ $? -ne 0 ]; then
+        TRAINFILES=`find -type f -name "$CLASSIFIERDIR/*.train" | wc -l`
+        IBASEFILES=`find -type f -name "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase" | wc -l`
+        echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases" >&2
+        if [ $IBASEFILES -ne $TRAINFILES ]; then
             #classifiers are built even when ignored later
             echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
             CMD="colibri-contextmoses --train -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS}"
