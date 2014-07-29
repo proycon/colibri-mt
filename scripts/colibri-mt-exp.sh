@@ -91,6 +91,10 @@ else
 fi
 
 
+if [ "$MERT" = "1" ] && [ "$NOMERT" = "1" ]; then
+    echo -e "(Skipping because NOMERT=1)" >&2
+    RUN=0
+fi
 
 if [ "$RUN" = "1" ]; then
 
