@@ -405,7 +405,7 @@ if [ "$RUN" = "1" ]; then
             $CMD 2> $CLASSIFIERDIR/extractfeatures.log
             if [[ $? -ne 0 ]]; then
                 echo -e "${red}[$NAME/$CLASSIFIERDIR]\nError in colibri-extractfeatures${NC}" >&2
-                echo -e "See $CLASSIFIERDIR/extratfeatures , tail:" >&2
+                echo -e "See $CLASSIFIERDIR/extractfeatures , tail:" >&2
                 tail -n 25 $CLASSIFIERDIR/extractfeatures.log >&2
                 sleep 3
                 exit 2
