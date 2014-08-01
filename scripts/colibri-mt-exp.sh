@@ -432,8 +432,8 @@ if [ "$RUN" = "1" ]; then
             DEVFACTOROPTIONS=""
         fi
 
-        TRAINFILES=`find -type f -path "$CLASSIFIERDIR/*.train" | wc -l`
-        IBASEFILES=`find -type f -path "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/*.ibase" | wc -l`
+        TRAINFILES=`find $CLASSIFIERDIR -type f -name "*.train" | wc -l`
+        IBASEFILES=`find $CLASSIFIERDIR/$CLASSIFIERSUBDIR -type f -name "*.ibase" | wc -l`
         echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases" >&2
         if [ $IBASEFILES -ne $TRAINFILES ]; then
             #classifiers are built even when ignored later
