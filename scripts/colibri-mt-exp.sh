@@ -1,4 +1,4 @@
-#!/bin/bash
+
 
 blue='\e[1;34m'
 red='\e[1;31m'
@@ -92,7 +92,7 @@ fi
 
 
 if [ "$MERT" = "1" ] && [ "$NOMERT" = "1" ]; then
-    echo -e "(Skipping because NOMERT=1)" >&2
+    echo -e "${yellow}(Skipping because NOMERT=1)${NC}" >&2
     RUN=0
 fi
 
@@ -435,6 +435,10 @@ if [ "$RUN" = "1" ]; then
         TRAINFILES=`find $CLASSIFIERDIR -type f -name "*.train" | wc -l`
         IBASEFILES=`find $CLASSIFIERDIR/$CLASSIFIERSUBDIR -type f -name "*.ibase" | wc -l`
         echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases" >&2
+        if [ $TRAINFILES -eq 0 ]; then
+            echo -e "${red}[$NAME/$CLASSIFIERDIR]\nNo training files found, something went wrong?${NC}" >&2
+            exit 2
+        fi
         if [ $IBASEFILES -ne $TRAINFILES ]; then
             #classifiers are built even when ignored later
             echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
