@@ -324,11 +324,12 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             if crosslingual:
                 #we're interested in the target-side sentence and token
                 sourcepattern, targetpattern, _,_, sentence,token  = data
+                n = len(targetpattern)
             else:
                 #normal behaviour
                 sourcepattern, targetpattern, sentence, token,_,_  = data
+                n = len(sourcepattern)
             count+=1
-            n = len(sourcepattern)
 
             if (sourcepattern, targetpattern) != prev:
                 if prev:
