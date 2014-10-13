@@ -511,8 +511,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
         if bag:
             print("\tFound " + str(len(bag)) + " keywords: ", file=sys.stderr)
-            bag = sorted(bag)
-
+            bag = tuple(sorted(bag,key= lambda x: x[3]))[:MAXKEYWORDS]
         else:
             print("\tNo keywords found", file=sys.stderr)
         return tuple(bag)
