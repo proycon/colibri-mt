@@ -170,7 +170,7 @@ def main():
 
             print("Loading test corpus " + corpusfile,file=sys.stderr)
 
-            l.append( Configuration( IndexedCorpus(corpusfile), sourcedecoder, conf['leftcontext'], conf['rightcontext'], conf['focus'] ) )
+            l.append( Configuration( IndexedCorpus(corpusfile), sourcedecoder, conf['leftcontext'], conf['focus'], conf['rightcontext']) )
 
         classifierconf['featureconf'] = l
 
@@ -179,7 +179,7 @@ def main():
         l = []
         for conf in classifierconf['featureconf']:
             sourcedecoder = ClassDecoder(conf['classdecoder'])
-            l.append( Configuration( IndexedCorpus(), sourcedecoder, conf['leftcontext'], conf['rightcontext'], conf['focus'] ) )
+            l.append( Configuration( IndexedCorpus(), sourcedecoder, conf['leftcontext'], conf['focus'], conf['rightcontext'] ) )
 
 
 

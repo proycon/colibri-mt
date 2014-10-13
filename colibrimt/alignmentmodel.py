@@ -15,7 +15,7 @@ from urllib.parse import quote_plus
 
 
 class Configuration:
-    def __init__(self, corpus, classdecoder, leftcontext, rightcontext, focus=True):
+    def __init__(self, corpus, classdecoder, leftcontext, focus, rightcontext):
         assert isinstance(corpus, colibricore.IndexedCorpus)
         assert isinstance(classdecoder, colibricore.ClassDecoder)
         assert isinstance(leftcontext, int)
