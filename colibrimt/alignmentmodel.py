@@ -359,6 +359,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     featurevector.append(unigram)
                 if focus: #focus needs a different class decoder if run with crosslingual! will be handled by featurestostring()
                     featurevector.append(sourcepattern)
+                print("DEBUG: l" + str(leftcontext) + "r" + str(rightcontext) + "n" + str(n) +"  : " + str(token+n) + "-" + str(token+n+rightcontext), file=sys.stderr)
                 for i in range(token + n , token + n + rightcontext):
                     if i >= sentencelength:
                         unigram = colibricore.ENDPATTERN
