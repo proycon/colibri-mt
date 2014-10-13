@@ -20,6 +20,7 @@ import time
 import socket
 
 def extractcontextfeatures(classifierconf, pattern, sentence, token):
+    #For TEST corpus!!
     featurevector = []
     n = len(pattern)
     for configuration in classifierconf['featureconf']:

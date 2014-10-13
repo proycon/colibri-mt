@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#'a!/usr/bin/env python3
 
 from __future__ import print_function, unicode_literals, division, absolute_import
 
@@ -13,6 +13,7 @@ import os
 from collections import defaultdict
 from urllib.parse import quote_plus
 
+MAXKEYWORDS = 50
 
 class Configuration:
     def __init__(self, corpus, classdecoder, leftcontext, focus, rightcontext):
@@ -25,6 +26,9 @@ class Configuration:
         self.leftcontext = leftcontext
         self.focus = focus
         self.rightcontext = rightcontext
+        self.keywordmodel = None
+        self.kw_absolute_threshold = 0
+        self.kw_prob_threshold = 0
 
 
 
@@ -265,47 +269,53 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 print("\tPattern not in model.. skipping", file=sys.stderr)
                 continue
 
-            tmpdata = defaultdict(list)
-
-            sourceindexes = None #loading deferred until really needed
-            targetl = 0
-            for targetpattern in self.targetpatterns(sourcepattern):
-                #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
-                targetl += 1
-                if not targetpattern in targetmodel:
-                    continue
-
-                if not sourceindexes: #loading deferred until here to improve performance, preventing unnecessary loads
-                    sourceindexes = defaultdict(list)
-                    for sourcesentence, sourcetoken in sourcemodel[sourcepattern]:
-                        sourceindexes[sourcesentence].append(sourcetoken)
-
-                targetindexes = defaultdict(list)
-                for targetsentence, targettoken in targetmodel[targetpattern]:
-                    if targetsentence in sourceindexes:
-                        targetindexes[targetsentence].append(targettoken)
-
-                ptsscore = self[(sourcepattern,targetpattern)][2] #assuming moses style score vector!
-
-                #for every occurrence of this pattern in the source
-                for sentence in targetindexes:
-                    #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
-                    for token in sourceindexes[sentence]:
-                        for targettoken in targetindexes[sentence]:
-                            tmpdata[(sentence,token,targettoken)].append( (ptsscore, sourcepattern, targetpattern) )
-                            break #multiple possible matches in same sentence? just pick first one... no word alignments here to resolve this
-
-            if showprogress:
-                print("\tFound " + str(len(tmpdata)) + " occurrences for " + sourcepattern.tostring(sourcedecoder) + ", with " + str(targetl) + " different translation options", file=sys.stderr)
-
-            #make sure only the strongest targetpattern for a given occurrence is chosen, in case multiple options exist
-            for (sentence,token, targettoken),targets  in tmpdata.items():
-                ptsscore,sourcepattern2, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
-                yield sourcepattern2, targetpattern, sentence, token, sentence, targettoken
+            for result in self.patternwithindexes(sourcepattern, sourcemodel, targetmodel, sourcedecoder, showprogress):
+                yield result
 
 
+    def patternwithindexes(self, sourcepattern, sourcemodel, targetmodel, sourcedecoder, showprogress=True):
+        tmpdata = defaultdict(list)
 
-    def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, sourcedecoder, crosslingual=False):
+        sourceindexes = None #loading deferred until really needed
+        targetl = 0
+        for targetpattern in self.targetpatterns(sourcepattern):
+            #print("DEBUG targetpattern=", sourcepattern,file=sys.stderr)
+            targetl += 1
+            if not targetpattern in targetmodel:
+                continue
+
+            if not sourceindexes: #loading deferred until here to improve performance, preventing unnecessary loads
+                sourceindexes = defaultdict(list)
+                for sourcesentence, sourcetoken in sourcemodel[sourcepattern]:
+                    sourceindexes[sourcesentence].append(sourcetoken)
+
+            targetindexes = defaultdict(list)
+            for targetsentence, targettoken in targetmodel[targetpattern]:
+                if targetsentence in sourceindexes:
+                    targetindexes[targetsentence].append(targettoken)
+
+            ptsscore = self[(sourcepattern,targetpattern)][2] #assuming moses style score vector!
+
+            #for every occurrence of this pattern in the source
+            for sentence in targetindexes:
+                #is a target pattern found in the same sentence? (if so we *assume* they're aligned, we don't actually use the word alignments anymore here)
+                for token in sourceindexes[sentence]:
+                    for targettoken in targetindexes[sentence]:
+                        tmpdata[(sentence,token,targettoken)].append( (ptsscore, sourcepattern, targetpattern) )
+                        break #multiple possible matches in same sentence? just pick first one... no word alignments here to resolve this
+
+        if showprogress:
+            print("\tFound " + str(len(tmpdata)) + " occurrences for " + sourcepattern.tostring(sourcedecoder) + ", with " + str(targetl) + " different translation options", file=sys.stderr)
+
+        #make sure only the strongest targetpattern for a given occurrence is chosen, in case multiple options exist
+        for (sentence,token, targettoken),targets  in tmpdata.items():
+            ptsscore,sourcepattern2, targetpattern = sorted(targets)[-1] #sorted by ptsscore, last item will be highest
+            yield sourcepattern2, targetpattern, sentence, token, sentence, targettoken
+
+
+
+
+    def extractcontextfeatures(self, sourcemodel, targetmodel, configurations, sourcedecoder, targetdecoder, crosslingual=False, savekeywordsindir='.'):
         featurevector = []
         assert isinstance(sourcemodel, colibricore.IndexedPatternModel)
         assert isinstance(targetmodel, colibricore.IndexedPatternModel)
@@ -313,9 +323,15 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         assert all([ isinstance(x, Configuration) for x in configurations ])
 
 
+        dokeywords = any([ not (conf.keywordmodel is None) for conf in configurations ] )
+
         prev = None
+        prevsource = None
         tmpdata = defaultdict(int) # featurevector => occurrencecount
 
+        keywords = {} #configuration index => (keywords)
+        kwcount = {}
+        tcount = {}
 
         count = 0
 
@@ -331,6 +347,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 n = len(sourcepattern)
             count+=1
 
+
+
             if (sourcepattern, targetpattern) != prev:
                 if prev:
                     #process previous
@@ -345,10 +363,24 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 tmpdata = defaultdict(int) #reset
                 prev = (sourcepattern,targetpattern)
 
+            if dokeywords and (not prevsource or prevsource != sourcepattern):
+                if keywords:
+                    keywords = {}
+                #we have a new source frgment, time to compute keywords for this source
+                for k, configuration in enumerate(configurations):
+                    if configuration.keywordmodel:
+                        kwcount, tcount = self.countkeywords(sourcepattern, sourcemodel, targetmodel, configuration.corpus, sourcedecoder, crosslingual)
+                        keywords[k] = self.findkeywords(configuration.keywordmodel, kwcount, tcount, configuration.kw_absolute_threshold, configuration.kw_prob_threshold)
+                        if savekeywordsindir:
+                            self.savekeywords(keywords[k], sourcepattern, sourcedecoder, targetdecoder, savekeywordsindir, crosslingual)
+                prevsource = sourcepattern
+
+
             featurevector = [] #local context features
 
-            for configuration in configurations:
-                factoredcorpus,classdecoder, leftcontext, focus, rightcontext = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.focus, configuration.rightcontext)
+            for k, configuration in enumerate(configurations):
+                factoredcorpus,classdecoder, leftcontext, focus, rightcontext, keywordmodel = (configuration.corpus, configuration.classdecoder, configuration.leftcontext, configuration.focus, configuration.rightcontext, configuration.keywordmodel)
+
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
                     if i < 0:
@@ -367,6 +399,21 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                         unigram = factoredcorpus[(sentence,i)]
                     assert len(unigram) == 1
                     featurevector.append(unigram)
+
+                if keywordmodel:
+                    #extract keywords and add to featurevector
+                    bagofwords = {}
+                    for i in range(0, sentencelength):
+                        unigram = factoredcorpus[(sentence,i)]
+                        if unigram in keywords[k]:
+                            bagofwords[unigram] = True
+
+                    for keyword in keywords:
+                        if keyword in bagofwords:
+                            featurevector.append(1)
+                        else:
+                            featurevector.append(0)
+
 
             #print(featurevector,file=sys.stderr)
             extracted += 1
@@ -429,6 +476,84 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     features[i] = 0
                 elif sumover[i] == '-':
                     pass
+
+
+    def countkeywords(self, sourcepattern, sourcemodel, targetmodel, corpus, sourcedecoder, crosslingual):
+        tcount = defaultdict(int)
+        kwcount = defaultdict( lambda: defaultdict(int) )
+        for data in self.patternwithindexes(sourcepattern, sourcemodel, targetmodel, sourcedecoder, False):
+            if crosslingual:
+                #we're interested in the target-side sentence and token
+                sourcepattern, targetpattern, _,_, sentence,token  = data
+            else:
+                #normal behaviour
+                sourcepattern, targetpattern, sentence, token,_,_  = data
+
+            sentencelength = corpus.sentencelength(sentence)
+            tcount[targetpattern] += 1
+            for i in range(0, sentencelength):
+                word = corpus[(sentence,i)]
+                kwcount[targetpattern][word] += 1
+
+        return kwcount, tcount
+
+
+
+    def findkeywords(self, keywordmodel, kwcount, tcount, kw_absolute_threshold, kw_prob_threshold):
+        bag = []
+        #select all words that occur at least 3 times for a sense, and have a probability_sense_given_keyword >= 0.001
+        for targetfragment in kwcount:
+            for keyword, freq in kwcount[targetfragment].items():
+                if freq>= kw_absolute_threshold:
+                    p = probability_translation_given_keyword(targetfragment, keyword, kwcount, keywordmodel)
+                    if p >= kw_prob_threshold:
+                        bag.append( (keyword, targetfragment, freq, p) )
+
+        if bag:
+            print("\tFound " + str(len(bag)) + " keywords: ", file=sys.stderr)
+            bag = sorted(bag)
+
+        else:
+            print("\tNo keywords found", file=sys.stderr)
+        return tuple(bag)
+
+
+    def savekeywords(self, bag, sourcepattern, sourcedecoder, targetdecoder, workdir='.', crosslingual=False):
+        f = open(workdir + '/' + quote_plus(sourcepattern.tostring(sourcedecoder)) + '.keywords','w',encoding='utf-8')
+        for keyword, targetpattern, c, p in bag:
+            if not crosslingual:
+                keyword = keyword.tostring(sourcedecoder)
+            else:
+                keyword = keyword.tostring(targetdecoder)
+            f.write(keyword + '\t' + targetpattern.tostring(targetdecoder) + '\t' + str(c) + '\t' + str(p) + '\n')
+            print("\t\t", keyword, file=sys.stderr)
+        f.close()
+
+
+
+def probability_translation_given_keyword(target, keyword, kwcount, keywordmodel):
+    if not target in kwcount:
+        print("target not seen:", target, file=sys.stderr)
+        return 0 #sense has never been seen for this focus word
+
+    Ns_kloc = 0.0
+    if keyword in kwcount[target]:
+        Ns_kloc = float(kwcount[target][keyword])
+
+    Nkloc = 0
+    for t in kwcount:
+        if keyword in kwcount[t]:
+            Nkloc += kwcount[t][keyword]
+
+
+    Nkcorp = keywordmodel.occurrencecount(keyword) #/ float(totalcount_sum)
+    if Nkcorp == 0:
+        print("keyword not seen:", keyword, file=sys.stderr)
+        return 0 #keyword has never been seen
+
+    return (Ns_kloc / Nkloc) * (1/Nkcorp)
+
+
 
 def featurestostring(features, configurations, crosslingual=False, sourcedecoder=None):
         if crosslingual and not sourcedecoder:
@@ -496,6 +621,12 @@ def main_extractfeatures():
     parser.add_argument('-I','--instancethreshold',type=int,help="Classifiers (-C) having less than the specified number of instances will be not be generated", action='store',default=2)
     parser.add_argument('-X','--experts', help="Classifier experts, one per source pattern", action="store_true", default=False)
     parser.add_argument('-M','--monolithic', help="Monolithic classifier", action="store_true", default=False)
+    parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
+    parser.add_argument('--km','--keywordmodel',type=str,help="Source-side unigram model (target-side if crosslingual is set!) for keyword extraction. Needs to be an indexed model with only unigrams.", action='store',required=True)
+    parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
+    parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
+    parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
+    #parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
     parser.add_argument('--crosslingual', help="Extract target-language context features instead of source-language features (for use with Colibrita). In this case, the corpus in -f and in any additional factor must be the *target* corpus", action="store_true", default=False)
     args = parser.parse_args()
 
@@ -522,6 +653,8 @@ def main_extractfeatures():
     print("Loading target model ", args.targetmodel, file=sys.stderr)
     targetmodel = colibricore.IndexedPatternModel(args.targetmodel, options)
 
+
+
     model.conf = []
     for corpusfile, classfile,left, right in zip(args.corpusfile, args.classfile, args.leftsize, args.rightsize):
         print("Loading corpus file ", corpusfile, file=sys.stderr)
@@ -532,6 +665,16 @@ def main_extractfeatures():
         else:
             d = colibricore.ClassDecoder(classfile)
         model.conf.append( Configuration(colibricore.IndexedCorpus(corpusfile), d ,left,True, right) )
+
+    if args.keywords:
+        if not args.keywordmodel:
+            print("Supply an indexed pattern model containing unigrams to extract keywords from!",file=sys.stderr)
+            sys.exit(2)
+        print("Loading keyword model ", args.keywordmodel, file=sys.stderr)
+        kmoptions = colibricore.PatternModelOptions(mintokens=max(args.bow_absolute_threshold,args.bow_filter_threshold),minlength=1,maxlength=1,doreverseindex=True)
+        model.conf[0].keywordmodel = colibricore.IndexedPatternModel(args.keywordmodel, kmoptions, None, args.corpusfile[0])
+        model.conf[0].kw_absolute_threshold = args.bow_absolute_treshold
+        model.conf[0].kw_prob_threshold = args.bow_prob_treshold
 
 
     if args.buildclassifiers:
@@ -548,9 +691,6 @@ def main_extractfeatures():
 
 
         f = None
-        prevsourcepattern = None
-        firsttargetpattern = None
-        prevtargetpattern = None
         trainfile = ""
         if args.monolithic:
             f = open(args.outputdir + "/train.train",'w',encoding='utf-8')
@@ -566,7 +706,10 @@ def main_extractfeatures():
         fconf.close()
 
 
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, sourcedecoder, args.crosslingual):
+        prevsourcepattern = None
+        firsttargetpattern = None
+        prevtargetpattern = None
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, sourcedecoder, targetdecoder, args.crosslingual):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern:
