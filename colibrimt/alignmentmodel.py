@@ -719,7 +719,7 @@ def main_extractfeatures():
         prevsourcepattern = None
         firsttargetpattern = None
         prevtargetpattern = None
-        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, sourcedecoder, targetdecoder, args.crosslingual):
+        for sourcepattern, targetpattern, featurevectors, scorevector in model.extractcontextfeatures(sourcemodel, targetmodel, model.conf, sourcedecoder, targetdecoder, args.crosslingual, args.outputdir ):
             if prevsourcepattern is None or sourcepattern != prevsourcepattern:
                 #write previous buffer to file:
                 if prevsourcepattern and firsttargetpattern:
