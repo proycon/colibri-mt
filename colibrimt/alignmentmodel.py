@@ -513,7 +513,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             found = {}
             newbag = []
             #sort by p, remove duplicates, and limit
-            for keyword,targetfragmen,freq,p in sorted(bag,key= lambda x: x[3]):
+            for keyword,targetfragmen,freq,p in sorted(bag,key= lambda x: -1 * x[3]):
                 if not keyword in found:
                     newbag.append( (keyword,targetfragment, freq, p) )
                     found[keyword] = True
