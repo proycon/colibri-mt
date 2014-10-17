@@ -47,6 +47,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
             if len(unigram) != 1:
                 raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
+        #TODO: process keywords
     return featurevector
 
 def gettimbloptions(args, classifierconf):
