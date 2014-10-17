@@ -520,10 +520,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     found[keyword] = True
                     if len(newbag) == MAXKEYWORDS:
                         break
-            print("\tFound " + str(len(newbag)) + " keywords: ", file=sys.stderr)
+            print("\tFound " + str(len(newbag)) + " keywords (for "+ str(len(kwcount)) + " translation options)", file=sys.stderr)
             return tuple(newbag)
         else:
-            print("\tNo keywords found", file=sys.stderr)
+            print("\tNo keywords found (for "+ str(len(kwcount)) + " translation options)", file=sys.stderr)
         return bag
 
 
@@ -534,8 +534,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 keyword = keyword.tostring(sourcedecoder)
             else:
                 keyword = keyword.tostring(targetdecoder)
-            f.write(keyword + '\t' + targetpattern.tostring(targetdecoder) + '\t' + str(c) + '\t' + str(p) + '\n')
-            print("\t\t", keyword, file=sys.stderr)
+            s = keyword + '\t' + targetpattern.tostring(targetdecoder) + '\t' + str(c) + '\t' + str(p)
+            f.write(s +'\n')
+            print("\t\t" + s, file=sys.stderr)
         f.close()
 
 
