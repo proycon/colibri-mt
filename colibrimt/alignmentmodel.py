@@ -621,7 +621,7 @@ def main_extractfeatures():
     parser.add_argument('-X','--experts', help="Classifier experts, one per source pattern", action="store_true", default=False)
     parser.add_argument('-M','--monolithic', help="Monolithic classifier (won't work with keywords enabled!)", action="store_true", default=False)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('--km','--keywordmodel',type=str,help="Source-side unigram model (target-side if crosslingual is set!) for keyword extraction. Needs to be an indexed model with only unigrams.", action='store',required=False,default="")
+    parser.add_argument('--km',dest='keywordmodel',type=str,help="Source-side unigram model (target-side if crosslingual is set!) for keyword extraction. Needs to be an indexed model with only unigrams.", action='store',required=False,default="")
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=float, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
