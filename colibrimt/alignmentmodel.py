@@ -671,7 +671,8 @@ def main_extractfeatures():
             sys.exit(2)
         print("Loading keyword model ", args.keywordmodel, file=sys.stderr)
         kmoptions = colibricore.PatternModelOptions(mintokens=max(args.bow_absolute_threshold,args.bow_filter_threshold),minlength=1,maxlength=1,doreverseindex=True)
-        model.conf[0].keywordmodel = colibricore.IndexedPatternModel(args.keywordmodel, kmoptions, None, args.corpusfile[0])
+        reverseindex = colibricore.IndexedCorpus(args.corpusfile[0])
+        model.conf[0].keywordmodel = colibricore.IndexedPatternModel(args.keywordmodel, kmoptions, None, reverseindex)
         model.conf[0].kw_absolute_threshold = args.bow_absolute_treshold
         model.conf[0].kw_prob_threshold = args.bow_prob_treshold
 
