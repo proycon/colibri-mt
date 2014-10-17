@@ -673,8 +673,8 @@ def main_extractfeatures():
         kmoptions = colibricore.PatternModelOptions(mintokens=max(args.bow_absolute_threshold,args.bow_filter_threshold),minlength=1,maxlength=1,doreverseindex=True)
         reverseindex = colibricore.IndexedCorpus(args.corpusfile[0])
         model.conf[0].keywordmodel = colibricore.IndexedPatternModel(args.keywordmodel, kmoptions, None, reverseindex)
-        model.conf[0].kw_absolute_threshold = args.bow_absolute_treshold
-        model.conf[0].kw_prob_threshold = args.bow_prob_treshold
+        model.conf[0].kw_absolute_threshold = args.bow_absolute_threshold
+        model.conf[0].kw_prob_threshold = args.bow_prob_threshold
 
 
     if args.buildclassifiers:
