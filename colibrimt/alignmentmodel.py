@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 from urllib.parse import quote_plus
 
-MAXKEYWORDS = 50
+MAXKEYWORDS = 25
 
 class Configuration:
     def __init__(self, corpus, classdecoder, leftcontext, focus, rightcontext):
@@ -510,11 +510,20 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                         bag.append( (keyword, targetfragment, freq, p) )
 
         if bag:
-            print("\tFound " + str(len(bag)) + " keywords: ", file=sys.stderr)
-            bag = tuple(sorted(bag,key= lambda x: x[3]))[:MAXKEYWORDS]
+            found = {}
+            newbag = []
+            #sort by p, remove duplicates, and limit
+            for keyword,targetfragmen,freq,p in sorted(bag,key= lambda x: x[3]):
+                if not keyword in found:
+                    newbag.append( (keyword,targetfragment, freq, p) )
+                    found[keyword] = True
+                    if len(newbag) == MAXKEYWORDS:
+                        break
+            print("\tFound " + str(len(newbag)) + " keywords: ", file=sys.stderr)
+            return tuple(newbag)
         else:
             print("\tNo keywords found", file=sys.stderr)
-        return tuple(bag)
+        return bag
 
 
     def savekeywords(self, bag, sourcepattern, sourcedecoder, targetdecoder, workdir='.', crosslingual=False):
