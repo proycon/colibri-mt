@@ -405,7 +405,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     bagofwords = {}
                     for i in range(0, sentencelength):
                         unigram = factoredcorpus[(sentence,i)]
-                        if unigram in keywords[k]:
+                        if unigram in ( x[0] for x in keywords[k] ):
                             bagofwords[unigram] = True
 
                     for keyword in keywords:
