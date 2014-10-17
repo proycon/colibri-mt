@@ -369,7 +369,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 #we have a new source frgment, time to compute keywords for this source
                 for k, configuration in enumerate(configurations):
                     if configuration.keywordmodel:
-                        kwcount, tcount = self.countkeywords(sourcepattern, sourcemodel, targetmodel, configuration.corpus, sourcedecoder, crosslingual)
+                        kwcount, tcount = self.countkeywords(sourcepattern, sourcemodel, targetmodel, configuration.corpus, configuration.keywordmodel, sourcedecoder, crosslingual)
                         keywords[k] = self.findkeywords(configuration.keywordmodel, kwcount, tcount, configuration.kw_absolute_threshold, configuration.kw_prob_threshold)
                         if savekeywordsindir:
                             self.savekeywords(keywords[k], sourcepattern, sourcedecoder, targetdecoder, savekeywordsindir, crosslingual)
@@ -478,7 +478,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     pass
 
 
-    def countkeywords(self, sourcepattern, sourcemodel, targetmodel, corpus, sourcedecoder, crosslingual):
+    def countkeywords(self, sourcepattern, sourcemodel, targetmodel, corpus, keywordmodel, sourcedecoder, crosslingual):
         tcount = defaultdict(int)
         kwcount = defaultdict( lambda: defaultdict(int) )
         for data in self.patternwithindexes(sourcepattern, sourcemodel, targetmodel, sourcedecoder, False):
@@ -493,7 +493,8 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             tcount[targetpattern] += 1
             for i in range(0, sentencelength):
                 word = corpus[(sentence,i)]
-                kwcount[targetpattern][word] += 1
+                if word in keywordmodel:
+                    kwcount[targetpattern][word] += 1
 
         return kwcount, tcount
 
