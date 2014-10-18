@@ -405,6 +405,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     featurevector.append(unigram)
 
                 if keywordmodel:
+                    print("\t\tProcessing " + str(len(keywords[k])) + " keywords, sentencelength=" + str(sentencelength) ,file=sys.stderr)
                     #extract keywords and add to featurevector
                     bagofwords = {}
                     for i in range(0, sentencelength):
