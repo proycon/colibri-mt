@@ -334,10 +334,6 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         tcount = {}
 
         count = 0
-        if crosslingual:
-            decoder = sourcedecoder
-        else:
-            decoder = targetdecoder
 
         extracted = 0
         for data in self.patternswithindexes(sourcemodel, targetmodel, sourcedecoder):
