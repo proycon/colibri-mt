@@ -401,7 +401,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                     featurevector.append(unigram)
 
                 if keywordmodel:
-                    print("\t\tProcessing " + str(len(keywords[k])) + " keywords, sentencelength=" + str(sentencelength) ,file=sys.stderr)
+                    #print("\t\tProcessing " + str(len(keywords[k])) + " keywords, sentencelength=" + str(sentencelength) ,file=sys.stderr)
                     #extract keywords and add to featurevector
                     bagofwords = {}
                     for i in range(0, sentencelength):
@@ -614,7 +614,7 @@ def featurestostring(features, configurations, crosslingual=False, sourcedecoder
                         keyword, occurs = d
                         keywordcount += 1
                         feature_s = keyword.tostring(conf.classdecoder)
-                        feature_s += str(int(occurs)) #0 or 1
+                        feature_s += "=" + str(int(occurs)) #0 or 1
                         s.append(feature_s)
                     else:
                         break
