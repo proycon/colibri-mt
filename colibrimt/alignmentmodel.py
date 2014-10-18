@@ -415,9 +415,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
                     for keyword in (x[0] for x in  keywords[k] ):
                         if keyword in bagofwords:
-                            featurevector.append(keyword.tostring(decoder) + "=1")
+                            featurevector.append( (keyword, True) )
                         else:
-                            featurevector.append(keyword.tostring(decoder) + "=0")
+                            featurevector.append( (keyword, False) )
 
 
             #print(featurevector,file=sys.stderr)
@@ -609,6 +609,23 @@ def featurestostring(features, configurations, crosslingual=False, sourcedecoder
                 s.append(feature_s)
 
             featcursor +=n
+
+            if conf.keywordmodel:
+                keywordcount = 0
+                #remaining str instances are keywords (decoded earlier)
+                for d in features[featcursor:]:
+                    if isinstance(d, tuple) and len(d) == 2:
+                        keyword, occurs = d
+                        keywordcount += 1
+                        feature_s = keyword.tostring(conf.classdecoder)
+                        feature_s += str(int(occurs)) #0 or 1
+                        s.append(feature_s)
+                    else:
+                        break
+
+            featcursor += keywordcount
+
+
 
 
         return "\t".join(s)
