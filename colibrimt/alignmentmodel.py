@@ -334,6 +334,10 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
         tcount = {}
 
         count = 0
+        if crosslingual:
+            decoder = sourcedecoder
+        else:
+            decoder = targetdecoder
 
         extracted = 0
         for data in self.patternswithindexes(sourcemodel, targetmodel, sourcedecoder):
@@ -410,9 +414,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
 
                     for keyword in (x[0] for x in  keywords[k] ):
                         if keyword in bagofwords:
-                            featurevector.append(1)
+                            featurevector.append(keyword.tostring(decoder) + "=1")
                         else:
-                            featurevector.append(0)
+                            featurevector.append(keyword.tostring(decoder) + "=0")
 
 
             #print(featurevector,file=sys.stderr)
