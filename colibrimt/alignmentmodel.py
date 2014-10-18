@@ -408,7 +408,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                         if unigram in ( x[0] for x in keywords[k] ):
                             bagofwords[unigram] = True
 
-                    for keyword in keywords:
+                    for keyword in (x[0] for x in  keywords[k] ):
                         if keyword in bagofwords:
                             featurevector.append(1)
                         else:
