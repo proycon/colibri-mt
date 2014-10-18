@@ -494,6 +494,9 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
             for i in range(0, sentencelength):
                 word = corpus[(sentence,i)]
                 if word in keywordmodel:
+                    if not crosslingual:
+                        if word in sourcepattern:
+                            continue
                     kwcount[targetpattern][word] += 1
 
         return kwcount, tcount
