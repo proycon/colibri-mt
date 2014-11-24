@@ -619,7 +619,7 @@ def featurestostring(features, configurations, crosslingual=False, sourcedecoder
                     else:
                         break
 
-            featcursor += keywordcount
+                featcursor += keywordcount
 
 
 
