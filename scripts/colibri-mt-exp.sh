@@ -241,19 +241,21 @@ if [ "$RUN" = "1" ]; then
     else
 
         if [ ! -f "$NAME.phrasetable" ] && [ ! -L  "$NAME.phrasetable" ]; then
-            echo -e "${blue}[$NAME]\nBuilding phrasetable${NC}">&2
-            ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
-            ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
-            CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
-            if [ ! -z "$REORDERING" ]; then
-                CMD="$CMD -reordering $REORDERING"
-            fi
-            echo $CMD>&2
-            $CMD
-            if [[ $? -ne 0 ]]; then
-                echo -e "${red}[$NAME]\nError in Moses${NC}" >&2
-                sleep 3
-                exit 2
+            if [ ! -f "model/phrase-table.gz" ]; then
+                echo -e "${blue}[$NAME]\nBuilding phrasetable${NC}">&2
+                ln -s "$EXPDIR/$TRAINSOURCE.txt" "$EXPDIR/$NAME/corpus.$SOURCELANG"
+                ln -s "$EXPDIR/$TRAINTARGET.txt" "$EXPDIR/$NAME/corpus.$TARGETLANG"    
+                CMD="/vol/customopt/machine-translation/src/mosesdecoder/scripts/training/train-model.perl -external-bin-dir /vol/customopt/machine-translation/bin  -root-dir . --corpus corpus --f $SOURCELANG --e $TARGETLANG --last-step 8"
+                if [ ! -z "$REORDERING" ]; then
+                    CMD="$CMD -reordering $REORDERING"
+                fi
+                echo $CMD>&2
+                $CMD
+                if [[ $? -ne 0 ]]; then
+                    echo -e "${red}[$NAME]\nError in Moses${NC}" >&2
+                    sleep 3
+                    exit 2
+                fi
             fi
             cp "model/phrase-table.gz" "$NAME.phrasetable.gz"
             gunzip "$NAME.phrasetable.gz"
