@@ -1,0 +1,11 @@
+a ||| een ||| 1 1 1 1
+just ||| maar ||| 0.5 0.5 1 1
+only ||| maar ||| 0.5 0.5 1 1
+bank ||| oever ||| 0.3333 0.3333 1 1
+bank ||| bank ||| 0.3333 0.3333 0.5 0.5 
+bank ||| sturen ||| 0.3333 0.3333 1 1 
+couch ||| bank ||| 1 1 0.5 0.5
+the bank ||| de oever ||| 0.5 0.5 1 1 
+the bank ||| de bank ||| 0.5 0.5 0.5 0.5
+the couch ||| de bank ||| 0.5 0.5 0.5 0.5
+
