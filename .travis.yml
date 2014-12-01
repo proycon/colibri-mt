@@ -1,0 +1,27 @@
+language: python
+
+python:
+    - 3.2
+    - 3.3
+    - 3.4
+before_install:
+    - sudo apt-get install timbl
+    - pip install cython
+install: 
+    - git clone https://github.com/proycon/colibri-core.git
+    - cd colibri-core
+    - bash bootstrap
+    - ./configure
+    - make
+    - sudo make install
+    - python setup.py build_ext  --include-dirs=/usr/include/:/usr/local/include/colibri-core/ --library-dirs=/usr/lib:/usr/local/lib/ install
+    - cd ..
+    - bash bootstrap
+    - ./configure
+    - make
+    - sudo make install
+    - python setup.py build_ext  --include-dirs=/usr/include/:/usr/local/include/colibri-core/:/usr/local/include/colibri-mt/ --library-dirs=/usr/lib:/usr/local/lib/ install
+script: 
+    - cd test
+    - LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib/" python test.py
+    

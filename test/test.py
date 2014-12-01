@@ -54,7 +54,7 @@ class TestExperiment(unittest.TestCase):
         r = os.system("diff test-en-nl/classifierdata-XI2l1r1/the+bank.train the+bank.train.ok")
         self.assertEqual(r,0)
 
-    def test004_trainfiles_M(self):
+    def test005_trainfiles_M(self):
         """Verifying training instances for monolithic system"""
         self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-MI2l1r1/*.train"))), 1)
         r = os.system("diff test-en-nl/classifierdata-MI2l1r1/train.train train.train.ok")
