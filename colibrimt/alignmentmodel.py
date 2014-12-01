@@ -748,7 +748,7 @@ def main_extractfeatures():
                     sourcepattern_s = prevsourcepattern.tostring(sourcedecoder)
                     if prevtargetpattern and firsttargetpattern != prevtargetpattern:
                         #only bother if there are at least two distinct target options
-                        if len(buffer) < args.instancethreshold:
+                        if len(buffer) < min(args.instancethreshold,2):
                             print("Omitting " + trainfile + ", only " + str(len(buffer)) + " instances",file=sys.stderr)
                         else:
                             trainfile = args.outputdir + "/" + quote_plus(sourcepattern_s) + ".train"

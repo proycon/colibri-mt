@@ -238,7 +238,7 @@ if [ "$RUN" = "1" ]; then
 
 
 
-    else
+    else #not mosesonly
 
         if [ ! -f "$NAME.phrasetable" ] && [ ! -L  "$NAME.phrasetable" ]; then
             if [ ! -f "model/phrase-table.gz" ]; then
