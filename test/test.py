@@ -4,6 +4,7 @@ import sys
 import os
 import unittest
 import colibricore
+import glob
 from colibrimt.alignmentmodel import AlignmentModel
 
 class TestExperiment(unittest.TestCase):
@@ -43,6 +44,14 @@ class TestExperiment(unittest.TestCase):
     def test003_targetdump(self):
         """Verifying target dump"""
         r = os.system("diff test-en-nl/test-en-nl.phrasetable.targetdump test-en-nl.phrasetable.targetdump.ok")
+        self.assertEqual(r,0)
+
+    def test004_trainfiles(self):
+        """Verifying training instances"""
+        self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-XI2l1r1/*.train"))), 2)
+        r = os.system("diff test-en-nl/classifierdata-XI2l1r1/bank.train bank.train.ok")
+        self.assertEqual(r,0)
+        r = os.system("diff test-en-nl/classifierdata-XI2l1r1/the+bank.train the+bank.train.ok")
         self.assertEqual(r,0)
 
 if __name__ == '__main__':
