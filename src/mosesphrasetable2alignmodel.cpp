@@ -124,6 +124,10 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
                 mode++;
             }
         }
+        if (mode == 2) {
+            scores_s = line.substr(begin);
+            mode++;
+        }
 
         if ((abort) || (firstword == skipfirstword)) {
             constrained++;
@@ -137,7 +141,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         }
 
 
-        if (mode < 2) {
+        if (mode < 3) {
             cerr << endl << "WARNING: Error in input format, line " << count << " (length=" << linesize << "): " << endl;
             cerr << line << endl;
             cerr << "SKIPPING..." << endl;
@@ -186,7 +190,6 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             buffer.clear();
         }
 
-        if ((source.empty()) || (target.empty()) || (scores.empty())) continue;
 
         //check score threshold
         if (  ((pst > 0) && (scores[pstfield] < pst))
@@ -256,6 +259,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
         }
         buffer.clear();
     }
+    cerr  << "Read " << count << " lines" << endl;
     cerr << "Added: " << added << " -- skipped due to threshold: " << skipped << " -- skipped by constraint: " << constrained << endl;
     cerr << "Source patterns: " << model.size() <<  endl;
 }

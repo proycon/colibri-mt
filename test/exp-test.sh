@@ -43,7 +43,7 @@ LMWEIGHT=1
 DWEIGHT=1
 WWEIGHT=0
 
-LASTSTAGE="trainclassifiers" #can be set to (in order): buildphrasetable,patternmodels, buildalignmentmodel, featureextraction, trainclassifiers to halt the script earlier
+LASTSTAGE="featureextraction" #can be set to (in order): buildphrasetable,patternmodels, buildalignmentmodel, featureextraction, trainclassifiers to halt the script earlier
 
 #$NAME will be the basis of a directory that holds all data for this experiment,
 #classifier training data will be in a subdir thereof (with options encoded in directory name)

@@ -25,14 +25,14 @@ class TestExperiment(unittest.TestCase):
         self.assertTrue(  (s.buildpattern('a'), t.buildpattern('een') ) in model )
         self.assertTrue(  (s.buildpattern('just'), t.buildpattern('maar') ) in model )
         self.assertTrue(  (s.buildpattern('only'), t.buildpattern('maar') ) in model )
-        self.assertTrue(  (s.buildpattern('bank'), t.buildpattern('over') ) in model )
+        self.assertTrue(  (s.buildpattern('bank'), t.buildpattern('oever') ) in model )
         self.assertTrue(  (s.buildpattern('bank'), t.buildpattern('bank') ) in model )
         self.assertTrue(  (s.buildpattern('bank'), t.buildpattern('sturen') ) in model )
         self.assertTrue(  (s.buildpattern('couch'), t.buildpattern('bank') ) in model )
         self.assertTrue(  (s.buildpattern('the bank'), t.buildpattern('de oever') ) in model )
         self.assertTrue(  (s.buildpattern('the bank'), t.buildpattern('de bank') ) in model )
         self.assertTrue(  (s.buildpattern('the couch'), t.buildpattern('de bank') ) in model )
-        self.assertEqual(  len(model), 10 )
+        self.assertEqual(  len(list(model.triples())), 10 )
 
 
     def test002_sourcedump(self):
@@ -48,6 +48,8 @@ class TestExperiment(unittest.TestCase):
 if __name__ == '__main__':
         print("Cleanup",file=sys.stderr)
         os.system("rm -Rf test-en-nl > /dev/null 2> /dev/null")
+        os.system("mkdir test-en-nl")
+        os.system("cp test-en-nl.phrasetable test-en-nl/")
 
         print("Running test experiment",file=sys.stderr)
         r = os.system("./exp-test.sh")
