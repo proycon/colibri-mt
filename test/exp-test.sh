@@ -64,6 +64,7 @@ export CLASSIFIERTYPE='M' # Can be X for experts, M for monolithic, and I for ig
 
 ( . $EXPSCRIPT )
 
+export CLASSIFIERTYPE='X' # Can be X for experts, M for monolithic, and I for ignoring the classifier
 export SCOREHANDLING='append' #Score handling: append, replace or weighed
 export TWEIGHTS=(1 1 1 1 1)  
 

@@ -60,6 +60,16 @@ class TestExperiment(unittest.TestCase):
         r = os.system("diff test-en-nl/classifierdata-MI2l1r1/train.train train.train.ok")
         self.assertEqual(r,0)
 
+    def test006_ibase_X(self):
+        """Verifying ibase instances for experts"""
+        self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-XI2l1r1/classifiers-Hreplace-ta0/*.ibase"))), 2)
+        self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-XI2l1r1/classifiers-Happend-ta0/*.ibase"))), 2)
+
+    def test007_trainfiles_M(self):
+        """Verifying ibase instances for monolithic system"""
+        self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-MI2l1r1/classifiers-Hreplace-ta0/*.ibase"))), 1)
+        self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-MI2l1r1/classifiers-Happend-ta0/*.ibase"))), 1)
+
 if __name__ == '__main__':
         if not os.path.exists("test.py"):
             print("Please run the test from the test/ directory",file=sys.stderr)
