@@ -567,7 +567,7 @@ Distortion0= {dweight}
                 if not args.reorderingweight:
                     reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
                 else:
-                    reorderingweight =  "LexicalReordering0= " + " ".join(args.reorderingweight)
+                    reorderingweight =  "LexicalReordering0= " + " ".join([str(x) for x in args.reorderingweight])
             else:
                 reorderingfeature = ""
                 reorderingweight = ""
