@@ -88,6 +88,7 @@ def main():
     parser.add_argument('--dweight', type=float, help="Distortion Model weight", action="store", default=0.3, required=False)
     parser.add_argument('--wweight', type=float, help="Word penalty weight", action="store", default=-1, required=False)
     parser.add_argument('--tweight', type=float, help="Translation Model weight (may be specified multiple times for each score making up the translation model)", action="append", required=False)
+    parser.add_argument('--reorderingweight', type=float, help="Reordering Model weight (may be specified multiple times for each score making up the reordering model)", action="append", required=False)
     parser.add_argument('--pweight', type=float, help="Phrase penalty", default=0.2, action="store", required=False)
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
@@ -563,7 +564,10 @@ Distortion0= {dweight}
 
             if args.reordering:
                 reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
-                reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
+                if not args.reorderingweight:
+                    reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
+                else:
+                    reorderingweight =  "LexicalReordering0= " + " ".join(args.reorderingweight)
             else:
                 reorderingfeature = ""
                 reorderingweight = ""
