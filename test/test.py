@@ -33,7 +33,12 @@ class TestExperiment(unittest.TestCase):
         self.assertTrue(  (s.buildpattern('the bank'), t.buildpattern('de oever') ) in model )
         self.assertTrue(  (s.buildpattern('the bank'), t.buildpattern('de bank') ) in model )
         self.assertTrue(  (s.buildpattern('the couch'), t.buildpattern('de bank') ) in model )
-        self.assertEqual(  len(list(model.triples())), 10 )
+        self.assertTrue(  (s.buildpattern('I see'), t.buildpattern('Ik zie') ) in model )
+        self.assertTrue(  (s.buildpattern('He'), t.buildpattern('Hij') ) in model )
+        self.assertTrue(  (s.buildpattern('sits'), t.buildpattern('zit') ) in model )
+        self.assertTrue(  (s.buildpattern('on'), t.buildpattern('on') ) in model )
+        self.assertTrue(  (s.buildpattern('today'), t.buildpattern('vandaag') ) in model )
+        self.assertEqual(  len(list(model.triples())), 15 )
 
 
     def test002_sourcedump(self):
