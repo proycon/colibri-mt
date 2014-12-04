@@ -1,7 +1,8 @@
-Dit is maar een test .
-Het is maar een heel klein corpus .
-We vertalen maar een paar woorden .
-Het schip raakt de oever van de rivier .
-Ik ga naar de bank om geld te halen .
-Ik zit op de bank voor de TV .
-Hij moet onmiddelijk naar rechts sturen .
+Dit is maar een test
+Het is maar een heel klein corpus
+We vertalen maar een paar woorden vandaag
+Het schip raakt de oever van de rivier
+Ik ga naar de bank om geld te halen
+Ik zit op de bank voor de TV
+Hij moet onmiddelijk naar rechts sturen
+Ik zie dat hij op een stoel zit
