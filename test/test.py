@@ -75,6 +75,13 @@ class TestExperiment(unittest.TestCase):
         self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-MI2l1r1/classifiers-Hreplace-ta0/*.ibase"))), 1)
         self.assertEqual(  len(list(glob.glob("test-en-nl/classifierdata-MI2l1r1/classifiers-Happend-ta0/*.ibase"))), 1)
 
+    def test008_contextmoses_M(self):
+        """Running contextmoses on monolithic system"""
+        r = os.system("contextmoses -M ")
+
+
+
+
 if __name__ == '__main__':
         if not os.path.exists("test.py"):
             print("Please run the test from the test/ directory",file=sys.stderr)

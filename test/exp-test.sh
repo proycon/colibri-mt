@@ -43,7 +43,8 @@ export LMWEIGHT=1
 export DWEIGHT=1
 export WWEIGHT=0
 
-export LASTSTAGE="trainclassifiers" #can be set to (in order): buildphrasetable,patternmodels, buildalignmentmodel, featureextraction, trainclassifiers to halt the script earlier
+
+#export LASTSTAGE="trainclassifiers" #can be set to (in order): buildphrasetable,patternmodels, buildalignmentmodel, featureextraction, trainclassifiers to halt the script earlier
 
 #$NAME will be the basis of a directory that holds all data for this experiment,
 #classifier training data will be in a subdir thereof (with options encoded in directory name)
