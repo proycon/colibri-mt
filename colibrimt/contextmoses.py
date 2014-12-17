@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--skipdecoder',action="store_true",default=False)
+    parser.add_argument('--ignoreerrors',action="Attempt to ignore errors",default=False)
     parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -Z is enabled",action='store',default=8080)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
@@ -485,12 +486,20 @@ Distortion0= {dweight}
                                             if t == targetpattern_s:
                                                 reordering_scores = sv
                                     except KeyError:
-                                        raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
+                                        if args.ignoreerrors:
+                                            print("******* ERROR ********* Source pattern notfound in reordering table: " + sourcepattern_s,file=sys.stderr)
+                                            continue
+                                        else:
+                                            raise Exception("Source pattern notfound in reordering table: " + sourcepattern_s)
 
                                     if reordering_scores:
                                         freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                                     else:
-                                        raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
+                                        if args.ignoreerrors:
+                                            print("******** ERROR ********* Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")",file=sys.stderr)
+                                            continue
+                                        else:
+                                            raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
                             if translationcount == 0:
                                 print("\tNo overlap between classifier translations (" + str(len(distribution)) + ") and phrase table. Falling back to statistical baseline.",file=sys.stderr)
@@ -530,12 +539,20 @@ Distortion0= {dweight}
                                         if t == targetpattern_s:
                                             reordering_scores = sv
                                 except KeyError:
-                                    raise Exception("Source pattern not found in reordering table: " + sourcepattern_s)
+                                    if args.ignoreerrors:
+                                        print("******** ERROR ******* Source pattern not found in reordering table: " + sourcepattern_s,file=sys.stderr)
+                                        continue
+                                    else:
+                                        raise Exception("Source pattern not found in reordering table: " + sourcepattern_s)
 
                                 if reordering_scores:
                                     freordering.write(tokenspan + " ||| " + targetpattern_s + " ||| " + " ".join([str(x) for x in reordering_scores]) + "\n")
                                 else:
-                                    raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
+                                    if args.ignoreerrors:
+                                            print("******* ERROR ****** Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")",file=sys.stderr)
+                                            continue
+                                    else:
+                                        raise Exception("Target pattern not found in reordering table: " + targetpattern_s + " (for source " + sourcepattern_s + ")")
 
                         print("\t\t" + str(translationcount) + " translation options written",file=sys.stderr)
 
