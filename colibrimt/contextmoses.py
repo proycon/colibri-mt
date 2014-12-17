@@ -93,7 +93,7 @@ def main():
     parser.add_argument('--classifierdir', type=str,help="Trained classifiers, intermediate phrase-table and test file will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--decodedir', type=str,help="Moses output will be written here (only specify if you want a different location than the work directory)", action='store',default="",required=False)
     parser.add_argument('--skipdecoder',action="store_true",default=False)
-    parser.add_argument('--ignoreerrors',action="Attempt to ignore errors",default=False)
+    parser.add_argument('--ignoreerrors',action="store_true",help="Attempt to ignore errors",default=False)
     parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -Z is enabled",action='store',default=8080)
     args = parser.parse_args()
     #args.storeconst, args.dataset, args.num, args.bar
