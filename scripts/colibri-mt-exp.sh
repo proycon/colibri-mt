@@ -505,7 +505,7 @@ if [ "$RUN" = "1" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
             CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT $REORDERINGWEIGHTS_OPTIONS --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
-            if [ "$MERT" = "1" ]; then
+            if [[ $MERT -ge 1 ]]; then
                 CMD="$CMD --skipdecoder"
                 echo "(Skipping decoder on first run, as mert is enabled)">&2
             fi
@@ -521,26 +521,30 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
-            if [ "$MERT" = "1" ]; then
-                echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nCopying MERT-optimised configuration and running decoder on test set${NC}">&2
-                #copy moses ini from mert
-                cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/
-                #replace phrase-table reference 
-                sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini
+            if [[ $MERT -ge 1 ]]; then
+                for MERTRUN in `seq 1 $MERT`; do
+                    echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nRunning decoder on test set with MERT optimization #${MERTRUN}${NC}">&2
+                    #copy moses ini from mert
+                    cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
+                    #replace phrase-table reference 
+                    sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
+                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini moses.ini #will always refer to last run
 
-                #run decoder (skipped earlier)
-                echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
-                moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log
+                    #run decoder (skipped earlier)
+                    echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN" >&2
+                    moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.opt${MERTRUN}.log
+                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN output.txt #will always refer to last run
 
-                if [[ $? -ne 0 ]]; then
-                    echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
-                    echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log , tail:" >&2
-                    tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.log >&2
-                    sleep 3
-                    exit 2
-                fi
+                    if [[ $? -ne 0 ]]; then
+                        echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
+                        echo -e "See $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.opt${MERTRUN}.log , tail:" >&2
+                        tail -n 25 $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.opt${MERTRUN}.log >&2
+                        sleep 3
+                        exit 2
+                    fi
+                done
             fi
-        elif [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
+        elif [[ $MERT -eq 0 ]] && [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
             #copy back, paths are relative
             echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
