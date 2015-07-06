@@ -58,7 +58,7 @@ if [ "$IGNORECLASSIFIER" = "1" ]; then
 else
     CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 fi
-if [ "$MERT" = "1" ]; then
+if [[ $MERT -ge 1 ]]; then
     DECODEDIR="decode-mert"
 else
     DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}-P${PWEIGHT}"
@@ -106,7 +106,7 @@ fi
 if [ "$RUN" = "1" ]; then
 
     ####### integrity checks ###################
-    if [ "$MERT" = "1" ] && [ -z $MOSESDIR ]; then
+    if [[ $MERT -ge 1 ]] && [ -z $MOSESDIR ]; then
         echo -e "${red}MOSESDIR must be set when MERT is used${NC}" >&2
         sleep 3
         exit 2
@@ -133,7 +133,7 @@ if [ "$RUN" = "1" ]; then
         exit 2
     fi
 
-    if [ "$MERT" = "1" ]; then
+    if [ $MERT -ge 1 ]; then
         if [ -z "$DEVSOURCE" ]; then
             echo -e "${red}MERT is enabled but no DEVSOURCE is specified!${NC}" >&2
             sleep 3
@@ -198,32 +198,34 @@ if [ "$RUN" = "1" ]; then
             echo -e "${magenta}[$NAME (Moses only)]\nPhrase-table already built${NC}">&2
         fi
 
-        if [ "$MERT" = 1 ]; then
-            echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
-            if [ ! -f mert-work/moses.ini ]; then
-                echo "$MOSESDIR/scripts/training/mert-moses.pl --decoder-flags=\"-threads $THREADS\" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini" >&2
-                $MOSESDIR/scripts/training/mert-moses.pl --decoder-flags="-threads $THREADS" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini
-                if [[ $? -ne 0 ]]; then
-                    echo -e "${red}Error in MERT${NC}" >&2
-                    sleep 3
-                    exit 2
+        if [[ $MERT -ge  1 ]]; then
+            for MERTRUN in `seq 1 $MERT`; do 
+                echo -e "${blue}[$NAME (Moses only)]\nRunning MERT${NC}">&2
+                if [ ! -f mert-work/moses.ini ]; then
+                    echo "$MOSESDIR/scripts/training/mert-moses.pl --decoder-flags=\"-threads $THREADS\" --working-dir="mert-work-$MERTRUN" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini" >&2
+                    $MOSESDIR/scripts/training/mert-moses.pl --decoder-flags="-threads $THREADS" --working-dir="mert-work-$MERTRUN" --mertdir=$MOSESDIR/mert/ ../$DEVSOURCE.txt ../$DEVTARGET.txt `which moses` model/moses.ini
+                    if [[ $? -ne 0 ]]; then
+                        echo -e "${red}Error in MERT${NC}" >&2
+                        sleep 3
+                        exit 2
+                    fi
                 fi
-            fi
 
-            if [ ! -f output.mosesonly-mert.txt ]; then
-                echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
-                echo "moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt">&2
-                moses -threads $THREADS -f mert-work/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert.txt
-            else
-                echo -e "${magenta}[$NAME (Moses only, mert)]\nMoses output already exists ${NC}">&2
-            fi
+                if [ ! -f output.mosesonly-mert.txt ]; then
+                    echo -e "${blue}[$NAME (Moses only, mert)]\nInvoking moses directly on the data (Moses-only approach, no classifiers or bypass method whatsoever)${NC}">&2
+                    echo "moses -threads $THREADS -f mert-work-$MERTRUN/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert-$MERTRUN.txt">&2
+                    moses -threads $THREADS -f mert-work-$MERTRUN/moses.ini < ../$TESTSOURCE.txt > output.mosesonly-mert-$MERTRUN.txt
+                else
+                    echo -e "${magenta}[$NAME (Moses only, mert)]\nMoses output already exists ${NC}">&2
+                fi
 
-            if [ ! -f output.mosesonly-mert.summary.score ]; then
-                echo -e "${blue}[$NAME (Moses only, mert)]\nEvaluating${NC}">&2
-                colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly-mert.txt 
-            else
-                echo -e "${magenta}[$NAME (Moses only, mert)]\nEvaluation already done${NC}">&2
-            fi
+                if [ ! -f output.mosesonly-mert-$MERTRUN.summary.score ]; then
+                    echo -e "${blue}[$NAME (Moses only, mert)]\nEvaluating${NC}">&2
+                    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out output.mosesonly-mert-$MERTRUN.txt 
+                else
+                    echo -e "${magenta}[$NAME (Moses only, mert)]\nEvaluation already done${NC}">&2
+                fi
+            done
         else
             #no mert
 

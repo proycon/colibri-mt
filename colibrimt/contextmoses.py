@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BEGINPATTERN, ENDPATTERN
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BEGINPATTERN, ENDPATTERN #pylint: disable=import-error
 from colibrimt.alignmentmodel import AlignmentModel, Configuration
 import timbl
 import pickle
@@ -77,7 +77,7 @@ def main():
     parser.add_argument('--mosesinclusive',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Classifier output competes with normal translation table. Score handling (-H) has no effect as only the classifier score will be passed.", action='store_true',default=False)
     parser.add_argument('--mosesexclusive',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Classifier does NOT compete with normal translation table. Score handling (-H) has no effect as only the classifier score will be passed.", action='store_true',default=False)
     parser.add_argument('--mosesdir', type=str,help='Path to Moses directory (required for MERT)', default="")
-    parser.add_argument('--mert', action="store_true",help="Do MERT parameter tuning", required=False)
+    parser.add_argument('--mert', type=int,help="Do MERT parameter tuning, set to number of MERT runs to perform", required=False, default=0)
     parser.add_argument('--threads', type=int, default=1, help="Number of threads to use for Moses or Mert")
     parser.add_argument('--reordering', type=str,action="store",help="Reordering type (use with --reorderingtable)", required=False)
     parser.add_argument('--reorderingtable', type=str,action="store",help="Use reordering table (use with --reordering)", required=False)
@@ -632,14 +632,15 @@ Distortion0= {dweight}
                     else:
                         ref = os.getcwd() + '/' + args.ref
 
-                    #invoke mert
-                    cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --predictable-seeds --threads=" + str(args.threads)
-                    print("Contextmoses calling mert: " + cmd,file=sys.stderr)
-                    r = subprocess.call(cmd, shell=True)
-                    if r != 0:
-                        print("Contextmoses called mert but failed!", file=sys.stderr)
-                        sys.exit(1)
-                    print("DONE: Contextmoses calling mert: " + cmd,file=sys.stderr)
+                    for mertrun in range(1,args.mert+1):
+                        #invoke mert
+                        cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
+                        print("Contextmoses calling mert #" + str(mertrun) + ": " + cmd,file=sys.stderr)
+                        r = subprocess.call(cmd, shell=True)
+                        if r != 0:
+                            print("Contextmoses called mert #" + str(mertrun) + " but failed!", file=sys.stderr)
+                            sys.exit(1)
+                        print("DONE: Contextmoses calling mert #" + str(mertrun)+": " + cmd,file=sys.stderr)
                 else:
                     #invoke moses
                     cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
