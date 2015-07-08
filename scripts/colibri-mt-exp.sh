@@ -30,21 +30,6 @@ if [ "$IGNORECLASSIFIER" = "1" ]; then
 else
     CONTEXTMOSES_EXTRAOPTIONS=""
 fi
-TWEIGHTS_COMMA=""
-TWEIGHTS_OPTIONS=""
-for tweight in ${TWEIGHTS[*]}; do
-    if [ ! -z "${TWEIGHTS_COMMA}" ]; then
-        TWEIGHTS_COMMA="${TWEIGHTS_COMMA},${tweight}"
-    else
-        TWEIGHTS_COMMA=$tweight
-    fi
-    TWEIGHTS_OPTIONS="${TWEIGHTS_OPTIONS} --tweight $tweight"
-done
-if [ -z $TWEIGHTS_COMMA ]; then
-    echo "No tweights? tweights=$TWEIGHTS">&2
-    sleep 3
-    exit 2
-fi
 REORDERINGWEIGHTS_OPTIONS=""
 if [ ! -z "$REORDERINGWEIGHTS" ]; then
     REORDERINGWEIGHTS_COMMA=${REORDERINGWEIGHTS// /,}
@@ -58,9 +43,24 @@ if [ "$IGNORECLASSIFIER" = "1" ]; then
 else
     CLASSIFIERSUBDIR="classifiers-H${SCOREHANDLING}-ta${TIMBL_A}"
 fi
+TWEIGHTS_COMMA=""
+TWEIGHTS_OPTIONS=""
 if [[ $MERT -ge 1 ]]; then
     DECODEDIR="decode-mert"
 else
+    for tweight in ${TWEIGHTS[*]}; do
+        if [ ! -z "${TWEIGHTS_COMMA}" ]; then
+            TWEIGHTS_COMMA="${TWEIGHTS_COMMA},${tweight}"
+        else
+            TWEIGHTS_COMMA=$tweight
+        fi
+        TWEIGHTS_OPTIONS="${TWEIGHTS_OPTIONS} --tweight $tweight"
+    done
+    if [ -z $TWEIGHTS_COMMA ]; then
+        echo "No tweights? tweights=$TWEIGHTS">&2
+        sleep 3
+        exit 2
+    fi
     DECODEDIR="decode-T${TWEIGHTS_COMMA}-L${LMWEIGHT}-D${DWEIGHT}-W${WWEIGHT}-P${PWEIGHT}"
 fi
 DECODEMERTDIR="dev-mert"
@@ -504,7 +504,8 @@ if [ "$RUN" = "1" ]; then
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
-            CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT $REORDERINGWEIGHTS_OPTIONS --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
+            #CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT $REORDERINGWEIGHTS_OPTIONS --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
+            CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING  --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
             if [[ $MERT -ge 1 ]]; then
                 CMD="$CMD --skipdecoder"
                 echo "(Skipping decoder on first run, as mert is enabled)">&2
