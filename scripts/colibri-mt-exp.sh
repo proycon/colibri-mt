@@ -532,13 +532,13 @@ if [ "$RUN" = "1" ]; then
                     #copy moses ini from mert
                     cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work-$MERTRUN/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
                     #replace phrase-table reference 
-                    sed -i s/[A-Za-z0-9\.//_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/ $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
-                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini moses.ini #will always refer to last run
+                    sed -i -e "s/[A-Za-z0-9\.\/_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/" $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
+                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini #will always refer to last run
 
                     #run decoder (skipped earlier)
                     echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN" >&2
                     moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.opt${MERTRUN}.log
-                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN output.txt #will always refer to last run
+                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt #will always refer to last run
 
                     if [[ $? -ne 0 ]]; then
                         echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
