@@ -334,7 +334,11 @@ def main():
                 lentweights = len(args.tweight)
 
 
+            if os.path.exists(decodedir + "/moses.ini"):
+                os.unlink(decodedir+"/moses.ini")
+
             print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
+
 
             if args.reordering:
                 reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"

@@ -506,7 +506,7 @@ if [ "$RUN" = "1" ]; then
         fi
 
         if [ ! -d "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini" ] || [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt" ]; then
-            mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR"
+            mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" 2>/dev/null
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
             #CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT $REORDERINGWEIGHTS_OPTIONS --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
             CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING  --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
