@@ -65,6 +65,9 @@ else
 fi
 DECODEMERTDIR="dev-mert"
 
+if [[ $LEFT -ge 1 ]] || [[ $RIGHT -ge 1 ]]; then
+    BASELINEDIR="$EXPDIR/$NAME/classifierdata-MI1l0r0$EXTRANAME/classifiers-H${SCOREHANDLING}-ignored/decode-mert/"
+fi
 
 if [ -z "$THREADS" ]; then
     THREADS=1
