@@ -633,14 +633,17 @@ Distortion0= {dweight}
                         ref = os.getcwd() + '/' + args.ref
 
                     for mertrun in range(1,args.mert+1):
-                        #invoke mert
-                        cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
-                        print("Contextmoses calling mert #" + str(mertrun) + ": " + cmd,file=sys.stderr)
-                        r = subprocess.call(cmd, shell=True)
-                        if r != 0:
-                            print("Contextmoses called mert #" + str(mertrun) + " but failed!", file=sys.stderr)
-                            sys.exit(1)
-                        print("DONE: Contextmoses calling mert #" + str(mertrun)+": " + cmd,file=sys.stderr)
+                        if os.path.exists(decodedir+"/mert-work-" + str(mertrun) +"/moses.ini"):
+                            print("Mert run #" + str(mertrun) + " already ran, skipping...",file=sys.stderr)
+                        else:
+                            #invoke mert
+                            cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
+                            print("Contextmoses calling mert #" + str(mertrun) + ": " + cmd,file=sys.stderr)
+                            r = subprocess.call(cmd, shell=True)
+                            if r != 0:
+                                print("Contextmoses called mert #" + str(mertrun) + " but failed!", file=sys.stderr)
+                                sys.exit(1)
+                            print("DONE: Contextmoses calling mert #" + str(mertrun)+": " + cmd,file=sys.stderr)
                 else:
                     #invoke moses
                     cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
