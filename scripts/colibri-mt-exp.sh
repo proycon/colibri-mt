@@ -403,7 +403,11 @@ if [ "$RUN" = "1" ]; then
             exit 0
         fi
 
-        if [ ! -d $CLASSIFIERDIR ]; then
+        if [ -d $CLASSIFIERDIR ]; then
+            TRAINFILES=`find $CLASSIFIERDIR -type f -name "*.train" | wc -l`
+        fi
+
+        if [ ! -d $CLASSIFIERDIR ] || [[ $TRAINFILES -eq 0 ]]; then
             echo -e "${blue}[$NAME/$CLASSIFIERDIR]\nExtracting features and building classifiers${NC}">&2
             mkdir $CLASSIFIERDIR
             if [ ! -z "$TRAINFACTOR" ]; then
