@@ -533,12 +533,12 @@ if [ "$RUN" = "1" ]; then
                     cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work-$MERTRUN/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
                     #replace phrase-table reference 
                     sed -i -e "s/[A-Za-z0-9\.\/_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/" $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
-                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini #will always refer to last run
+                    ln -sf $EXPDIR/$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini #will always refer to last run
 
                     #run decoder (skipped earlier)
                     echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN" >&2
                     moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.opt${MERTRUN}.log
-                    ln -sf $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt #will always refer to last run
+                    ln -sf $EXPDIR/$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt$MERTRUN $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt #will always refer to last run
 
                     if [[ $? -ne 0 ]]; then
                         echo -e "${red}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nError in moses${NC}" >&2
@@ -572,24 +572,28 @@ if [ "$RUN" = "1" ]; then
             exit 0
         fi
 
-        if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ] && [ "$BASELINEDIR" != "" ]; then
-            if [[ $MERT -ge 1 ]]; then
-               mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
-               OLDPWD=`pwd`
-               cd $MULTEVALDIR
-               ./multeval eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
-               cd $OLDPWD
-            else
-                echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating${NC}">&2
-                colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
+        if [ "$BASELINEDIR" == "" ]; then
+            echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nNo BASELINEDIR set, skipping evaluation${NC}">&2
+        else
+            if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ] && [ "$BASELINEDIR" != "" ]; then
+                if [[ $MERT -ge 1 ]]; then
+                mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
+                OLDPWD=`pwd`
+                cd $MULTEVALDIR
+                ./multeval eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
+                cd $OLDPWD
+                else
+                    echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating${NC}">&2
+                    colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
 
+                    echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
+                    echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
+                fi
+            else
+                echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nEvaluation already done${NC}">&2
                 echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
                 echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
             fi
-        else
-            echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nEvaluation already done${NC}">&2
-            echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
-            echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
         fi
     fi
 
