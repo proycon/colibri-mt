@@ -256,6 +256,7 @@ def main():
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
                     sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
                     if not sourcepattern in testmodel:
+                        print("Skipping " + trainfile + " (not in test model)",file=sys.stderr)
                         continue
 
                 #build a classifier
