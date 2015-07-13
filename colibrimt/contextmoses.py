@@ -256,6 +256,8 @@ def main():
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
                     sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
                     if not sourcepattern in testmodel:
+                        if sourcepattern_s == "一 杯 咖啡 。":
+                            import pdb; pdb.set_trace()
                         print("Skipping " + trainfile + " (\"" + sourcepattern_s + "\" not in test model)",file=sys.stderr)
                         continue
 
