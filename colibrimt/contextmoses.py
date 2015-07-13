@@ -645,6 +645,7 @@ Distortion0= {dweight}
                         else:
                             #invoke mert
                             cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
+                            #TODO: test must be dev!!!
                             print("Contextmoses calling mert #" + str(mertrun) + ": " + cmd,file=sys.stderr)
                             r = subprocess.call(cmd, shell=True)
                             if r != 0:
