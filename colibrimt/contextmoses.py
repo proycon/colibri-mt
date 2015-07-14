@@ -51,7 +51,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
     return featurevector
 
 def gettimbloptions(args, classifierconf):
-    timbloptions = "-a " + args.ta + " -k " + args.tk + " -w " + args.tw + " -m " + args.tm + " -d " + args.td  + " -vdb -G0"
+    timbloptions = "-a " + args.ta + " -k " + args.tk + " -w " + args.tw + " -m " + args.tm + " -d " + args.td  + " -vdb+s -G0"
     if classifierconf['weighbyoccurrence'] or classifierconf['weighbyscore']:
         timbloptions += " -s"
     return timbloptions
