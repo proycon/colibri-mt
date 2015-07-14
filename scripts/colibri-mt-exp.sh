@@ -535,7 +535,8 @@ if [ "$RUN" = "1" ]; then
                     #copy moses ini from mert
                     cp -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEMERTDIR/mert-work-$MERTRUN/moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
                     #replace phrase-table reference 
-                    sed -i -e "s/[A-Za-z0-9\.\/_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/phrase-table/" $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
+                    sed -i -e "s/[A-Za-z0-9\.\/_-]*phrase-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/$DECODEDIR\/phrase-table/" $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
+                    sed -i -e "s/[A-Za-z0-9\.\/_-]*reordering-table/$CLASSIFIERDIR\/$CLASSIFIERSUBDIR\/$DECODEDIR\/reordering-table/" $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini
                     ln -sf $EXPDIR/$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/mert-work-$MERTRUN-moses.ini $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini #will always refer to last run
 
                     #run decoder (skipped earlier)
