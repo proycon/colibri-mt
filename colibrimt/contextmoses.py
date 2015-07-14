@@ -285,9 +285,9 @@ def main():
 
 
         if not args.mosesinclusive and not args.mosesexclusive:
-            print("Writing intermediate test data to " + classifierdir + "/test.txt",file=sys.stderr)
+            print("Writing intermediate test data to " + decodedir + "/test.txt",file=sys.stderr)
             #write intermediate test data (consisting only of indices AND unknown words) and
-            f = open(classifierdir + "/test.txt",'w',encoding='utf-8')
+            f = open(decodedir + "/test.txt",'w',encoding='utf-8')
             for sentencenum, line in enumerate(classifierconf['featureconf'][0].corpus.sentences()):
                 sentenceindex = sentencenum + 1
                 print("@" + str(sentenceindex),file=sys.stderr)
@@ -644,7 +644,7 @@ Distortion0= {dweight}
                             print("Mert run #" + str(mertrun) + " already ran, skipping...",file=sys.stderr)
                         else:
                             #invoke mert
-                            cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + classifierdir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
+                            cmd = args.mosesdir + "/scripts/training/mert-moses.pl --working-dir=" + decodedir + "/mert-work-" + str(mertrun) + " --mertdir=" + args.mosesdir + '/mert/' + ' --decoder-flags="-threads ' + str(args.threads) + '" ' + decodedir + "/test.txt " + ref + " `which moses` " + decodedir + "/moses.ini --threads=" + str(args.threads)
                             print("Contextmoses calling mert #" + str(mertrun) + ": " + cmd,file=sys.stderr)
                             r = subprocess.call(cmd, shell=True)
                             if r != 0:
@@ -653,7 +653,7 @@ Distortion0= {dweight}
                             print("DONE: Contextmoses calling mert #" + str(mertrun)+": " + cmd,file=sys.stderr)
                 else:
                     #invoke moses
-                    cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + classifierdir + "/test.txt > " + decodedir + "/output.txt"
+                    cmd = EXEC_MOSES + " -threads " + str(args.threads) + " -f " + decodedir + "/moses.ini < " + decodedir + "/test.txt > " + decodedir + "/output.txt"
                     print("Contextmoses calling moses: " + cmd,file=sys.stderr)
                     r = subprocess.call(cmd, shell=True)
                     if r != 0:
