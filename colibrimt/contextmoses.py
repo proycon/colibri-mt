@@ -256,8 +256,6 @@ def main():
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
                     sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
                     if not sourcepattern in testmodel:
-                        if sourcepattern_s == "一 杯 咖啡 。":
-                            import pdb; pdb.set_trace()
                         print("Skipping " + trainfile + " (\"" + sourcepattern_s + "\" not in test model)",file=sys.stderr)
                         continue
 
@@ -451,7 +449,8 @@ Distortion0= {dweight}
                                 print("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!! " + trainfile + " exists but " + ibasefile + " misses",file=sys.stderr)
                                 print("Classifier dir: ", classifierdir,file=sys.stderr)
                                 print("Workdir (training data dir): ", args.workdir,file=sys.stderr)
-                                raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
+                                import pdb; pdb.set_trace()
+                                #raise Exception("ERROR: Classifier for " + sourcepattern_s + " built but not trained!!!!")
                             else:
                                 #no classifier
                                 classifier = None
