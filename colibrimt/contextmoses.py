@@ -206,7 +206,7 @@ def main():
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         #saving just so we can inspect it for debug purposes:
-        testmodel.write(  classifierdir + '/test.colibri.indexedpatternmodel'  )
+        testmodel.write(  decodedir + '/test.colibri.indexedpatternmodel'  )
 
 
         if args.reorderingtable:
@@ -320,7 +320,7 @@ def main():
 
         if args.reorderingtable:
             print("Creating intermediate phrase-table and reordering-table",file=sys.stderr)
-            freordering = open(classifierdir + "/reordering-table", 'w',encoding='utf-8')
+            freordering = open(decodedir + "/reordering-table", 'w',encoding='utf-8')
         else:
             print("Creating intermediate phrase-table",file=sys.stderr)
             freordering = None
@@ -344,7 +344,7 @@ def main():
 
 
             if args.reordering:
-                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
+                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + decodedir + "/reordering-table"
                 reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
             else:
                 reorderingfeature = ""
@@ -380,7 +380,7 @@ LM0= {lmweight}
 TranslationModel0= {tweights}
 Distortion0= {dweight}
 {reorderingweight}
-""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
+""".format(phrasetable=decodedir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
             f.close()
 
             print("Starting Moses Server",file=sys.stderr)
@@ -414,7 +414,7 @@ Distortion0= {dweight}
         else: #No XML method
 
             #create intermediate phrasetable, with indices covering the entire test corpus instead of source text and calling classifier with context information to obtain adjusted translation with distribution
-            ftable = open(classifierdir + "/phrase-table", 'w',encoding='utf-8')
+            ftable = open(decodedir + "/phrase-table", 'w',encoding='utf-8')
             prevpattern = None
             sourcepatterncount = len(testmodel)
             for i, sourcepattern in enumerate(testmodel):
@@ -587,7 +587,7 @@ Distortion0= {dweight}
             print("Writing " + decodedir + "/moses.ini",file=sys.stderr)
 
             if args.reordering:
-                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + classifierdir + "/reordering-table"
+                reorderingfeature = "LexicalReordering name=LexicalReordering0 num-features=6 type=" + args.reordering + " input-factor=0 output-factor=0 path=" + decodedir + "/reordering-table"
                 if not args.reorderingweight:
                     reorderingweight =  "LexicalReordering0= 0.3 0.3 0.3 0.3 0.3 0.3"
                 else:
@@ -626,7 +626,7 @@ LM0= {lmweight}
 TranslationModel0= {tweights}
 Distortion0= {dweight}
 {reorderingweight}
-""".format(phrasetable=classifierdir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
+""".format(phrasetable=decodedir + "/phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.lmweight, dweight = args.dweight, tweights=tweights, lentweights=lentweights, wweight=args.wweight, pweight = args.pweight, reorderingfeature=reorderingfeature, reorderingweight=reorderingweight))
 
 
 
