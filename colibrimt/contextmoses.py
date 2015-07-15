@@ -36,7 +36,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
                 raise Exception("Unigram (" + str(sentence) + "," + str(i) + "), has invalid length " + str(len(unigram)))
             featurevector.append(unigram.tostring(classdecoder))
         if focus:
-            focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)]
+            focuspattern = factoredcorpus[(sentence,token):(sentence,token+n)] #pylint: disable=invalid-slice-index
             assert len(focuspattern) >= 1
             featurevector.append(focuspattern.tostring(classdecoder))
         for i in range(token + n , token + n + rightcontext):
@@ -61,6 +61,7 @@ EXEC_MOSES = "moses"
 def main():
     parser = argparse.ArgumentParser(description="Wrapper around the Moses Decoder that adds support for context features through classifiers.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-f','--inputfile', type=str,help="Input text file; the test corpus (plain text, tokenised, one sentence per line), may be specified multiple times for each factor", action='append',required=False)
+    parser.add_argument('-d','--devinputfile', type=str,help="Extra input text file to consider when training classifiers; the development corpus (plain text, tokenised, one sentence per line)", action='store',required=False)
     parser.add_argument('-S','--sourceclassfile', type=str, help="Source class file", action='store',required=True)
     parser.add_argument('-T','--targetclassfile', type=str, help="Target class file", action='store',required=True)
     parser.add_argument('-a','--alignmodelfile', type=str,help="Colibri alignment model (made from phrase translation table)", action='store',default="",required=False)
@@ -166,6 +167,9 @@ def main():
             print("Loading and extending source class encoder, from " + trainclassfile + " to " + classfile,file=sys.stderr)
             sourceencoders.append( ClassEncoder(trainclassfile) )
             sourceencoders[i].build(inputfile)
+            if i == 0 and args.devinputfile:
+                print("(including development corpus in extended class encoder)",file=sys.stderr)
+                sourceencoders[i].build(args.devinputfile)
             sourceencoders[i].save(classfile)
             print("Encoding test corpus, from " + inputfile + " to " + corpusfile,file=sys.stderr)
             sourceencoders[i].encodefile(inputfile, corpusfile)
@@ -208,6 +212,15 @@ def main():
         #saving just so we can inspect it for debug purposes:
         testmodel.write(  decodedir + '/test.colibri.indexedpatternmodel'  )
 
+        if args.devinputfile:
+            devmodel = IndexedPatternModel()
+            devmodel.train( args.devinputfile, options, alignmodel)
+            print("\tDevelopment model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
+
+            #saving just so we can inspect it for debug purposes:
+            devmodel.write(  decodedir + '/dev.colibri.indexedpatternmodel'  )
+        else:
+            devmodel = {}
 
         if args.reorderingtable:
             print("Loading reordering model (may take a while)",file=sys.stderr)
@@ -255,8 +268,8 @@ def main():
                 if args.inputfile:
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
                     sourcepattern = sourceencoders[0].buildpattern(sourcepattern_s)
-                    if not sourcepattern in testmodel:
-                        print("Skipping " + trainfile + " (\"" + sourcepattern_s + "\" not in test model)",file=sys.stderr)
+                    if not sourcepattern in testmodel and not sourcepattern in devmodel:
+                        print("Skipping " + trainfile + " (\"" + sourcepattern_s + "\" not in test/dev model)",file=sys.stderr)
                         continue
 
                 #build a classifier
