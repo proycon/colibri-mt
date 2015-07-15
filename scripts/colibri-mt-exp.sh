@@ -452,15 +452,21 @@ if [ "$RUN" = "1" ]; then
 
         TRAINFILES=`find $CLASSIFIERDIR -type f -name "*.train" | wc -l`
         IBASEFILES=`find $CLASSIFIERDIR/$CLASSIFIERSUBDIR -type f -name "*.ibase" | wc -l`
+
         echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases (it's okay if numbers don't match, we only train what we need)" >&2
         if [ $TRAINFILES -eq 0 ]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR]\nNo training files found, something went wrong?${NC}" >&2
             exit 2
         fi
+        if [[ $MERT -ge 1 ]]; then
+            WITHDEVSOURCE="-d ../$DEVSOURCE.txt"  #take dev set into account when training classifiers
+        else
+            WITHDEVSOURCE=""
+        fi
         if [ ! -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/trained ]; then
             #classifiers are built even when ignored later
-            echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
-            CMD="colibri-contextmoses --train -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
+            echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
+            CMD="colibri-contextmoses --train -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $WITHDEVSOURCE $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
             echo $CMD>&2
             $CMD 2> $CLASSIFIERDIR/$CLASSIFIERSUBDIR/contextmoses-train.log
             if [[ $? -ne 0 ]]; then
@@ -514,12 +520,6 @@ if [ "$RUN" = "1" ]; then
             mkdir "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR" 2>/dev/null
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nProcessing test data and invoking moses${NC}">&2
             #CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING $TWEIGHTS_OPTIONS --lmweight $LMWEIGHT --dweight $DWEIGHT --wweight $WWEIGHT --pweight $PWEIGHT $REORDERINGWEIGHTS_OPTIONS --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
-            if [[ $MERT -ge 1 ]]; then
-                #concatenate test and dev set so we train all necessary classifiers 
-                WITHDEVSOURCE="-d ../$DEVSOURCE.txt"
-            else
-                WITHDEVSOURCE=""
-            fi
             CMD="colibri-contextmoses -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $WITHDEVSOURCE $FACTOROPTIONS -w $CLASSIFIERDIR --lm $EXPDIR/$NAME/$TARGETLANG.lm -H $SCOREHANDLING  --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --decodedir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR --threads $THREADS --ta ${TIMBL_A} --tk ${TIMBL_K} --td ${TIMBL_D} --tw ${TIMBL_W} --tm ${TIMBL_M} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
             if [[ $MERT -ge 1 ]]; then
                 CMD="$CMD --skipdecoder"

@@ -166,10 +166,11 @@ def main():
             #else:
             print("Loading and extending source class encoder, from " + trainclassfile + " to " + classfile,file=sys.stderr)
             sourceencoders.append( ClassEncoder(trainclassfile) )
-            sourceencoders[i].build(inputfile)
+            sourceencoders[i].processcorpus(inputfile)
             if i == 0 and args.devinputfile:
                 print("(including development corpus in extended class encoder)",file=sys.stderr)
-                sourceencoders[i].build(args.devinputfile)
+                sourceencoders[i].processcorpus(args.devinputfile)
+            sourceencoders[i].buildclasses()
             sourceencoders[i].save(classfile)
             print("Encoding test corpus, from " + inputfile + " to " + corpusfile,file=sys.stderr)
             sourceencoders[i].encodefile(inputfile, corpusfile)
