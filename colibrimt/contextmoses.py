@@ -293,7 +293,7 @@ def main():
                 if not os.path.exists(trainfile.replace(".train",".ibase")):
                     raise Exception("Resulting instance base " + trainfile.replace(".train",".ibase") + " not found!")
 
-        with open(args.workdir + '/trained','w',encoding='utf-8') as f:
+        with open(args.classifierdir + '/trained','w',encoding='utf-8') as f:
             f.write(str(trained)+"\n")
 
     else:
