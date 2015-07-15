@@ -174,6 +174,9 @@ def main():
             sourceencoders[i].save(classfile)
             print("Encoding test corpus, from " + inputfile + " to " + corpusfile,file=sys.stderr)
             sourceencoders[i].encodefile(inputfile, corpusfile)
+            if i == 0 and args.devinputfile:
+                print("Encoding development corpus, from " + args.devinputfile + " to " + args.devinputfile + '.colibri.dat',file=sys.stderr)
+                sourceencoders[i].encodefile(args.devinputfile, args.devinputfile + '.colibri.dat')
             print("Loading source class decoder " + classfile,file=sys.stderr)
             sourcedecoder = ClassDecoder(classfile)
 
@@ -215,7 +218,7 @@ def main():
 
         if args.devinputfile:
             devmodel = IndexedPatternModel()
-            devmodel.train( args.devinputfile, options, alignmodel)
+            devmodel.train( args.devinputfile +'.colibri.dat', options, alignmodel)
             print("\tDevelopment model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
             #saving just so we can inspect it for debug purposes:

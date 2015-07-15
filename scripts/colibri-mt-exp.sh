@@ -458,8 +458,8 @@ if [ "$RUN" = "1" ]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR]\nNo training files found, something went wrong?${NC}" >&2
             exit 2
         fi
-        if [[ $MERT -ge 1 ]]; then
-            WITHDEVSOURCE="-d ../$DEVSOURCE.txt"  #take dev set into account when training classifiers
+        if [[ $MERT -ge 1 ]] && [ ! -z $DEVSOURCE ]; then
+            WITHDEVSOURCE="-d ../$DEVSOURCE.txt"  #take dev set 
         else
             WITHDEVSOURCE=""
         fi
