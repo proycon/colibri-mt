@@ -452,12 +452,12 @@ if [ "$RUN" = "1" ]; then
 
         TRAINFILES=`find $CLASSIFIERDIR -type f -name "*.train" | wc -l`
         IBASEFILES=`find $CLASSIFIERDIR/$CLASSIFIERSUBDIR -type f -name "*.ibase" | wc -l`
-        echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases" >&2
+        echo -e "Found $TRAINFILES files for training and $IBASEFILES trained instance bases (it's okay if numbers don't match, we only train what we need)" >&2
         if [ $TRAINFILES -eq 0 ]; then
             echo -e "${red}[$NAME/$CLASSIFIERDIR]\nNo training files found, something went wrong?${NC}" >&2
             exit 2
         fi
-        if [ $IBASEFILES -ne $TRAINFILES ]; then
+        if [ ! -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/trained ]; then
             #classifiers are built even when ignored later
             echo -e "${blue}[$NAME/$CLASSIFIER/$CLASSIFIERSUBDIR]\nTraining classifiers${NC}">&2
             CMD="colibri-contextmoses --train -a $NAME.colibri.alignmodel -S $TRAINSOURCE.colibri.cls -T $TRAINTARGET.colibri.cls -f ../$TESTSOURCE.txt $FACTOROPTIONS -w $CLASSIFIERDIR --classifierdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR --threads $THREADS --ta ${TIMBL_A} ${CONTEXTMOSES_EXTRAOPTIONS} --ignoreerrors"
@@ -470,6 +470,8 @@ if [ "$RUN" = "1" ]; then
                 sleep 3
                 exit 2
             fi
+        else
+            echo -e "${magenta}[$NAME/$CLASSIFIERDIR]\nClassifiers already trained${NC}">&2
         fi
 
         if [ "$LASTSTAGE" = "trainclassifiers" ]; then

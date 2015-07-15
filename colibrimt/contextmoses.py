@@ -262,8 +262,10 @@ def main():
             if args.classifierdir:
                 #remove copy
                 os.unlink(trainfile+".train")
+            trained = 1
         else:
             #experts
+            trained = 0
             for trainfile in itertools.chain(glob.glob(args.workdir + "/*.train"), glob.glob(args.workdir + "/.*.train")): #explicitly add 'dotfiles', will be skipped by default
                 if args.inputfile:
                     sourcepattern_s = unquote_plus(os.path.basename(trainfile.replace('.train','')))
@@ -274,6 +276,7 @@ def main():
 
                 #build a classifier
                 print("Training " + trainfile,file=sys.stderr)
+                trained += 1
                 timbloptions = gettimbloptions(args, classifierconf)
                 if args.classifierdir:
                     #ugly hack since we want ibases in a different location
@@ -288,6 +291,10 @@ def main():
                     os.unlink(trainfile)
                 if not os.path.exists(trainfile.replace(".train",".ibase")):
                     raise Exception("Resulting instance base " + trainfile.replace(".train",".ibase") + " not found!")
+
+        with open(args.workdir + '/trained','w',encoding='utf-8') as f:
+            f.write(str(trained)+"\n")
+
     else:
         #TEST
         if not args.inputfile:
