@@ -587,7 +587,7 @@ if [ "$RUN" = "1" ]; then
         if [ "$BASELINEDIR" == "" ]; then
             echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nNo BASELINEDIR set, skipping evaluation${NC}">&2
         else
-            if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ] && [ "$BASELINEDIR" != "" ]; then
+            if [ ! -s "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ] && [ "$BASELINEDIR" != "" ]; then
                 if [[ $MERT -ge 1 ]]; then
                     echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating using multieval${NC}">&2
                     mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
