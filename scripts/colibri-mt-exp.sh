@@ -592,7 +592,7 @@ if [ "$RUN" = "1" ]; then
                 mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
                 OLDPWD=`pwd`
                 cd $MULTEVALDIR
-                ./multeval eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
+                ./multeval.sh eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
                 cd $OLDPWD
                 else
                     echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating${NC}">&2
