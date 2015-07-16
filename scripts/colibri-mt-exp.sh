@@ -589,18 +589,18 @@ if [ "$RUN" = "1" ]; then
         else
             if [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score" ] && [ "$BASELINEDIR" != "" ]; then
                 if [[ $MERT -ge 1 ]]; then
-                mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
-                OLDPWD=`pwd`
-                cd $MULTEVALDIR
-                ./multeval.sh eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
-                cd $OLDPWD
+                    echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating using multieval${NC}">&2
+                    mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
+                    OLDPWD=`pwd`
+                    cd $MULTEVALDIR
+                    ./multeval.sh eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
+                    cd $OLDPWD
                 else
                     echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating${NC}">&2
                     colibri-evaluate --matrexdir $MATREXDIR --input ../$TESTSOURCE.txt --ref ../$TESTTARGET.txt --out $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt 
-
-                    echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
-                    echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
                 fi
+                echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
+                echo "Decoder output and evaluation is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/"
             else
                 echo -e "${magenta}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODERDIR]\nEvaluation already done${NC}">&2
                 echo "Classifier output is in $CLASSIFIERDIR/$CLASSIFIERSUBDIR"
