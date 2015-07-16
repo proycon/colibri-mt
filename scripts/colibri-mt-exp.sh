@@ -561,7 +561,7 @@ if [ "$RUN" = "1" ]; then
                     fi
                 done
             fi
-        elif [[ $MERT -eq 0 ]] && [ ! -f "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
+        elif [[ $MERT -eq 0 ]] && [ ! -s "$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" ]; then
             echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nInvoking moses on previously generated test data${NC}">&2
             #copy back, paths are relative
             echo "moses -threads $THREADS -f $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/moses.ini < $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/test.txt > $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt" >&2
@@ -593,7 +593,7 @@ if [ "$RUN" = "1" ]; then
                     mkdir $CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel
                     OLDPWD=`pwd`
                     cd $MULTEVALDIR
-                    ./multeval.sh eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor-language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
+                    ./multeval.sh eval --refs $OLDPWD/../$TESTTARGET.txt --hyps-baseline $BASELINEDIR/output.txt.opt* --hyps-sys1 $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.txt.opt* --meteor.language $TARGETLANG --latex $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.table.tex --sentLevelDir $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/sentlevel > $OLDPWD/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR/output.summary.score
                     cd $OLDPWD
                 else
                     echo -e "${blue}[$NAME/$CLASSIFIERDIR/$CLASSIFIERSUBDIR/$DECODEDIR]\nEvaluating${NC}">&2
