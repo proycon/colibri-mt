@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BEGINPATTERN, ENDPATTERN #pylint: disable=import-error
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BOUNDARYPATTERN #pylint: disable=import-error
 from colibrimt.alignmentmodel import AlignmentModel, Configuration
 import timbl
 import pickle
@@ -29,7 +29,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
         assert sentencelength > 0
         for i in range(token - leftcontext,token):
             if i < 0:
-                unigram = BEGINPATTERN
+                unigram = BOUNDARYPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
@@ -41,7 +41,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
             featurevector.append(focuspattern.tostring(classdecoder))
         for i in range(token + n , token + n + rightcontext):
             if i >= sentencelength:
-                unigram = ENDPATTERN
+                unigram = BOUNDARYPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
