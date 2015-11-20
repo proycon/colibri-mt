@@ -208,7 +208,7 @@ def main():
 
 
         print("Building patternmodel on test corpus " + classifierconf['featureconf'][0].corpus.filename() ,file=sys.stderr)
-        options = PatternModelOptions(mintokens=1, maxlength=12)
+        options = PatternModelOptions(mintokens=1, maxlength=12, debug=True)
         testmodel = IndexedPatternModel(reverseindex=classifierconf['featureconf'][0].corpus)
         testmodel.train( classifierconf['featureconf'][0].corpus.filename(), options, alignmodel)
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
