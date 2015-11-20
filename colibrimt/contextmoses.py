@@ -217,6 +217,7 @@ def main():
         testmodel.write(  decodedir + '/test.colibri.indexedpatternmodel'  )
 
         if args.devinputfile:
+            print("Building patternmodel on development corpus " + args.devinputfile + ".colibri.dat" ,file=sys.stderr)
             devmodel = IndexedPatternModel(reverseindex=IndexedCorpus(args.devinputfile + ".colibri.dat"))
             devmodel.train( args.devinputfile +'.colibri.dat', options, alignmodel)
             print("\tDevelopment model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
