@@ -209,7 +209,7 @@ def main():
 
         print("Building patternmodel on test corpus " + classifierconf['featureconf'][0].corpus.filename() ,file=sys.stderr)
         options = PatternModelOptions(mintokens=1, maxlength=12)
-        testmodel = IndexedPatternModel(classifierconf['featureconf'][0].corpus)
+        testmodel = IndexedPatternModel(reverseindex=classifierconf['featureconf'][0].corpus)
         testmodel.train( classifierconf['featureconf'][0].corpus.filename(), options, alignmodel)
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
@@ -217,7 +217,7 @@ def main():
         testmodel.write(  decodedir + '/test.colibri.indexedpatternmodel'  )
 
         if args.devinputfile:
-            devmodel = IndexedPatternModel(IndexedCorpus(args.devinputfile + ".colibri.dat"))
+            devmodel = IndexedPatternModel(reverseindex=IndexedCorpus(args.devinputfile + ".colibri.dat"))
             devmodel.train( args.devinputfile +'.colibri.dat', options, alignmodel)
             print("\tDevelopment model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
