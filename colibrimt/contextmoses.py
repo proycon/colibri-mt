@@ -319,6 +319,7 @@ def main():
                 tokens = [] #actual string representations
                 for tokenindex,pattern in enumerate(line): #will yield only unigrams
                     #is this an uncovered word that does not appear in the phrasetable? check using alignment model and keep the word untranslated if so
+                    print("DEBUG: Processing pattern " + str(sentenceindex) + ":" + str(tokenindex) + ": "+ pattern.tostring(classifierconf['featureconf'][0].classdecoder),file=sys.stderr)
                     if not pattern in alignmodel:
                         print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
                         tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
