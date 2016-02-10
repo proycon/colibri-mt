@@ -384,7 +384,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 sentencelength = factoredcorpus.sentencelength(sentence)
                 for i in range(token - leftcontext,token):
                     if i < 0:
-                        unigram = colibricore.BEGINPATTERN
+                        unigram = colibricore.BOUNDARYPATTERN
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     assert len(unigram) == 1
@@ -394,7 +394,7 @@ class AlignmentModel(colibricore.PatternAlignmentModel_float):
                 #print("DEBUG: l" + str(leftcontext) + "r" + str(rightcontext) + "n" + str(n) +"  : " + str(token+n) + "-" + str(token+n+rightcontext), file=sys.stderr)
                 for i in range(token + n , token + n + rightcontext):
                     if i >= sentencelength:
-                        unigram = colibricore.ENDPATTERN
+                        unigram = colibricore.BOUNDARYPATTERN
                     else:
                         unigram = factoredcorpus[(sentence,i)]
                     assert len(unigram) == 1
