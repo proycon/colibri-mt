@@ -199,39 +199,43 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
             skipped++;
         } else {
             //add to phrasetable
-            Pattern sourcepattern = sourceencoder.buildpattern(source);
+            try{
+                Pattern sourcepattern = sourceencoder.buildpattern(source);
 
-            if ((constrainsourcemodel != NULL) && (!constrainsourcemodel->has(sourcepattern))) {
-                const int _n = sourcepattern.n();
-                if (_n == 1) {
-                    skipfirstword = firstword;
-                } else if (!firstwords.has(sourcepattern[0])) {
-                    skipfirstword = firstword;
+                if ((constrainsourcemodel != NULL) && (!constrainsourcemodel->has(sourcepattern))) {
+                    const int _n = sourcepattern.n();
+                    if (_n == 1) {
+                        skipfirstword = firstword;
+                    } else if (!firstwords.has(sourcepattern[0])) {
+                        skipfirstword = firstword;
+                    }
+
+                    constrained++;
+                    skipsamesource = true;
+                    continue;
                 }
 
-                constrained++;
-                skipsamesource = true;
-                continue;
+                if ((max_sourcen > 0) && (sourcepattern.n() > max_sourcen)) {
+                    skipped++;
+                    skipsamesource = true;
+                    continue;
+                }
+
+                Pattern targetpattern = targetencoder.buildpattern(target);
+
+                if ((constraintargetmodel != NULL) && (!constraintargetmodel->has(targetpattern))) {
+                    constrained++;
+                    continue;
+                }
+
+                if (scores.size() > maxscores) {
+                    cerr << endl << "*** WARNING: Unexpectedly large number of scores in line " << count << ", something wrong? ***" << endl;
+                }
+
+                buffer.push_back( BufferItem(sourcepattern, targetpattern, scores) );
+            } catch (const UnknownTokenError &e) {
+                cerr << endl << "*** WARNING: UnknownTokenError in encoding of source or target fragment on line " << count << ", skipping..." << endl;
             }
-
-            if ((max_sourcen > 0) && (sourcepattern.n() > max_sourcen)) {
-                skipped++;
-                skipsamesource = true;
-                continue;
-            }
-
-            Pattern targetpattern = targetencoder.buildpattern(target);
-
-            if ((constraintargetmodel != NULL) && (!constraintargetmodel->has(targetpattern))) {
-                constrained++;
-                continue;
-            }
-
-            if (scores.size() > maxscores) {
-                cerr << endl << "*** WARNING: Unexpectedly large number of scores in line " << count << ", something wrong? ***" << endl;
-            }
-
-            buffer.push_back( BufferItem(sourcepattern, targetpattern, scores) );
         }
 
     }
