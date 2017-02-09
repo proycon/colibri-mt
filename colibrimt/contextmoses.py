@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import glob
-from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BEGINPATTERN, ENDPATTERN #pylint: disable=import-error
+from colibricore import IndexedCorpus, ClassEncoder, ClassDecoder, IndexedPatternModel,  PatternModelOptions, BOUNDARYPATTERN #pylint: disable=import-error
 from colibrimt.alignmentmodel import AlignmentModel, Configuration
 import timbl
 import pickle
@@ -29,7 +29,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
         assert sentencelength > 0
         for i in range(token - leftcontext,token):
             if i < 0:
-                unigram = BEGINPATTERN
+                unigram = BOUNDARYPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
@@ -41,7 +41,7 @@ def extractcontextfeatures(classifierconf, pattern, sentence, token):
             featurevector.append(focuspattern.tostring(classdecoder))
         for i in range(token + n , token + n + rightcontext):
             if i >= sentencelength:
-                unigram = ENDPATTERN
+                unigram = BOUNDARYPATTERN
             else:
                 unigram = factoredcorpus[(sentence,i)]
             if len(unigram) != 1:
@@ -208,17 +208,20 @@ def main():
 
 
         print("Building patternmodel on test corpus " + classifierconf['featureconf'][0].corpus.filename() ,file=sys.stderr)
-        options = PatternModelOptions(mintokens=1, maxlength=12)
-        testmodel = IndexedPatternModel()
-        testmodel.train( classifierconf['featureconf'][0].corpus.filename(), options, alignmodel)
+        options = PatternModelOptions(mintokens=1, maxlength=12, debug=True)
+        testmodel = IndexedPatternModel(reverseindex=classifierconf['featureconf'][0].corpus)
+        testmodel.train( "", options, alignmodel)
         print("\tTest model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
         #saving just so we can inspect it for debug purposes:
         testmodel.write(  decodedir + '/test.colibri.indexedpatternmodel'  )
 
         if args.devinputfile:
-            devmodel = IndexedPatternModel()
-            devmodel.train( args.devinputfile +'.colibri.dat', options, alignmodel)
+            print("Building patternmodel on development corpus " + args.devinputfile + ".colibri.dat" ,file=sys.stderr)
+            devcorpus = IndexedCorpus(args.devinputfile + ".colibri.dat")
+            print("Development corpus has " + str(devcorpus.sentences()) + " sentences")
+            devmodel = IndexedPatternModel(reverseindex=devcorpus)
+            devmodel.train( "", options, alignmodel)
             print("\tDevelopment model has " + str(len(testmodel)) + " source patterns",file=sys.stderr)
 
             #saving just so we can inspect it for debug purposes:
@@ -316,6 +319,7 @@ def main():
                 tokens = [] #actual string representations
                 for tokenindex,pattern in enumerate(line): #will yield only unigrams
                     #is this an uncovered word that does not appear in the phrasetable? check using alignment model and keep the word untranslated if so
+                    print("DEBUG: Processing pattern " + str(sentenceindex) + ":" + str(tokenindex) + ": "+ pattern.tostring(classifierconf['featureconf'][0].classdecoder),file=sys.stderr)
                     if not pattern in alignmodel:
                         print("     Found OOV at @" + str(sentenceindex) + ":" + str(tokenindex) + ": " + pattern.tostring(classifierconf['featureconf'][0].classdecoder), file=sys.stderr)
                         tokens.append(pattern.tostring(classifierconf['featureconf'][0].classdecoder))
