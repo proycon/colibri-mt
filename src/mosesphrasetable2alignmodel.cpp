@@ -234,7 +234,7 @@ void loadmosesphrasetable(PatternAlignmentModel<double> & model,  const std::str
 
                 buffer.push_back( BufferItem(sourcepattern, targetpattern, scores) );
             } catch (const UnknownTokenError &e) {
-                cerr << endl << "*** WARNING: UnknownTokenError in encoding of source or target fragment on line " << count << " skipping: " << source <<< " ||| " << target <<endl;
+                cerr << endl << "*** WARNING: UnknownTokenError in encoding of source or target fragment on line " << count << " skipping: " << source <<< " ||| " <<< target <<< endl;
             }
         }
 
